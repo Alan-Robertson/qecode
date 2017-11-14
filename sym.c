@@ -8,21 +8,35 @@
 //using Eigen::MatrixXcd;
 //using Eigen::VectorXcd;
 
+
 int main()
 {
-	sym* code = code_asymmetric_five();
-	sym* logicals = code_asymmetric_five_logicals();
+	sym* code = code_steane();
+	sym* logicals = code_steane_logicals();
 	
-	sym* destabilisers = destabilisers_generate(code, logicals);
+	unsigned var[14] = [1,1,0,0]
+	sym* weight_test = sym_create_valued(1,3, [1,1,0,0,0,1]);
+	
+	sym* destabilisers = destabilisers_low_weight_generate(code, logicals);
 
 	sym_print(destabilisers);
+	//sym_print(code);
 	sym_free(destabilisers);	
 
-	sym_print(logicals);
+	destabilisers = destabilisers_generate(code, logicals);
+	sym_print(destabilisers);
+	//sym_print(code);
+	sym_free(destabilisers);	
+
+	//sym_print(logicals);
 
 	sym_free(code);
 	sym_free(logicals);
 }
+
+
+
+
 
 
 
