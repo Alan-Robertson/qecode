@@ -522,7 +522,7 @@ unsigned sym_weight_type_partial(const sym* s, const char type, unsigned start, 
 */
 unsigned int sym_weight(const sym* s)
 {
-	return sym_weight_type_partial(s, '\0', 0, s->length/2);
+	return sym_weight_type_partial(s, '\0', 0, s->length);
 }
 
 /*
@@ -533,7 +533,7 @@ unsigned int sym_weight(const sym* s)
 */
 unsigned int sym_weight_X(const sym* s)
 {
-	return sym_weight_type_partial(s, 'X', 0, s->length/2);
+	return sym_weight_type_partial(s, 'X', 0, s->length);
 }
 
 /*
@@ -544,7 +544,7 @@ unsigned int sym_weight_X(const sym* s)
 */
 unsigned int sym_weight_Y(const sym* s)
 {
-	return sym_weight_type_partial(s, 'Y', 0, s->length/2);
+	return sym_weight_type_partial(s, 'Y', 0, s->length);
 }
 
 /*
@@ -555,7 +555,7 @@ unsigned int sym_weight_Y(const sym* s)
 */
 unsigned int sym_weight_Z(const sym* s)
 {
-	return sym_weight_type_partial(s, 'Z', 0, s->length/2);
+	return sym_weight_type_partial(s, 'Z', 0, s->length);
 }
 
 /*

@@ -29,8 +29,8 @@ sym* destabilisers_low_weight_generate(
 bool destabilisers_low_weight_backtrack(
 	const sym* code, 
 	const sym* logicals, 
-	sym* destabilisers, unsigned row);
-
+	sym* destabilisers,
+	unsigned row);
 
 // Recursive backtrack solution, this can almost certainly be improved upon
 // Using binary symplectic elimination
@@ -49,7 +49,11 @@ sym* destabilisers_generate(const sym* code, const sym* logicals)
 }
 
 // Recursive backtrack
-bool destabilisers_backtrack(const sym* code, const sym* logicals, sym* destabilisers, unsigned row)
+bool destabilisers_backtrack(
+	const sym* code, 
+	const sym* logicals, 
+	sym* destabilisers, 
+	unsigned row)
 {
 	// The base case
 	if (row == code->height)
@@ -85,7 +89,7 @@ bool destabilisers_backtrack(const sym* code, const sym* logicals, sym* destabil
 		{
 			memcpy(
 				&(destabilisers->matrix[row]), 
-				&(tested_destabiliser->matrix),
+				tested_destabiliser->matrix,
 				sym_matrix_bytes(tested_destabiliser));
 
 			found_destabiliser = destabilisers_backtrack(
@@ -105,12 +109,42 @@ bool destabiliser_is_destabiliser(
 	const sym* destabiliser, 
 	unsigned row)
 {
+
+	sym* syndrome = sym_syndrome(code, destabiliser);
+
+	//sym_print(destabiliser);
+	//sym_print(syndrome);
+	for (int i = 0; i <= row; i++)
+	{
+		if (i < row)
+			if (sym_get(syndrome, i, 0) != 0)
+			{
+				sym_free(syndrome);
+				return false;
+			}
+		else
+		{
+			if (sym_get(syndrome, i, 0) != 1)
+			{
+				sym_free(syndrome);
+				return false;
+			}
+		}
+	}
+	sym_free(syndrome);
+	return true;
+}
+
+/*
 	// Check that it commutes with all bar one of the stabilisers
 	for (int i = 0; i < code->height; i++)
 	{
 		unsigned anti_commutes = 0;
 		for (int j = 0; j < code->length/2; j++)
 		{
+			// First check if there is an X component in the code and a Z component in the destabiliser
+			// Then if there is an X in the destabiliser and a Z in the code
+			// Then if there are both of these then they are both Y's and are XOR'ed together.
 			if ( 
 				(sym_get(code, i, j) & sym_get(destabiliser, 0, j + code->length/2)) 
 				^ 
@@ -129,8 +163,7 @@ bool destabiliser_is_destabiliser(
 		}
 	}
 	return true;
-}
-
+*/
 
 sym* destabilisers_low_weight_generate(const sym* code, const sym* logicals)
 {
@@ -185,25 +218,21 @@ bool destabilisers_low_weight_backtrack(const sym* code, const sym* logicals, sy
 		{
 			if (found_destabiliser) // if we've already found a destabiliser, compare weights
 			{
-				sym_print(tested_destabiliser);
-				printf("%d\n", sym_weight(tested_destabiliser));
 				if (sym_weight(tested_destabiliser) < curr_weight)
 				{
 					memcpy(
 					&(destabilisers->matrix[row]), 
-					&(tested_destabiliser->matrix),
+					tested_destabiliser->matrix,
 					sym_matrix_bytes(tested_destabiliser));
 				}
 			}
 			else 
 			{ // Otherwise this is the first one and just add it
 				curr_weight = sym_weight(tested_destabiliser);
-				sym_print(tested_destabiliser);
-				printf("%d\n", sym_weight(tested_destabiliser));
 				found_destabiliser = true;
 				memcpy(
 					&(destabilisers->matrix[row]), 
-					&(tested_destabiliser->matrix),
+					tested_destabiliser->matrix,
 					sym_matrix_bytes(tested_destabiliser));
 			}
 		}		
@@ -220,7 +249,6 @@ bool destabilisers_low_weight_backtrack(const sym* code, const sym* logicals, sy
 					row + 1);
 	}
 	return found_destabiliser;
-} 
-
+}
 
 #endif
