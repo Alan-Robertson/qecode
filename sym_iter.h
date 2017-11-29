@@ -1,4 +1,21 @@
+#ifndef SYMPLECTIC_ITERATOR
+#define SYMPLECTIC_ITERATOR
+
+// LIBRARIES ----------------------------------------------------------------------------------------
+
 #include "sym.h"
+
+// STRUCT OBJECTS ----------------------------------------------------------------------------------------
+
+/*
+	sym:
+	The symplectic matrix iterator
+	:: sym* state :: Number of rows in the matrix
+	:: unsigned max_weight :: Maximum hamming weight for the iterator
+	:: unsigned curr_weight :: Current hamming weight for the iterator
+	:: long long counter :: Counter position at the current hamming weight
+	:: long long max_counter :: Maximum counter position for this hamming weight
+*/
 
 typedef struct {
 	sym* state; // The current state of our sym iterator
@@ -6,14 +23,169 @@ typedef struct {
 	unsigned max_weight; // The maximum weight we will be testing
 	unsigned curr_weight; // Our current weight
 	long long counter; // Current counter state
-	long long max_counter; // Current maximum counter 
+	long long max_counter; 
 } sym_iter; 
 
+// FUNCTION DECLARATIONS ----------------------------------------------------------------------------------------
+/* 
+    sym_iter_create:
+	Creates a new symplectic matrix object
+	:: const unsigned length :: Length of the iterator in bits (2 * qubits)
+	Returns a heap pointer to the new iterator
+*/
+sym_iter* sym_iter_create(const unsigned length);
+
+/* 
+    sym_iter_create_range:
+	Creates a new symplectic matrix object
+	:: const unsigned length :: Length of the iterator in bits (2 * qubits)
+	:: const unsigned min_weight :: Minimum hamming weight for the iterator
+	:: const unsigned max_weight :: Maximum hamming weight for the iterator
+	Returns a heap pointer to the new iterator
+*/
+sym_iter* sym_iter_create_range(const unsigned length, const unsigned min_weight, const unsigned max_weight);
+
+
+/*
+	sym_iter_next:
+	Updates the state of the sym iterator
+	:: sym_iter* siter :: The iterator whose state is to be updated
+	Returns a boolean value, true indicates that the iterator was updated, false indicates that the end of the range has been reached
+*/
+bool sym_iter_next(sym_iter* siter);
+
+/*
+	sym_iter_ll_from_state:
+	Casts the current state of the iterator to long long
+	:: const sym_iter* siter :: The iterator whose state is to be cast
+	Returns a long long representation of the state of the iterator
+*/
+long long sym_iter_ll_from_state(const sym_iter* siter);
+
+/*
+	sym_iter_state_from_ll:
+	Casts from long long to the state of the iterator
+	:: sym_iter* siter :: The iterator whose state is to be cast
+	:: const long long val :: The long long val 
+	Does not return anything, updates the value of the iterator in place.
+*/
+void sym_iter_state_from_ll(sym_iter* siter, const long long val);
+
+/*
+	sym_iter_max_counter:
+	Calculate (n, k) to determine the number of 
+	:: const unsigned length::
+	:: const unsigned weight::
+	Returns an unsigned long long containing the result
+*/
+unsigned long long sym_iter_max_counter(const unsigned length, const unsigned current_weight);
+
+void sym_iter_free(sym_iter* siter);
+
+// FUNCTION DEFINITIONS ----------------------------------------------------------------------------------------
+/* 
+    sym_iter_create:
+	Creates a new symplectic matrix object
+	:: const unsigned length :: Length of the iterator in bits (2 * qubits)
+	Returns a heap pointer to the new iterator
+*/
+sym_iter* sym_iter_create(const unsigned length)
+{
+	sym_iter* siter = sym_iter_create_range(length, 0, length);
+}
+
+/* 
+    sym_iter_create_range:
+	Creates a new symplectic matrix object
+	:: const unsigned length :: Length of the iterator in bits (2 * qubits)
+	:: const unsigned min_weight :: Minimum hamming weight for the iterator
+	:: const unsigned max_weight :: Maximum hamming weight for the iterator
+	Returns a heap pointer to the new iterator
+*/
+sym_iter* sym_iter_create_range(const unsigned length, const unsigned min_weight, const unsigned max_weight)
+{
+	// Allocate memory for the state iterator
+	sym_iter* siter = (sym_iter*)malloc(sizeof(sym_iter));
+	
+	// Create the state currently occupied by the state iterator
+	siter->state = sym_create(1, length);
+
+	siter->length = length;
+	siter->curr_weight = min_weight; // Our current weight
+	siter->counter = 0; // Current counter state
+	siter->max_counter = sym_iter_max_counter(length, min_weight); // Current maximum counter
+
+	siter->max_weight = max_weight;
+
+	return siter;
+}
+
+// Update the state of the iterator
+bool sym_iter_next(sym_iter* siter)
+{
+	if (siter->counter < siter->max_counter)
+	{
+		// Cast from iterator to long long
+		long long val = sym_iter_ll_from_state(siter);
+
+		// Bill Gosper Hamming Weight generator
+		long long c = val & -val;
+		long long r = val + c;
+		val = (((r^val) >> 2) / c) | r;
+
+		// Push the result back to the state
+		sym_iter_state_from_ll(siter, val);
+		siter->counter++;
+
+		return true;
+	}
+	else
+	{
+		if (siter->curr_weight < siter->max_weight)
+		{
+			siter->curr_weight++;
+			siter->counter = 0; // Current counter state
+			siter->max_counter = sym_iter_max_counter(siter->length, siter->curr_weight);
+
+			long long val = (1ll << (long long)siter->curr_weight) - 1;
+
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+}
+
+long long sym_iter_ll_from_state(const sym_iter* siter)
+{
+	long long val = 0;
+	for (int i = 0; i < siter->length / 8; i++)
+	{
+		val <<= 8ll;
+		val += (BYTE)(siter->state->matrix[i]);
+	}
+	printf("%lld", val);
+	return val;
+}
+
+void sym_iter_state_from_ll(sym_iter* siter, const long long val)
+{
+	for (int i = siter->length / 8; i < ; i++)
+	{
+		val <<= 8;
+		val += (BYTE)(siter->state->matrix[i]);
+	}
+	return;
+}
+
+
 // Calculates binomial coefficients
-unsigned long long sym_iter_max_counter(unsigned length, unsigned current_weight)
+unsigned long long sym_iter_max_counter(const unsigned length, const unsigned current_weight)
 {
     long long result = 1;
-    
+
     // If current_weight greater than length - weight then it's faster to calculate length - weight and it's symmetric!
     current_weight = current_weight > length - current_weight ? length - current_weight : current_weight;
    
@@ -36,80 +208,10 @@ unsigned long long sym_iter_max_counter(unsigned length, unsigned current_weight
 }
 
 
-sym_iter* sym_iter_create_range(unsigned length, unsigned min_weight, unsigned max_weight)
+void sym_iter_free(sym_iter* siter)
 {
-	// Allocate memory for the state iterator
-	sym_iter* siter = (sym_iter*)malloc(sizeof(sym_iter));
-	
-	// Create the state currently occupied by the state iterator
-	siter->state = sym_create(1, length);
-
-	siter->length = length;
-	siter->curr_weight = min_weight; // Our current weight
-	siter->counter = 0; // Current counter state
-	siter->max_counter = sym_iter_max_counter(length, min_weight); // Current maximum counter
-
-	siter->max_weight = max_weight;
-
-	return siter;
+	sym_free(siter->state);
+	free(siter);
 }
 
-sym_iter* sym_iter_create(unsigned length)
-{
-	sym_iter* siter = sym_iter_create_range(length, 0, length);
-}
-
-
-// Update the state of the iterator
-bool sym_iter_next(sym_iter* siter)
-{
-		if (siter->counter < siter->max_counter)
-		{
-			// Bill Gosper Hamming Weight generator
-			long long val = sym_iter_ll_from_state(sym_iter* siter);
-			c = val & -val;
-			r = val + c;
-			val = (((r^val) >> 2) / c) | r;
-
-			sym_iter_state_from_ll(siter, val);
-
-			siter->counter++;
-			return true;
-		}
-		else
-		{
-			if (siter->curr_weight < siter->max_weight)
-			{
-				siter->curr_weight++;
-				siter->counter = 0; // Current counter state
-				siter->max_counter = sym_iter_max_counter(siter->length, siter->curr_weight);
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		}
-}
-
-long long sym_iter_ll_from_state(sym_iter* siter)
-{
-	long long val = 0;
-	for (int i = 0; i < siter->length / 8; i++)
-	{
-		val <<= 8;
-		val += BYTE(siter->state->matrix[i]);
-	}
-	printf("%lld", val);
-	return val;
-}
-
-void sym_iter_state_from_ll(sym_iter* siter, long long val)
-{
-	for (int i = 0; i < siter->length / 8; i++)
-	{
-		val <<= 8;
-		val += int(siter->state->matrix[i]);
-	}
-	return;
-}
+#endif

@@ -54,8 +54,8 @@ typedef struct
 /* 
     sym_create:
 	Creates a new symplectic matrix object
-	:: unsigned height :: Height of the matrix
-	:: unsigned length ::  length of the matrix
+	:: const unsigned height :: Height of the matrix
+	:: const unsigned length ::  length of the matrix
 	Returns a heap pointer to the new matrix
 */
 sym* sym_create(const unsigned height, const unsigned length);
@@ -63,8 +63,8 @@ sym* sym_create(const unsigned height, const unsigned length);
 /* 
     sym_create_valued:
 	Creates a new symplectic matrix object
-	:: unsigned height :: Height of the matrix
-	:: unsigned length ::  length of the matrix
+	:: const unsigned height :: Height of the matrix
+	:: const unsigned length ::  length of the matrix
 	:: const unsigned* values :: A 2D integer array of values to be stored
 	Returns a heap pointer to the new matrix
 */
@@ -410,7 +410,6 @@ sym* sym_transpose(const sym* s)
 /* sym_kron:
 	Performs a Kronecker product on two sym matrix objects
 */
-
 sym* sym_kron(sym* a, sym* b)
 {
 	if (!a || !b) // Either a or b is a null pointer
@@ -569,12 +568,6 @@ void sym_free(sym* s)
 	free(s);
 	return;
 }
-
-bool sym_row_commutes(const sym* s_a, const sym* s_b, const unsigned row_a, const unsigned row_b)
-{
-
-}
-
 
 /*
 	sym_print:
