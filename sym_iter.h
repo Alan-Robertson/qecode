@@ -80,6 +80,9 @@ void sym_iter_state_from_ll(sym_iter* siter, long long val);
 */
 unsigned long long sym_iter_max_counter(unsigned length, unsigned current_weight);
 
+
+void sym_iter_left_shift(sym_iter* siter, unsigned shift);
+
 void sym_iter_free(sym_iter* siter);
 
 // FUNCTION DEFINITIONS ----------------------------------------------------------------------------------------
@@ -120,7 +123,12 @@ sym_iter* sym_iter_create_range(const unsigned length, const unsigned min_weight
 	return siter;
 }
 
-// Update the state of the iterator
+/*
+	sym_iter_next:
+	Updates the state of the sym iterator
+	:: sym_iter* siter :: The iterator whose state is to be updated
+	Returns a boolean value, true indicates that the iterator was updated, false indicates that the end of the range has been reached
+*/
 bool sym_iter_next(sym_iter* siter)
 {
 	if (siter->counter < siter->max_counter)
@@ -131,9 +139,8 @@ bool sym_iter_next(sym_iter* siter)
 		// Bill Gosper Hamming Weight generator
 		long long c = val & -val;
 		long long r = val + c;
-		printf("%lld %lld", val, r);  
 		
-	//	val = (((r^val) >> 2) / c) | r;
+		val = (c != 0) ? (((r^val) >> 2) / c) | r : 0;
 		
 		// Push the result back to the state
 		sym_iter_state_from_ll(siter, val);
@@ -148,7 +155,7 @@ bool sym_iter_next(sym_iter* siter)
 			siter->counter = 1; // Current counter state
 			siter->max_counter = sym_iter_max_counter(siter->length, siter->curr_weight);
 
-			long long val = (1ll << (long long)(siter->curr_weight + 8 - (siter->length % 8))) - 1ll;
+			long long val = (1ll << (long long)(siter->curr_weight)) - 1ll;
 			sym_iter_state_from_ll(siter, val);
 			return true;
 		}
@@ -159,6 +166,12 @@ bool sym_iter_next(sym_iter* siter)
 	}
 }
 
+/*
+	sym_iter_ll_from_state:
+	Casts the current state of the iterator to long long
+	:: const sym_iter* siter :: The iterator whose state is to be cast
+	Returns a long long representation of the state of the iterator
+*/
 long long sym_iter_ll_from_state(const sym_iter* siter)
 {
 	long long val = 0;
@@ -167,8 +180,17 @@ long long sym_iter_ll_from_state(const sym_iter* siter)
 		val <<= 8ll;
 		val += (BYTE)(siter->state->matrix[i]);
 	}
+	val >>= ((siter->length % 8) ? 8 - siter->length : 0);
+	//printf("%lld", val);
 	return val;
 }
+/*
+	sym_iter_state_from_ll:
+	Casts from long long to the state of the iterator
+	:: sym_iter* siter :: The iterator whose state is to be cast
+	:: const long long val :: The long long val 
+	Does not return anything, updates the value of the iterator in place.
+*/
 
 void sym_iter_state_from_ll(sym_iter* siter, long long val)
 {
@@ -177,8 +199,38 @@ void sym_iter_state_from_ll(sym_iter* siter, long long val)
 		siter->state->matrix[i] = (BYTE)(val);
 		val >>= 8ll;
 	}
+	unsigned shift = ((siter->length % 8) ? 8 - siter->length : 0);
+	//sym_print(siter->state);
+	sym_iter_left_shift(siter, shift);
 	return;
 }
+
+void sym_iter_left_shift(sym_iter* siter, unsigned shift)
+{
+	unsigned carry = 0;
+	for (int i = 0; i < shift; i++)
+	{
+		unsigned t_carry = siter->state->matrix[i] & 0xF0;
+		siter->state->matrix[i] <<= shift;
+		siter->state->matrix[i] += carry;
+
+		carry = t_carry;
+	}
+}
+
+void sym_iter_right_shift(sym_iter* siter, unsigned shift)
+{
+	unsigned carry = 0;
+	for (int i = 0; i >= 0; i--)
+	{
+		unsigned t_carry = siter->state->matrix[i] & 0x0F;
+		siter->state->matrix[i] <<= 4;
+		siter->state->matrix[i] += carry;
+
+		carry = t_carry;
+	}
+}
+
 
 
 // Calculates binomial coefficients

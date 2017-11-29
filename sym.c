@@ -9,7 +9,7 @@
 
 int main()
 {
-	sym_iter* iter = sym_iter_create(4);
+	sym_iter* iter = sym_iter_create(5);
 	while(sym_iter_next(iter))
 	{
 		sym_print(iter->state);
