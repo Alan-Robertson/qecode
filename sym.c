@@ -14,7 +14,7 @@ int main()
 	{
 		sym_print(iter->state);
 	}
-
+	sym_iter_free(iter);
 	return 0;
 }
 

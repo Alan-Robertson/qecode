@@ -69,16 +69,16 @@ long long sym_iter_ll_from_state(const sym_iter* siter);
 	:: const long long val :: The long long val 
 	Does not return anything, updates the value of the iterator in place.
 */
-void sym_iter_state_from_ll(sym_iter* siter, const long long val);
+void sym_iter_state_from_ll(sym_iter* siter, long long val);
 
 /*
 	sym_iter_max_counter:
-	Calculate (n, k) to determine the number of 
-	:: const unsigned length::
-	:: const unsigned weight::
+	Calculate (n, k) to determine the number of elements in the iterator with the same hamming weight 
+	:: unsigned length::
+	:: unsigned weight::
 	Returns an unsigned long long containing the result
 */
-unsigned long long sym_iter_max_counter(const unsigned length, const unsigned current_weight);
+unsigned long long sym_iter_max_counter(unsigned length, unsigned current_weight);
 
 void sym_iter_free(sym_iter* siter);
 
@@ -127,16 +127,17 @@ bool sym_iter_next(sym_iter* siter)
 	{
 		// Cast from iterator to long long
 		long long val = sym_iter_ll_from_state(siter);
-
+		
 		// Bill Gosper Hamming Weight generator
 		long long c = val & -val;
 		long long r = val + c;
-		val = (((r^val) >> 2) / c) | r;
-
+		printf("%lld %lld", val, r);  
+		
+	//	val = (((r^val) >> 2) / c) | r;
+		
 		// Push the result back to the state
 		sym_iter_state_from_ll(siter, val);
 		siter->counter++;
-
 		return true;
 	}
 	else
@@ -144,11 +145,11 @@ bool sym_iter_next(sym_iter* siter)
 		if (siter->curr_weight < siter->max_weight)
 		{
 			siter->curr_weight++;
-			siter->counter = 0; // Current counter state
+			siter->counter = 1; // Current counter state
 			siter->max_counter = sym_iter_max_counter(siter->length, siter->curr_weight);
 
-			long long val = (1ll << (long long)siter->curr_weight) - 1;
-
+			long long val = (1ll << (long long)(siter->curr_weight + 8 - (siter->length % 8))) - 1ll;
+			sym_iter_state_from_ll(siter, val);
 			return true;
 		}
 		else
@@ -161,28 +162,27 @@ bool sym_iter_next(sym_iter* siter)
 long long sym_iter_ll_from_state(const sym_iter* siter)
 {
 	long long val = 0;
-	for (int i = 0; i < siter->length / 8; i++)
+	for (int i = 0; i < sym_matrix_bytes(siter->state); i++)
 	{
 		val <<= 8ll;
 		val += (BYTE)(siter->state->matrix[i]);
 	}
-	printf("%lld", val);
 	return val;
 }
 
-void sym_iter_state_from_ll(sym_iter* siter, const long long val)
+void sym_iter_state_from_ll(sym_iter* siter, long long val)
 {
-	for (int i = siter->length / 8; i < ; i++)
+	for (int i = sym_matrix_bytes(siter->state)- 1; i >= 0; i--)
 	{
-		val <<= 8;
-		val += (BYTE)(siter->state->matrix[i]);
+		siter->state->matrix[i] = (BYTE)(val);
+		val >>= 8ll;
 	}
 	return;
 }
 
 
 // Calculates binomial coefficients
-unsigned long long sym_iter_max_counter(const unsigned length, const unsigned current_weight)
+unsigned long long sym_iter_max_counter(unsigned length, unsigned current_weight)
 {
     long long result = 1;
 
