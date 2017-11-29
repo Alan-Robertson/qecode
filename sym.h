@@ -249,7 +249,6 @@ sym* sym_add(const sym* a, const sym* b)
 	return added;
 }
 
-
 unsigned sym_matrix_bytes(sym* s)
 {
 	return MATRIX_BYTES(s);
