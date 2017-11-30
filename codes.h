@@ -190,7 +190,28 @@ sym* code_two_qubit_logicals()
 	return t;
 }
 
+sym* code_five_qubit()
+{
+	unsigned code[] = {
+		1, 0, 0, 0, 1, 0, 1, 0, 1, 0,
+		1, 1, 0, 0, 0, 0, 0, 1, 0, 1,
+		0, 1, 1, 0, 0, 1, 0, 0, 1, 0,
+		0, 0, 1, 1, 0, 0, 1, 0, 0, 1			
+	};
+	return sym_create_valued(4, 10, code);
+}
 
+sym* code_five_qubit_logicals()
+{
+	unsigned code[] = {
+		1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 1, 1, 1, 1, 1
+	};
+	sym* s = sym_create_valued(2, 10, code);
+	sym* t = sym_transpose(s);
+	sym_free(s);
+	return t;
+}
 
 sym* code_asymmetric_five()
 {

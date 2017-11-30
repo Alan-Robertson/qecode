@@ -1,5 +1,6 @@
 #include "codes.h"
 #include "error_models.h"
+#include "errors.h"
 #include "characterise.h"
 #include "decoders.h"
 #include "destabilisers.h"
@@ -9,41 +10,27 @@
 
 int main()
 {
-	sym_iter* iter = sym_iter_create(5);
-	while(sym_iter_next(iter))
-	{
-		sym_print(iter->state);
-	}
-	sym_iter_free(iter);
-	return 0;
-}
-
-	/*sym* code = code_steane();
+	sym* code = code_steane();
 	sym* logicals = code_steane_logicals();
-	
-	
-	sym* destabilisers = destabilisers_low_weight_generate(code, logicals);
 
-	//sym_print(destabilisers);
+	sym* destabilisers = destabilisers_generate(code, logicals);
+	sym_print(destabilisers);
+
 	//printf("################\n");
 	//sym_print(code);
 
-	printf("################\n");
-	sym_free(destabilisers);	
-
-	destabilisers = destabilisers_generate(code, logicals);
-	sym_print(destabilisers);
-
-	printf("################\n");
-	sym_print(code);
-
-	printf("################\n");
+	//printf("################\n");
 	sym_free(destabilisers);	
 
 	//sym_print(logicals);
 
 	sym_free(code);
-	sym_free(logicals);*/
+	sym_free(logicals);
+	
+	return 0;
+}
+
+	
 
 /*{
 	MatrixXcd pi = dmatrix_pauli_i();

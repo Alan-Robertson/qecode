@@ -556,6 +556,17 @@ unsigned int sym_weight_Z(const sym* s)
 	return sym_weight_type_partial(s, 'Z', 0, s->length);
 }
 
+
+void sym_row_copy(sym* s, const sym* t, const unsigned s_row, const unsigned t_row)
+{
+	for (size_t i = 0; i < s->length; i++)
+	{
+		sym_set(s, s_row, i, sym_get(t, t_row, i));
+	}
+}
+
+
+
 /*
 	sym_free:
 	Frees a symplectic matrix object
