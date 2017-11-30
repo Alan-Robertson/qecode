@@ -13,14 +13,16 @@ int main()
 	sym* code = code_steane();
 	sym* logicals = code_steane_logicals();
 
-	sym* destabilisers = destabilisers_generate(code, logicals);
-	sym_print(destabilisers);
+
+
+	//sym* destabilisers = destabilisers_generate(code, logicals);
+	//sym_print(destabilisers);
 
 	//printf("################\n");
 	//sym_print(code);
 
 	//printf("################\n");
-	sym_free(destabilisers);	
+	//sym_free(destabilisers);	
 
 	//sym_print(logicals);
 

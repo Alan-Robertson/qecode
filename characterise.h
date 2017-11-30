@@ -2,6 +2,7 @@
 #define CHARACTERISATION
 
 #include "sym.h"
+#include "sym_iter.h"
 #include "errors.h"
 #include <math.h>
 
@@ -27,35 +28,26 @@ double* characterise_code(const sym* code,
 
 	double* p_error_probabilities = (double*)calloc(pow(4 , code->length / 2), sizeof(double));
 
-	char physical_error_string[code->length/2 + 1];
-	for (int i = 0; i < code->length / 2; i++)
-	{
-		physical_error_string[i] = 'I'; // Initialise error string to the identity
-	}
-	physical_error_string[code->length / 2] = '\0'; // Null terminator
-	
+	sym_iter* physical_error = sym_iter_create(code->length);	
 	do
 	{
-		sym* physical_error = error_str_to_sym(physical_error_string);
+		double error_prob = error_model(physical_error->state, model_data);
 
-		double error_prob = error_model(physical_error, model_data);
-
-		sym* syndrome = sym_syndrome(code, physical_error);
+		sym* syndrome = sym_syndrome(code, physical_error->state);
 
 		sym* recovery_operator = decoder(syndrome, decoder_data);
-		char* recovery_operator_string = error_sym_to_str(recovery_operator);
-		sym* corrected_physical_error = sym_add(physical_error, recovery_operator);
+		//char* recovery_operator_string = error_sym_to_str(recovery_operator);
+		sym* corrected_physical_error = sym_add(physical_error->state, recovery_operator);
 
 		char* corrected_string = error_sym_to_str(corrected_physical_error);
 		p_error_probabilities[error_str_to_int(corrected_string, logicals->height / 2)] += error_prob;
 
-		sym_free(physical_error);
 		sym_free(syndrome);
 		sym_free(recovery_operator);
 		sym_free(corrected_physical_error);
 		free(corrected_string);
 
-	} while(error_inc(physical_error_string, code->length / 2));
+	} while(sym_iter_next(physical_error));
 
 	return p_error_probabilities;
 }

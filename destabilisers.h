@@ -56,7 +56,7 @@ bool destabilisers_backtrack(
 
 	bool found_destabiliser = false;
 	sym_iter* iter = sym_iter_create(code->length);
-	sym_iter_next(iter);
+	// The all identity string should never be a destabiliser
 	while(sym_iter_next(iter) && !found_destabiliser)
 	{
 
