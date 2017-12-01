@@ -81,6 +81,14 @@ void sym_iter_state_from_ll(sym_iter* siter, long long val);
 unsigned long long sym_iter_max_counter(unsigned length, unsigned current_weight);
 
 /*
+	sym_iter_free:
+	Frees a symplectic iterator object
+	:: sym_iter* siter :: Pointer to the object to be freed
+	No return
+*/
+void sym_iter_free(sym_iter* siter);
+
+/*
 	sym_iter_right_shift:
 	Shifts an entire sym array right by the specified number of bits
 	:: sym_iter* siter :: The iterator to shift
@@ -98,13 +106,6 @@ unsigned long long sym_iter_max_counter(unsigned length, unsigned current_weight
 */
 //void sym_iter_right_shift(sym_iter* siter, const unsigned shift);
 
-/*
-	sym_iter_free:
-	Frees a symplectic iterator object
-	:: sym_iter* siter :: Pointer to the object to be freed
-	No return
-*/
-void sym_iter_free(sym_iter* siter);
 
 // FUNCTION DEFINITIONS ----------------------------------------------------------------------------------------
 /* 
@@ -225,48 +226,6 @@ void sym_iter_state_from_ll(sym_iter* siter, long long val)
 }
 
 /*
-	sym_iter_left_shift:
-	Shifts an entire sym array left by the specified number of bits
-	:: sym_iter* siter :: The iterator to shift
-	:: const unsigned shift :: The number of bits to shift by
-	Does not return anything, value is modified in place.
-
-void sym_iter_left_shift(sym_iter* siter, const unsigned shift)
-{
-	unsigned carry = 0;
-	for (int i = 0; i < sym_matrix_bytes(siter->state); i++)
-	{
-		long long t_carry = siter->state->matrix[i] & (BYTE)(((unsigned) -1) - ((1 << (8 - shift)) - 1));
-		siter->state->matrix[i] <<= shift;
-		siter->state->matrix[i] += (BYTE)carry;
-
-		carry = t_carry;
-	}
-	return;
-}*/
-
-/*
-	sym_iter_right_shift:
-	Shifts an entire sym array right by the specified number of bits
-	:: sym_iter* siter :: The iterator to shift
-	:: const unsigned shift :: The number of bits to shift by
-	Does not return anything, value is modified in place.
-
-void sym_iter_right_shift(sym_iter* siter, const unsigned shift)
-{
-	unsigned carry = 0;
-	for (int i = 0; i >= 0; i--)
-	{
-		unsigned t_carry = siter->state->matrix[i] & (((1 << 8) - 1) - ((1 << shift) - 1));
-		siter->state->matrix[i] <<= shift;
-		siter->state->matrix[i] += carry;
-
-		carry = t_carry;
-	}
-	return;
-}*/
-
-/*
 	sym_iter_max_counter:
 	Calculate (n, k) to determine the number of elements in the iterator with the same hamming weight 
 	:: unsigned length::
@@ -309,5 +268,47 @@ void sym_iter_free(sym_iter* siter)
 	sym_free(siter->state);
 	free(siter);
 }
+
+/*
+	sym_iter_left_shift:
+	Shifts an entire sym array left by the specified number of bits
+	:: sym_iter* siter :: The iterator to shift
+	:: const unsigned shift :: The number of bits to shift by
+	Does not return anything, value is modified in place.
+
+void sym_iter_left_shift(sym_iter* siter, const unsigned shift)
+{
+	unsigned carry = 0;
+	for (int i = 0; i < sym_matrix_bytes(siter->state); i++)
+	{
+		long long t_carry = siter->state->matrix[i] & (BYTE)(((unsigned) -1) - ((1 << (8 - shift)) - 1));
+		siter->state->matrix[i] <<= shift;
+		siter->state->matrix[i] += (BYTE)carry;
+
+		carry = t_carry;
+	}
+	return;
+}*/
+
+/*
+	sym_iter_right_shift:
+	Shifts an entire sym array right by the specified number of bits
+	:: sym_iter* siter :: The iterator to shift
+	:: const unsigned shift :: The number of bits to shift by
+	Does not return anything, value is modified in place.
+
+void sym_iter_right_shift(sym_iter* siter, const unsigned shift)
+{
+	unsigned carry = 0;
+	for (int i = 0; i >= 0; i--)
+	{
+		unsigned t_carry = siter->state->matrix[i] & (((1 << 8) - 1) - ((1 << shift) - 1));
+		siter->state->matrix[i] <<= shift;
+		siter->state->matrix[i] += carry;
+
+		carry = t_carry;
+	}
+	return;
+}*/
 
 #endif

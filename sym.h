@@ -102,6 +102,32 @@ void sym_set(sym* s, const unsigned height, const unsigned length, const BYTE va
 sym* sym_add(const sym* a, const sym*  b);
 
 /*
+	sym_add_in_place:
+	Adds two symplectic matrices of the same size in place; the object 'a' will inherit the changes
+	:: const sym* a :: One of the matrices to be added 
+	:: const sym* b :: The other matrix
+	No return type
+*/
+void sym_add_in_place(const sym* a, const sym* b)
+
+/*
+	sym_copy:
+	Copies the contents of a sym object to a new sym object
+	:: const sym* s :: The object to be copied 
+	Returns a copy of the object
+*/
+sym* sym_copy(const sym* s);
+
+/*
+	sym_copy_in_place:
+	Copies the contents of a sym object to another if the sizes match
+	:: sym* d :: The object to be copied to
+	:: const sym* s :: The object to be copied from
+	Returns a copy of the object
+*/
+void sym_copy_in_place(sym* d, const sym* s);
+
+/*
 	sym_multiply:
 	Multiplies two symplectic matrices of the appropriate size
 	:: const sym* a :: One of the matrices to be multiplied
@@ -120,15 +146,7 @@ sym* sym_multiply(const sym* const a, const sym* const b);
 */
 sym* sym_sydrome(const sym* code, const sym* error);
 
-/*
-	sym_logical_error:
-	Applies an error to a given set of logical operators and returns the associated logical corrections
-	:: const sym* code :: The logical operators being acted on
-	:: const sym* error :: The error being applied
-	Returns null if the error does not match the physical dimensions of the code, or if a pointer is invalid 
-	Else it returns a pointer to the map of applied logicals
-*/
-sym* sym_logical_error(const sym* error, const sym* logicals);
+
 
 /*
 	sym_print:
@@ -249,6 +267,61 @@ sym* sym_add(const sym* a, const sym* b)
 	return added;
 }
 
+/*
+	sym_add_in_place:
+	Adds two symplectic matrices of the same size in place; the object 'a' will inherit the changes
+	:: const sym* a :: One of the matrices to be added 
+	:: const sym* b :: The other matrix
+	No return type
+*/
+void sym_add_in_place(const sym* a, const sym* b)
+{
+	// Check that the heights and lengths are valid before proceeding
+	if (   a == NULL 
+		|| b == NULL
+		|| a->height != b->height 
+		|| a->length != b->length)
+	{
+		printf("Incorrect Matrix Dimensions for Addition\n");
+		return NULL;
+	}
+
+	// Calculate the result and store it
+	for (size_t i = 0; i < a->mem_size; i++)
+	{
+		a->matrix[i] ^=  b->matrix[i];
+	} 
+	return;
+}
+
+
+/*
+	sym_copy:
+	Copies the contents of a sym object to a new sym object
+	:: const sym* s :: The object to be copied 
+	Returns a copy of the object
+*/
+sym* sym_copy(const sym* s)
+{
+	sym* s_copy = sym_create(s->height, s->length);
+	memcpy(s_copy->matrix, s->matrix, s->mem_size);
+	return s_copy;
+}
+
+/*
+	sym_copy_in_place:
+	Copies the contents of a sym object to another
+	This is an unsafe function and should not be used unless the matrix sizes match
+	:: const sym* s :: The object to be copied to
+	:: const sym* s :: The object to be copied from
+	Returns a copy of the object
+*/
+void sym_copy_in_place(sym* d, const sym* s)
+{
+	memcpy(d->matrix, s->matrix, s->mem_size);
+}
+
+
 unsigned sym_matrix_bytes(sym* s)
 {
 	return MATRIX_BYTES(s);
@@ -340,52 +413,6 @@ sym* sym_syndrome(const sym* code, const sym* error)
 	}
 
 	return syndrome;
-}
-
-/*
-	sym_logical_error:
-	Applies an error to a given set of logical operators and returns the associated logical corrections
-	:: const sym* code :: The logical operators being acted on
-	:: const sym* error :: The error being applied
-	Returns null if the error does not match the physical dimensions of the code, or if a pointer is invalid 
-	Else it returns a pointer to the map of applied logicals
-*/
-	/* Matrix Multiplication version:
-		sym* symplectic = sym_code_symplectic(error->length);
-		sym* mult = sym_multiply(error, symplectic);
-		sym* l_map = sym_multiply(mult, logicals);
-
-		sym_free(symplectic);
-		sym_free(mult);
-		return l_map;
-	*/
-sym* sym_logical_error(const sym* error, const sym* logicals)
-{
-	if ( logicals == NULL 
-		|| error == NULL 
-		|| error->length != logicals->height
-		|| logicals->length % 2 != 0)
-	{
-		printf("Null pointer exception or matrices of incompatible sizes\n");
-		return NULL;
-	}
-
-	const int half_length = logicals->height / 2;
-
-	sym* l_map = sym_create(1, logicals->length);
-
-	for (int i = 0; i <= error->length; i++)
-	{
-		if (ELEMENT_GET(error, 0, i)) // If there is no error on this qubit, skip it
-		{
-			for (int j = 0; j <= logicals->length; j++)
-			{
-				ELEMENT_XOR(l_map, 0, j, ELEMENT_GET(logicals, (i + half_length) % logicals->height, j) & ELEMENT_GET(error, 0, i));
-			}
-		}
-	}
-	
-	return l_map;
 }
 
 /* 
@@ -495,7 +522,7 @@ unsigned sym_weight_type_partial(const sym* s, const char type, unsigned start, 
 			is_pauli = sym_is_not_I;
 			break;
 		default:
-		printf("%c is not a recognised pauli operator", type);
+		printf("%c is not a recognised Pauli operator", type);
 		return 0;
 	}
 	
@@ -566,6 +593,42 @@ void sym_row_copy(sym* s, const sym* t, const unsigned s_row, const unsigned t_r
 }
 
 
+unsigned long long sym_to_ll(const sym* s)
+{
+	if (s->mem_size > 8)
+	{
+		printf("Sym object is too large for a complete unsigned long long representation!\n Returning an approximation using the first 8 bytes.");
+		printf("Change this object's mem_size to 8 or less to suppress this warning for an unsafe conversion\n";);
+		return (unsigned long long)s->matrix;
+	}
+
+	unsigned long long ll = 0;
+	for (size_t i = 0; i < s->mem_size; i++)
+	{
+		ll <<= 8;
+		ll += s->matrix[i];
+	}
+	ll >>= (((s->length * s->height) % 8) ? 8 - ((s->length * s->height) % 8) : 0);
+	return ll;
+}
+
+sym* ll_to_sym(unsigned long long ll, const unsigned height, const unsigned length)
+{
+	if ((length * height) / 8 > 64)
+	{
+		printf("Requested sym object is too large to be filled by a single unsigned long long type\n");
+		return NULL;	
+	}
+
+	sym* s = sym_create(height, length);
+	ll <<= (((s->length * s->height) % 8) ? 8 - ((s->length * s->height) % 8) : 0);
+	for (int i = s->mem_size - 1; i >= 0; i--)
+	{
+		s->matrix[i] = ll & 0xFF;
+		ll >>= 8;
+	}
+	return s;
+}
 
 /*
 	sym_free:
@@ -609,6 +672,5 @@ void sym_print(const sym* s)
 	}
 	return;
 }
-
 
 #endif

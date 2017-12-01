@@ -31,12 +31,16 @@ double* characterise_code(const sym* code,
 	sym_iter* physical_error = sym_iter_create(code->length);	
 	do
 	{
+		// Calculate the probability of the error occurring
 		double error_prob = error_model(physical_error->state, model_data);
 
+		// What syndrome is caused by this error
 		sym* syndrome = sym_syndrome(code, physical_error->state);
 
+		// Use the decoder to determine the recovery operator
 		sym* recovery_operator = decoder(syndrome, decoder_data);
-		//char* recovery_operator_string = error_sym_to_str(recovery_operator);
+
+		// 
 		sym* corrected_physical_error = sym_add(physical_error->state, recovery_operator);
 
 		char* corrected_string = error_sym_to_str(corrected_physical_error);

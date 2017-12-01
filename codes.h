@@ -58,7 +58,7 @@ sym* code_steane_logicals()
 		1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 
 		0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1
 	};
-	sym* s = sym_create_valued(2, 18, code);
+	sym* s = sym_create_valued(2, 14, code);
 	sym* t = sym_transpose(s);
 	sym_free(s);
 	return t;

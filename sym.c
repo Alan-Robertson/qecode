@@ -2,7 +2,7 @@
 #include "error_models.h"
 #include "errors.h"
 #include "characterise.h"
-#include "decoders.h"
+//#include "decoders.h"
 #include "destabilisers.h"
 #include "sym_iter.h"
 //using Eigen::MatrixXcd;
@@ -10,21 +10,29 @@
 
 int main()
 {
+
 	sym* code = code_steane();
 	sym* logicals = code_steane_logicals();
 
 
 
-	//sym* destabilisers = destabilisers_generate(code, logicals);
-	//sym_print(destabilisers);
+	sym** destabilisers = destabilisers_generate(code, logicals);
+	for (int i = 0; i < code->height; i++)
+	{
+		sym_print(destabilisers[i]);
+	}
 
-	//printf("################\n");
-	//sym_print(code);
+	printf("################\n");
+	sym_print(code);
 
-	//printf("################\n");
-	//sym_free(destabilisers);	
+	printf("################\n");
+	for (int i = 0; i < code->height; i++)
+	{
+		sym_free(destabilisers[i]);
+	}
+		
 
-	//sym_print(logicals);
+	sym_print(logicals);
 
 	sym_free(code);
 	sym_free(logicals);

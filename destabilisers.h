@@ -7,14 +7,14 @@
 #include "sym_iter.h"
 
 // Given a stabiliser code and a set of logicals, find the destabilisers
-sym* destabilisers_generate(
+sym** destabilisers_generate(
 	const sym* code, 
 	const sym* logicals);
 
 bool destabilisers_backtrack(
 	const sym* code, 
 	const sym* logicals, 
-	sym* destabilisers, 
+	sym** destabilisers, 
 	unsigned row);
 
 bool destabilisers_is_destabiliser(
@@ -22,11 +22,20 @@ bool destabilisers_is_destabiliser(
 	const sym* destabiliser, 
 	unsigned row);
 
+// Frees all elements in a destabiliser
+void destabilisers_free(sym** d, unsigned length);
+
 // Recursive backtrack solution, this can almost certainly be improved upon
 // Using binary symplectic elimination
-sym* destabilisers_generate(const sym* code, const sym* logicals)
+sym** destabilisers_generate(const sym* code, const sym* logicals)
 {
-	sym* destabilisers = sym_create(code->height, code->length);
+	// Setup the array of destabilisers
+	sym** destabilisers = (sym**)malloc(sizeof(sym*) * code->height); 
+	for (int i = 0; i < code->height; i++)
+	{
+		destabilisers[i] = sym_create(1, code->length);
+	}
+
 	if (destabilisers_backtrack(code, logicals, destabilisers, 0))
 	{
 		return destabilisers;
@@ -44,7 +53,7 @@ sym* destabilisers_generate(const sym* code, const sym* logicals)
 bool destabilisers_backtrack(
 	const sym* code, 
 	const sym* logicals, 
-	sym* destabilisers, 
+	sym** destabilisers, 
 	unsigned row)
 {
 	
@@ -66,7 +75,7 @@ bool destabilisers_backtrack(
 			iter->state,
 			row))
 		{ // If it is then copy it to our destabilisers
-			sym_row_copy(destabilisers, iter->state, row, 0);
+			sym_row_copy(destabilisers[row], iter->state, 0, 0);
 			found_destabiliser = destabilisers_backtrack(
 				code,
 				logicals,
@@ -77,6 +86,7 @@ bool destabilisers_backtrack(
 	sym_iter_free(iter);
 	return found_destabiliser;
 } 
+
 
 bool destabilisers_is_destabiliser(
 	const sym* code, 
@@ -137,5 +147,15 @@ bool destabilisers_is_destabiliser(
 	}
 	return true;
 */
+
+
+void destabilisers_free(sym** d, unsigned length)
+{
+	for (int i = 0; i < length; i++)
+	{
+		sym_free(d[i]);
+	}
+	return;
+}
 
 #endif

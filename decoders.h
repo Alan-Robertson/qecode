@@ -22,6 +22,8 @@ sym* decoder(sym* error, void* v_m);
 
 */
 
+//2 Qubit Bit Flip Decoder--------------------------------------------------------------------
+
 sym* decoder_2_qubit_bit_flip(const sym* syndrome, void* decoder_data)
 {
 	//sym* recovery = sym_create(1, 4);
@@ -46,6 +48,7 @@ sym* decoder_2_qubit_bit_flip(const sym* syndrome, void* decoder_data)
 	return NULL;
 }
 
+//Null Decoder--------------------------------------------------------------------
 
 typedef struct{
 	unsigned n_qubits;
@@ -55,6 +58,40 @@ typedef struct{
 sym* decoder_null(const sym* syndrome, void* decoder_data)
 {
 	sym* recovery_operator = sym_create(1, ((null_decoder_data*)decoder_data)->n_qubits * 2);
+	return recovery_operator;
+}
+
+// Destabiliser Decoder -------------------------------------------------------------------------------------
+typdef struct{
+	sym** destabilisers
+} destabiliser_decoder_data;
+
+sym* decoder_destabiliser(const sym* syndrome, void* decoder_data)
+{
+	destabiliser_decoder_data* d = (destabiliser_decoder*)destabiliser_decoder;
+	
+	sym* correction = sym_create(d->destabilisers[0]->length);
+
+	for (int i = 0; i < syndrome->height; i++)
+	{
+		if (sym_get(syndrome, i, 0)) 
+		{
+			sym_add_in_place(correction, d->destabilisers[i]);
+		}
+	}
+	return correction;
+}
+
+//-------------------------------------------------------------------------------------------
+
+typdef struct{
+	sym** recovery_operators;
+} tailored_decoder_data;
+
+sym* decoder_tailored(const sym* syndrome, void* decoder_data)
+{
+	tailored_decoder_data* d = (tailored_decoder_data*)decoder_data;
+	sym* recovery_operator = sym_copy(decoder_data->recovery_operators[sym_to_ll(syndrome)]);
 	return recovery_operator;
 }
 
