@@ -1,39 +1,30 @@
 #include "codes.h"
 #include "error_models.h"
-#include "errors.h"
-#include "characterise.h"
-//#include "decoders.h"
 #include "destabilisers.h"
 #include "sym_iter.h"
+#include "tailored.h"
 //using Eigen::MatrixXcd;
 //using Eigen::VectorXcd;
 
 int main()
 {
+	sym* code = code_8_3_3_gottesman();
+	sym* logicals = code_8_3_3_gottesman_logicals();
 
-	sym* code = code_steane();
-	sym* logicals = code_steane_logicals();
+	// Setup the error model
+	double (*error_model)(const sym*, void*) =  error_model_iid;
 
+	// Pass the data to the model
+	iid_model_data model_data;
+	model_data.p_error = 0.01;
+	model_data.n_qubits = 5;
+	
+	sym** tailored_decoder = decoder_tailor(code, logicals, error_model, (void*)&model_data);
+	
+	destabilisers_print(tailored_decoder, 1 << (code->height));
 
-
-	sym** destabilisers = destabilisers_generate(code, logicals);
-	for (int i = 0; i < code->height; i++)
-	{
-		sym_print(destabilisers[i]);
-	}
-
-	printf("################\n");
-	sym_print(code);
-
-	printf("################\n");
-	for (int i = 0; i < code->height; i++)
-	{
-		sym_free(destabilisers[i]);
-	}
-		
-
+	destabilisers_free(tailored_decoder, 1 << (code->height));
 	sym_print(logicals);
-
 	sym_free(code);
 	sym_free(logicals);
 	
@@ -41,7 +32,6 @@ int main()
 }
 
 	
-
 /*{
 	MatrixXcd pi = dmatrix_pauli_i();
 	MatrixXcd px = dmatrix_pauli_x();
@@ -55,9 +45,16 @@ int main()
 	return 0; 
 } */
 
-
 /*
+for (int i = 0; i < code->height; i++)
+	{
+		sym_print(destabilisers[i]);
+	}
 
+	printf("################\n");
+	sym_print(code);
+
+	printf("################\n");
 // Setup the code and logicals
 	sym* code = code_asymmetric_five();
 	sym* logicals = code_asymmetric_five_logicals();

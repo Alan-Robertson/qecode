@@ -62,15 +62,15 @@ sym* decoder_null(const sym* syndrome, void* decoder_data)
 }
 
 // Destabiliser Decoder -------------------------------------------------------------------------------------
-typdef struct{
-	sym** destabilisers
+typedef struct{
+	sym** destabilisers;
 } destabiliser_decoder_data;
 
 sym* decoder_destabiliser(const sym* syndrome, void* decoder_data)
 {
-	destabiliser_decoder_data* d = (destabiliser_decoder*)destabiliser_decoder;
+	destabiliser_decoder_data* d = (destabiliser_decoder_data*)decoder_data;
 	
-	sym* correction = sym_create(d->destabilisers[0]->length);
+	sym* correction = sym_create(1, d->destabilisers[0]->length);
 
 	for (int i = 0; i < syndrome->height; i++)
 	{
@@ -84,14 +84,14 @@ sym* decoder_destabiliser(const sym* syndrome, void* decoder_data)
 
 //-------------------------------------------------------------------------------------------
 
-typdef struct{
+typedef struct{
 	sym** recovery_operators;
 } tailored_decoder_data;
 
 sym* decoder_tailored(const sym* syndrome, void* decoder_data)
 {
 	tailored_decoder_data* d = (tailored_decoder_data*)decoder_data;
-	sym* recovery_operator = sym_copy(decoder_data->recovery_operators[sym_to_ll(syndrome)]);
+	sym* recovery_operator = sym_copy(d->recovery_operators[sym_to_ll(syndrome)]);
 	return recovery_operator;
 }
 

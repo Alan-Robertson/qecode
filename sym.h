@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-
+#include <string.h>
 
 // MACROS -------------------------------------------------------------------------------------------
 
@@ -108,7 +108,7 @@ sym* sym_add(const sym* a, const sym*  b);
 	:: const sym* b :: The other matrix
 	No return type
 */
-void sym_add_in_place(const sym* a, const sym* b)
+void sym_add_in_place(const sym* a, const sym* b);
 
 /*
 	sym_copy:
@@ -283,7 +283,7 @@ void sym_add_in_place(const sym* a, const sym* b)
 		|| a->length != b->length)
 	{
 		printf("Incorrect Matrix Dimensions for Addition\n");
-		return NULL;
+		return;
 	}
 
 	// Calculate the result and store it
@@ -598,7 +598,7 @@ unsigned long long sym_to_ll(const sym* s)
 	if (s->mem_size > 8)
 	{
 		printf("Sym object is too large for a complete unsigned long long representation!\n Returning an approximation using the first 8 bytes.");
-		printf("Change this object's mem_size to 8 or less to suppress this warning for an unsafe conversion\n";);
+		printf("Change this object's mem_size to 8 or less to suppress this warning for an unsafe conversion\n");
 		return (unsigned long long)s->matrix;
 	}
 

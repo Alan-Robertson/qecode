@@ -118,6 +118,25 @@ bool destabilisers_is_destabiliser(
 	return true;
 }
 
+void destabilisers_print(sym** d, const unsigned length)
+{
+	for (int i = 0; i < length; i++)
+	{
+		sym_print(d[i]);
+	}
+	return;
+}
+
+void destabilisers_free(sym** d, const unsigned length)
+{
+	for (int i = 0; i < length; i++)
+	{
+		sym_free(d[i]);
+	}
+	free(d);
+	return;
+}
+
 /*
 	// Check that it commutes with all bar one of the stabilisers
 	for (int i = 0; i < code->height; i++)
@@ -147,15 +166,5 @@ bool destabilisers_is_destabiliser(
 	}
 	return true;
 */
-
-
-void destabilisers_free(sym** d, unsigned length)
-{
-	for (int i = 0; i < length; i++)
-	{
-		sym_free(d[i]);
-	}
-	return;
-}
 
 #endif
