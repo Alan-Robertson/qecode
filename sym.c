@@ -1,10 +1,15 @@
+#include <iostream>
 #include "codes.h"
 #include "error_models.h"
 #include "destabilisers.h"
 #include "sym_iter.h"
 #include "tailored.h"
-//using Eigen::MatrixXcd;
-//using Eigen::VectorXcd;
+#include "decoders.h"
+#include "dmatrix.h"
+#include "state_rep.h"
+
+using Eigen::MatrixXcd;
+using Eigen::VectorXcd;
 
 int main()
 {
@@ -17,13 +22,20 @@ int main()
 	// Pass the data to the model
 	iid_model_data model_data;
 	model_data.p_error = 0.01;
-	model_data.n_qubits = 5;
+	model_data.n_qubits = code->length / 2;
 	
-	sym** tailored_decoder = decoder_tailor(code, logicals, error_model, (void*)&model_data);
-	
-	destabilisers_print(tailored_decoder, 1 << (code->height));
+	// Determine the tailored recovery operators
+	sym** decoder_data = decoder_tailor(code, logicals, error_model, (void*)&model_data);
 
-	destabilisers_free(tailored_decoder, 1 << (code->height));
+	// Pick the decoder
+	sym* (*decoder)(const sym* syndrome, void* decoder_data) = decoder_tailored;
+
+	// Determine the logical error channel
+	MatrixXcd lc = logical_error_channel(code, logicals, error_model, (void*)&model_data, decoder, (void*)&decoder_data);
+
+	std::cout << lc << std::endl;
+
+	destabilisers_free(decoder_data, 1 << (code->height));
 	sym_print(logicals);
 	sym_free(code);
 	sym_free(logicals);

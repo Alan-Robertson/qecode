@@ -6,7 +6,6 @@
 #include "errors.h"
 #include <math.h>
 
-
 /* 
 	sym_characterise:
 	Given an error model, calculates the physical and logical krauss operators for a given code
@@ -29,8 +28,8 @@ double* characterise_code(const sym* code,
 	double* p_error_probabilities = (double*)calloc(pow(4 , code->length / 2), sizeof(double));
 
 	sym_iter* physical_error = sym_iter_create(code->length);	
-	do
-	{
+	
+	while (sym_iter_next(physical_error)) {
 		// Calculate the probability of the error occurring
 		double error_prob = error_model(physical_error->state, model_data);
 
@@ -51,7 +50,8 @@ double* characterise_code(const sym* code,
 		sym_free(corrected_physical_error);
 		free(corrected_string);
 
-	} while(sym_iter_next(physical_error));
+	}
+
 
 	return p_error_probabilities;
 }
