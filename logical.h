@@ -13,9 +13,6 @@
 */
 sym* logical_error(const sym* error, const sym* logicals);
 
-
-
-
 /*
 	sym_logical_error:
 	Applies an error to a given set of logical operators and returns the associated logical corrections

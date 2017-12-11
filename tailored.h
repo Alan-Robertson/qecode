@@ -77,10 +77,11 @@ sym** decoder_tailor(const sym* code,
 		// Free our memory in order to prevent leaks and fragmentation
 		sym_free(logical_state);
 		sym_free(corrected);
+		sym_free(recovery);
 		sym_free(syndrome);
 	}
 	sym_iter_free(physical_error);
-
+	
 	// ---------------------------------------------------
 	// Calculate and store the optimal recovery operator
 	// For each possible logical error associated with each syndrome, determine the best choice of logical correction

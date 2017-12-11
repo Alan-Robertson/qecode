@@ -122,7 +122,4 @@ double error_model_bordell(const sym* error, void* model_data)
 	return 1;
 }
 
-
-
-
 #endif

@@ -6,6 +6,7 @@
 #include "tailored.h"
 #include "decoders.h"
 #include "dmatrix.h"
+#include "characterise.h"
 #include "state_rep.h"
 
 using Eigen::MatrixXcd;
@@ -15,6 +16,9 @@ int main()
 {
 	sym* code = code_8_3_3_gottesman();
 	sym* logicals = code_8_3_3_gottesman_logicals();
+
+	//sym* code = code_five_qubit();
+	//sym* logicals = code_five_qubit_logicals();
 
 	// Setup the error model
 	double (*error_model)(const sym*, void*) =  error_model_iid;
@@ -30,16 +34,19 @@ int main()
 	// Pick the decoder
 	sym* (*decoder)(const sym* syndrome, void* decoder_data) = decoder_tailored;
 
-	// Determine the logical error channel
-	MatrixXcd lc = logical_error_channel(code, logicals, error_model, (void*)&model_data, decoder, (void*)&decoder_data);
+	double* probabilities = characterise_code(code, logicals, error_model, (void*)&model_data, decoder, (void*)&decoder_data);
 
-	std::cout << lc << std::endl;
+	characterise_save(probabilities, code->length, "krauss_probs.txt");
+
+	// Determine the logical error channel
+	//MatrixXcd lc = logical_error_channel(code, logicals, error_model, (void*)&model_data, decoder, (void*)&decoder_data);
+
+	//std::cout << lc << std::endl;
 
 	destabilisers_free(decoder_data, 1 << (code->height));
-	sym_print(logicals);
 	sym_free(code);
 	sym_free(logicals);
-	
+	free(probabilities);
 	return 0;
 }
 
