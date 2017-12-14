@@ -54,7 +54,7 @@ MatrixXcd dmatrix_pauli_string(const char* str)
     MatrixXcd pz = dmatrix_pauli_z();
 
     MatrixXcd p(1,1);
-    p(0,0).real() = 1;
+    p(0,0).real(1);
 
     const char* c = str;
     while (*c != '\0')
@@ -94,7 +94,7 @@ MatrixXcd dmatrix_sym_to_matrix(const sym* s)
     MatrixXcd pz = dmatrix_pauli_z();
     
     MatrixXcd p(1,1);
-    p(0,0).real() = 1;
+    p(0,0).real(1);
 
     for (int i = 0; i < s->length / 2; i++)
     {
