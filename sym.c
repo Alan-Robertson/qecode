@@ -45,6 +45,10 @@ int main()
 	//printf("Physical Error Channel\n");
 	//MatrixXcd pc = physical_error_channel(code, logicals, error_model, (void*)&model_data, decoder, (void*)&decoder_data);
 	//std::cout << pc << std::endl;
+	
+	//printf("Logical Closure\n");
+	//MatrixXcd cl = logical_closure(code, logicals, error_model, (void*)&model_data, decoder, (void*)&decoder_data);
+	//std::cout << cl << std::endl;
 
 	destabilisers_free(decoder_data, 1 << (code->height));
 	sym_free(code);

@@ -3,6 +3,7 @@
 #include <iostream>
 #include "Eigen/Dense"
 #include "unsupported/Eigen/KroneckerProduct"
+#include "math.h"
 using Eigen::MatrixXcd;
 using Eigen::VectorXcd;
 
@@ -26,7 +27,7 @@ MatrixXcd dmatrix_pauli_x()
 MatrixXcd dmatrix_pauli_y()
 {
     MatrixXcd m(2,2);
-    m(0,1).imag(-1);
+    m(0,1).imag(-1.0);
     m(1,0).imag(1);
     return m;
 }
@@ -43,6 +44,11 @@ MatrixXcd dmatrix_zeros(const unsigned long long height, const unsigned long lon
 {
     MatrixXcd m = MatrixXcd::Zero(height,length);
     return m;
+}
+
+MatrixXcd dmatrix_closure(MatrixXcd m)
+{
+    return m * m.adjoint();
 }
 
 
