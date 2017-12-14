@@ -7,6 +7,7 @@
 #include "errors.h"
 #include "decoders.h"
 #include "logical.h"
+#include <iostream>
 #include <math.h>
 using Eigen::MatrixXcd;
 using Eigen::VectorXcd;
@@ -38,6 +39,7 @@ MatrixXcd logical_error_channel(const sym* code,
 		// Find the logical operations associated with the corrected state
 		sym* logical_state = logical_error(corrected, logicals);
 
+
 		// Get the density matrix representation of the logical state
 		MatrixXcd logical_operator = dmatrix_sym_to_matrix(logical_state);
 
@@ -67,25 +69,27 @@ MatrixXcd physical_error_channel(const sym* code,
 	while (sym_iter_next(physical_error)) {
 		// Calculate the probability of the error occurring
 		double error_prob = error_model(physical_error->state, model_data);
+		if (error_prob != 0)
+		{
+			// What syndrome is caused by this error
+			sym* syndrome = sym_syndrome(code, physical_error->state);
 
-		// What syndrome is caused by this error
-		sym* syndrome = sym_syndrome(code, physical_error->state);
+			// Use the decoder to determine the recovery operator
+			sym* recovery = decoder(syndrome, decoder_data);
 
-		// Use the decoder to determine the recovery operator
-		sym* recovery = decoder(syndrome, decoder_data);
+			//  Determine the overall impact of the correction
+			sym* corrected = sym_add(recovery, physical_error->state);
 
-		//  Determine the overall impact of the correction
-		sym* corrected = sym_add(recovery, physical_error->state);
+			// Get the density matrix representation of the logical state
+			MatrixXcd physical_operator = dmatrix_sym_to_matrix(corrected);
 
-		// Get the density matrix representation of the logical state
-		MatrixXcd physical_operator = dmatrix_sym_to_matrix(corrected);
+			// Add this particular matrix with the appropriate weighting to the sum
+			sum_physical_operator += error_prob * physical_operator;
 
-		// Add this particular matrix with the appropriate weighting to the sum
-		sum_physical_operator += error_prob * physical_operator;
-		
-		sym_free(syndrome);
-		sym_free(recovery);
-		sym_free(corrected);
+			sym_free(syndrome);
+			sym_free(recovery);
+			sym_free(corrected);
+		}
 	}
 	sym_iter_free(physical_error);
 

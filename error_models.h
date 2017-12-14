@@ -91,19 +91,42 @@ double error_model_bit_flip(const sym* error, void* v_model_data)
 // Spatially Asymmetric Noise -------------------------------------------------------------------------------
 
 typedef struct {
-	double p_error;
 	unsigned n_bitflip_qubits;
+	double p_bitflip;
 	unsigned n_phaseflip_qubits;
+	double p_phaseflip;
 } spatially_asymmetric_model_data;
 
-double error_model_spatially_asymmetric(const sym* error, void* model_data)
+double error_model_spatially_asymmetric(const sym* error, void* v_model_data)
 {
+	spatially_asymmetric_model_data* model_data = (spatially_asymmetric_model_data*) v_model_data;
 	if (sym_weight_Y(error) > 0) // No Y errors
 	{
 		return 0;
 	}
 
-	return 1;
+	for (int i = 0; i < model_data->n_bitflip_qubits; i++)
+	{
+		if (sym_get(error, 0, i+(model_data->n_bitflip_qubits + model_data->n_phaseflip_qubits)))
+		{
+			return 0;
+		}
+	}
+
+
+	for (int i = 0; i < model_data->n_phaseflip_qubits; i++)
+	{
+		if (sym_get(error, 0, i+(model_data->n_bitflip_qubits)))
+		{
+			return 0;
+		}
+	}
+
+ 	unsigned x_weight = sym_weight_X(error);
+ 	unsigned z_weight = sym_weight_Z(error);
+
+	return pow(1.0 - (model_data->p_bitflip), model_data->n_bitflip_qubits - x_weight) * pow((model_data->p_bitflip), x_weight) * pow(1.0 - (model_data->p_phaseflip), model_data->n_phaseflip_qubits - z_weight) * pow(model_data->p_phaseflip, z_weight);
+
 }
 
 // Shitty qubits -------------------------------------------------------------------------------

@@ -41,7 +41,7 @@ MatrixXcd dmatrix_pauli_z()
 
 MatrixXcd dmatrix_zeros(const unsigned long long height, const unsigned long long length)
 {
-    MatrixXcd m(height,length);
+    MatrixXcd m = MatrixXcd::Zero(height,length);
     return m;
 }
 

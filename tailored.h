@@ -1,3 +1,5 @@
+#ifndef TAILORED
+#define TAILORED
 #include "sym.h"
 #include "sym_iter.h"
 #include "decoders.h"
@@ -81,7 +83,7 @@ sym** decoder_tailor(const sym* code,
 		sym_free(syndrome);
 	}
 	sym_iter_free(physical_error);
-	
+
 	// ---------------------------------------------------
 	// Calculate and store the optimal recovery operator
 	// For each possible logical error associated with each syndrome, determine the best choice of logical correction
@@ -134,3 +136,4 @@ sym** decoder_tailor(const sym* code,
 
 	return tailored_decoder;
 }
+#endif

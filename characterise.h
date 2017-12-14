@@ -63,7 +63,7 @@ void characterise_save(const double* probabilities, const size_t length, const c
 		printf("Error when opening file.\n");
 		return;
 	}
-
+	double s = 0;
 	int i = 0;
 	sym_iter* physical_error = sym_iter_create(length);	
 	while (sym_iter_next(physical_error))
@@ -71,10 +71,12 @@ void characterise_save(const double* probabilities, const size_t length, const c
 		char* error_string = error_sym_to_str(physical_error->state);
 		fprintf(f, "%s %e\n", error_string, probabilities[i]);
 		free(error_string);
+		s += probabilities[i];
 		i++;
 	}
 	sym_iter_free(physical_error);
 	fclose(f);
+	printf("Sum of probabilities: %e\n", s);
 	return;
 }
 
