@@ -11,7 +11,7 @@ MatrixXcd dmatrix_zeros(const unsigned long long height, const unsigned long lon
 
 MatrixXcd dmatrix_pauli_i()
 {
-    MatrixXcd m = dmatrix_zeros(2, 2);
+    MatrixXcd m = MatrixXcd::Zero(2, 2);
     m(0,0).real(1);
     m(1,1).real(1);
     return m;
@@ -19,7 +19,7 @@ MatrixXcd dmatrix_pauli_i()
 
 MatrixXcd dmatrix_pauli_x()
 {
-    MatrixXcd m = dmatrix_zeros(2, 2);
+    MatrixXcd m = MatrixXcd::Zero(2, 2);
     m(1,0).real(1);
     m(0,1).real(1);
     return m;
@@ -27,7 +27,7 @@ MatrixXcd dmatrix_pauli_x()
 
 MatrixXcd dmatrix_pauli_y()
 {
-    MatrixXcd m = dmatrix_zeros(2, 2);
+    MatrixXcd m = MatrixXcd::Zero(2, 2);
     m(0,1).imag(-1.0);
     m(1,0).imag(1);
     return m;
@@ -35,7 +35,7 @@ MatrixXcd dmatrix_pauli_y()
 
 MatrixXcd dmatrix_pauli_z()
 {
-    MatrixXcd m = dmatrix_zeros(2, 2);
+    MatrixXcd m = MatrixXcd::Zero(2, 2);
     m(0,0).real(1);
     m(1,1).real(-1);
     return m;
@@ -60,7 +60,7 @@ MatrixXcd dmatrix_pauli_string(const char* str)
     MatrixXcd py = dmatrix_pauli_y();
     MatrixXcd pz = dmatrix_pauli_z();
 
-    MatrixXcd p = dmatrix_zeros(1, 1);
+    MatrixXcd p = MatrixXcd::Zero(1, 1);
     p(0,0).real(1);
 
     const char* c = str;
@@ -100,7 +100,7 @@ MatrixXcd dmatrix_sym_to_matrix(const sym* s)
     MatrixXcd py = dmatrix_pauli_y();
     MatrixXcd pz = dmatrix_pauli_z();
     
-    MatrixXcd p = dmatrix_zeros(2, 2);
+    MatrixXcd p = MatrixXcd::Zero(1,1);
     p(0,0).real(1);
 
     for (int i = 0; i < s->length / 2; i++)
