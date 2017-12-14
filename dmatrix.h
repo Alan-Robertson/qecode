@@ -7,6 +7,8 @@
 using Eigen::MatrixXcd;
 using Eigen::VectorXcd;
 
+MatrixXcd dmatrix_zeros(const unsigned long long height, const unsigned long long width);
+
 MatrixXcd dmatrix_pauli_i()
 {
     MatrixXcd m = dmatrix_zeros(2, 2);
@@ -59,7 +61,6 @@ MatrixXcd dmatrix_pauli_string(const char* str)
     MatrixXcd pz = dmatrix_pauli_z();
 
     MatrixXcd p = dmatrix_zeros(1, 1);
-    MatrixXcd p(1,1);
     p(0,0).real(1);
 
     const char* c = str;
