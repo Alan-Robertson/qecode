@@ -10,32 +10,32 @@ using Eigen::VectorXcd;
 MatrixXcd dmatrix_pauli_i()
 {
     MatrixXcd m(2,2);
-    m(0,0).real() = 1;
-    m(1,1).real() = 1;
+    m(0,0).real(1);
+    m(1,1).real(1);
     return m;
 }
 
 MatrixXcd dmatrix_pauli_x()
 {
     MatrixXcd m(2,2);
-    m(1,0).real() = 1;
-    m(0,1).real() = 1;
+    m(1,0).real(1);
+    m(0,1).real(1);
     return m;
 }
 
 MatrixXcd dmatrix_pauli_y()
 {
     MatrixXcd m(2,2);
-    m(0,1).imag() = -1;
-    m(1,0).imag() = 1;
+    m(0,1).imag(-1);
+    m(1,0).imag(1);
     return m;
 }
 
 MatrixXcd dmatrix_pauli_z()
 {
     MatrixXcd m(2,2);
-    m(0,0).real() = 1;
-    m(1,1).real() = -1;
+    m(0,0).real(1);
+    m(1,1).real(-1);
     return m;
 }
 
