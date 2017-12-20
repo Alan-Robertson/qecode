@@ -6,6 +6,9 @@
 #include "logical.h"
 #include "pthread.h"
 
+
+// WORK IN PROGRESS!!!
+
 // Flyweight pattern for passing single instances to each thread without copying all the pointers every time
 typedef struct {
 	const sym* code; 

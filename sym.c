@@ -7,7 +7,7 @@
 #include "decoders.h"
 #include "dmatrix.h"
 #include "characterise.h"
-#include "state_rep.h"
+#include "channels.h"
 
 //using Eigen::MatrixXcd;
 //using Eigen::VectorXcd;
@@ -35,7 +35,7 @@ int main()
 
 	// Pass the data to the model
 	iid_model_data model_data;
-	model_data.p_error = 0.0001;
+	model_data.p_error = 0.01;
 	model_data.n_qubits = code->length / 2;
 
 	/*
@@ -45,6 +45,10 @@ int main()
 	sym** decoder_data = tailor_decoder(code, logicals, error_model, (void*)&model_data);
 	// Pick the decoder
 	sym* (*decoder)(const sym* syndrome, void* decoder_data) = decoder_tailored;
+
+	printf("Logical Error Channel\n");
+	MatrixXcd lc = channel_logical(code, logicals, error_model, (void*)&model_data, decoder, (void*)&decoder_data);
+	std::cout << lc << std::endl;
 
 	/*
 		Characterisation

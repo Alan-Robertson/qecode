@@ -37,7 +37,7 @@ MatrixXcd channel_logical(const sym* code,
 		sym* corrected = sym_add(recovery, physical_error->state);
 
 		// Find the logical operations associated with the corrected state
-		sym* logical_state = logical_error(corrected, logicals);
+		sym* logical_state = logical_error(logicals, corrected);
 
 		// Get the density matrix representation of the logical state
 		MatrixXcd logical_operator = dmatrix_sym_to_matrix(logical_state);
@@ -95,7 +95,7 @@ MatrixXcd channel_physical(const sym* code,
 	return sum_physical_operator;
 }
 
-MatrixXcd logical_closure(const sym* code, 
+MatrixXcd channel_closure(const sym* code, 
 						const sym* logicals, 
 						double (*error_model)(const sym*, void*), 
 						void* model_data, 

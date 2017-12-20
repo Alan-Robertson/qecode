@@ -269,8 +269,106 @@ sym* code_asymmetric_five_logicals()
 	return t;
 }
 
+//-----------------------------------------------------------
+// Random Codes
+//-----------------------------------------------------------
+// Based off Nielsen and Chuang pg 470
 
+/*						
+* 		    r 		[	I 	A_1 A_2 |	B 	0 	C 	]
+*		n - k - r 	[	0	0	0	|	D 	I 	E 	]
+*		
+*	Set everything to random, only anti-commutations between A_2 and E, resolve that using D
+*/
+sym** code_random(unsigned long long seed, const unsigned n, const unsigned k, const unsigned r)
+{
 
+	sym* code = sym_create();
+	sym* logicals = sym_create();
+
+	// An Identity element in the top left
+	for (size_t i = 0; i < r; i++)
+	{
+		sym_set(code, i, i, 1);
+	}
+
+	// The "A_1 Element"
+	unsigned A1_start_x = r;
+	unsigned A1_start_y = 0;
+	unsigned A1_end_x = n - k;
+	unsigned A1_end_y = r;
+	for (size_t i = A1_start_x; i < A1_end_x; i++)
+	{
+		for (size_t j = A1_start_y; j < A1_end_y; j++)
+		{
+			sym_set(code, i, j, seed % 2);
+			seed >>= 1;	
+		}
+	}
+
+	// The "A_2 Element"
+	unsigned A2_start_x = n - k;
+	unsigned A2_start_y = 0;
+	unsigned A2_end_x = n;
+	unsigned A2_end_y = r;
+	for (size_t i = A2_start_x; i < A2_end_x; i++)
+	{
+		for (size_t j = A2_start_y; j < A2_end_y; j++)
+		{
+			sym_set(code, i, j, seed % 2);
+			seed >>= 1;	
+		}
+	}
+
+	unsigned B_start_x = n;
+	unsigned B_start_y = 0;
+	unsigned B_end_x = n + r;
+	unsigned B_end_y = r;
+
+	unsigned D_start_x = n;
+	unsigned D_start_y = r;
+	unsigned D_end_x = n + r;
+	unsigned D_end_y = n - k;
+
+	// Another Identity Element
+	unsigned eye_b_start_x = n + r;
+	unsigned eye_b_start_y = r;
+	unsigned eye_b_end_x = 2 * n - k;
+	unsigned eye_b_end_y = n - k;
+	for (int i = 0; i < n - k - r; i++)
+	{
+
+	}
+
+	// The "C Element"
+	unsigned C_start_x = 2 * n - k;
+	unsigned C_start_y = 0;
+	unsigned C_end_x = 2 * n;
+	unsigned C_end_y = r;
+	for (size_t i = A2_start_x; i < A2_end_x; i++)
+	{
+		for (size_t j = A2_start_y; j < A2_end_y; j++)
+		{
+			sym_set(code, i, j, seed % 2);
+			seed >>= 1;	
+		}
+	}
+
+	// The "F Element"
+	unsigned E_start_x = 2 * n - k;
+	unsigned E_start_y = r;
+	unsigned E_end_x = 2 * n;
+	unsigned E_end_y = n - k;
+	for (size_t i = A2_start_x; i < A2_end_x; i++)
+	{
+		for (size_t j = A2_start_y; j < A2_end_y; j++)
+		{
+			sym_set(code, i, j, seed % 2);
+			seed >>= 1;	
+		}
+	}
+
+}
 
 //-----------------------------------------------------------
 
