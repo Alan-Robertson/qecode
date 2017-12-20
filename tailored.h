@@ -5,7 +5,7 @@
 #include "decoders.h"
 #include "logical.h"
 
-sym** decoder_tailor(const sym* code, 
+sym** tailor_decoder(const sym* code, 
 				const sym* logicals, 
 				double (*error_model)(const sym*, void*), 
 				void* model_data)
@@ -15,8 +15,8 @@ sym** decoder_tailor(const sym* code,
 	// -------------------------------------
 
 	// Some quality of life variables
-	long long n_syndromes = (1 << (code->height));
-	long long n_logical_operations = (1 << (logicals->length));
+	long long n_syndromes = (1ull << (code->height));
+	long long n_logical_operations = (1ull << (logicals->length));
 
 	// Build the decoder table, there should be a single decoding operation for each syndrome
 	sym** tailored_decoder = (sym**)malloc(sizeof(sym*) * n_syndromes);
@@ -62,7 +62,6 @@ sym** decoder_tailor(const sym* code,
 		if (!tailored_decoder[sym_to_ll(syndrome)]->mem_size)
 		{
 			// Reset the mem_size and perform this copy operation in place
-			// This prevents fragmentation of heap memory
 			tailored_decoder[sym_to_ll(syndrome)]->mem_size = recovery->mem_size;
 			sym_copy_in_place(tailored_decoder[sym_to_ll(syndrome)], recovery);
 		}
@@ -71,10 +70,10 @@ sym** decoder_tailor(const sym* code,
 		sym* corrected = sym_add(recovery, physical_error->state);
 
 		// Determine the overall logical state
-		sym* logical_state = logical_error(corrected, logicals);
+		sym* logical_state = logical_error(logicals, corrected);
 
 		// Calculate the probability of this particular error occurring and store it
-		p_options[sym_to_ll(syndrome)][sym_to_ll(logical_state)] = error_model(physical_error->state, model_data); 
+		p_options[sym_to_ll(syndrome)][sym_to_ll(logical_state)] += error_model(physical_error->state, model_data); 
 
 		// Free our memory in order to prevent leaks and fragmentation
 		sym_free(logical_state);
@@ -89,6 +88,7 @@ sym** decoder_tailor(const sym* code,
 	// For each possible logical error associated with each syndrome, determine the best choice of logical correction
 	// ---------------------------------------------------
 
+	// Determine the anti-commutation relations between the logical operators
 	sym** logical_destabilisers = logical_as_destabilisers(logicals);
 
 	// Setup the decoder	
@@ -98,9 +98,9 @@ sym** decoder_tailor(const sym* code,
 		// This covers the case when that particular syndrome is never encountered
 		double p_correction = p_options[i][0];
 		unsigned r_operator = 0;
-
+				
 		// This syndrome was never encountered, we can skip searching the rest and just
-		// correct the mem_size
+		// correct the mem_size, p == 0
 		if (!tailored_decoder[i]->mem_size) 
 		{
 			tailored_decoder[i]->mem_size = mem_size;
@@ -109,6 +109,8 @@ sym** decoder_tailor(const sym* code,
 		{
 			for (size_t j = 1; j < n_logical_operations; j++)
 			{
+				// If the probability of this syndrome is greater than the current 
+				// best found then change our optimal correction
 				if (p_options[i][j] > p_correction)
 				{
 					p_correction = p_options[i][j];
@@ -117,12 +119,12 @@ sym** decoder_tailor(const sym* code,
 			}
 		}
 		// Find the logical syndrome
-		sym* logical_syndrome = ll_to_sym(r_operator, 1, code->height);
+		sym* logical_syndrome = ll_to_sym_t(r_operator, 1, logicals->length);
 
-		// Using our logical syndromes and our knowledge of the best 
+		// Using our logical syndromes and our knowledge of the best recovery
 		sym* logical_recovery = decoder_destabiliser(logical_syndrome, (void*)&logical_destabilisers);
 		sym_add_in_place(tailored_decoder[i], logical_recovery);
-
+	
 		sym_free(logical_recovery);
 		sym_free(logical_syndrome);
 	}

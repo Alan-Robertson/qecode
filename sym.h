@@ -39,7 +39,7 @@
 	:: unsigned height :: Number of rows in the matrix
 	:: unsigned length :: Number of columns in one block of the matrix (use SYM_LEN as a shorthand for the full number of columns)
 	:: BYTE* matrix :: Points to the matrix on the heap
-	:: size_t mem_size :: 
+	:: size_t mem_size :: The number of bytes allocated in memory to the matrix object, useful for memcpy and memove
 */
 typedef struct
 {
@@ -145,8 +145,6 @@ sym* sym_multiply(const sym* const a, const sym* const b);
 	Returns null if the error does not match the physical dimensions of the code, or if a pointer is invalid 
 */
 sym* sym_sydrome(const sym* code, const sym* error);
-
-
 
 /*
 	sym_print:
@@ -628,6 +626,14 @@ sym* ll_to_sym(unsigned long long ll, const unsigned height, const unsigned leng
 		ll >>= 8;
 	}
 	return s;
+}
+
+sym* ll_to_sym_t(unsigned long long ll, const unsigned height, const unsigned length)
+{
+	sym* s = ll_to_sym(ll, height, length);
+	sym* t = sym_transpose(s);
+	sym_free(s);
+	return t;
 }
 
 /*

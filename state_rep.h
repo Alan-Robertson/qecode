@@ -39,7 +39,6 @@ MatrixXcd logical_error_channel(const sym* code,
 		// Find the logical operations associated with the corrected state
 		sym* logical_state = logical_error(corrected, logicals);
 
-
 		// Get the density matrix representation of the logical state
 		MatrixXcd logical_operator = dmatrix_sym_to_matrix(logical_state);
 

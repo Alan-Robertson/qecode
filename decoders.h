@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include "sym.h"
 
+#include "destabilisers.h"
+
 // Decoder template:
 /*
 
@@ -84,14 +86,10 @@ sym* decoder_destabiliser(const sym* syndrome, void* decoder_data)
 
 //-------------------------------------------------------------------------------------------
 
-typedef struct{
-	sym** recovery_operators;
-} tailored_decoder_data;
-
 sym* decoder_tailored(const sym* syndrome, void* decoder_data)
 {
-	tailored_decoder_data* d = (tailored_decoder_data*)decoder_data;
-	sym* recovery_operator = sym_copy(d->recovery_operators[sym_to_ll(syndrome)]);
+	sym** recovery_operators = *(sym***)decoder_data;
+	sym* recovery_operator = sym_copy(*(recovery_operators + sym_to_ll(syndrome)));
 	return recovery_operator;
 }
 

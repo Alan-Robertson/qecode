@@ -24,30 +24,34 @@ double* characterise_code(const sym* code,
 						sym* (*decoder)(const sym*, void*),
 						void* decoder_data)
 {
+	double* p_error_probabilities = (double*)calloc(1ull << (logicals->length), sizeof(double));
 
-	double* p_error_probabilities = (double*)calloc(pow(4 , code->length / 2), sizeof(double));
 
-	int i = 0;
-	sym_iter* physical_error = sym_iter_create(code->length);	
-	while (sym_iter_next(physical_error)) {
-		// Calculate the probability of the error occurring
-		double error_prob = error_model(physical_error->state, model_data);
 
-		// What syndrome is caused by this error
+	// Iterate through errors and map back to the code-space
+	sym_iter* physical_error = sym_iter_create(code->length);
+	while (sym_iter_next(physical_error))
+	{
+		// Calculate the syndrome
 		sym* syndrome = sym_syndrome(code, physical_error->state);
+		
+		// Get the recovery operator
+		sym* recovery = decoder(syndrome, decoder_data);
 
-		// Use the decoder to determine the recovery operator
-		sym* recovery_operator = decoder(syndrome, decoder_data);
+		// Determine the state after correction
+		sym* corrected = sym_add(recovery, physical_error->state);
 
-		// 
-		sym* corrected_physical_error = sym_add(physical_error->state, recovery_operator);
+		// Determine the overall logical state
+		sym* logical_state = logical_error(logicals, corrected);
 
-		p_error_probabilities[i] += error_prob;
+		// Store the probability
+		p_error_probabilities[sym_to_ll(logical_state)] += error_model(physical_error->state, model_data);
 
+		// Free our memory
+		sym_free(logical_state);
+		sym_free(corrected);
+		sym_free(recovery);
 		sym_free(syndrome);
-		sym_free(recovery_operator);
-		sym_free(corrected_physical_error);
-		i++;
 	}
 	sym_iter_free(physical_error);
 
@@ -69,13 +73,29 @@ void characterise_save(const double* probabilities, const size_t length, const c
 	while (sym_iter_next(physical_error))
 	{
 		char* error_string = error_sym_to_str(physical_error->state);
-		fprintf(f, "%s %e\n", error_string, probabilities[i]);
+		fprintf(f, "%s %f\n", error_string, probabilities[i]);
 		free(error_string);
 		s += probabilities[i];
 		i++;
 	}
 	sym_iter_free(physical_error);
 	fclose(f);
+	printf("Sum of probabilities: %e\n", s);
+	return;
+}
+
+void characterise_print(const double* probabilities, const size_t length)
+{	
+	double s = 0;
+	sym_iter* physical_error = sym_iter_create(length);	
+	while (sym_iter_next(physical_error))
+	{
+		char* error_string = error_sym_to_str(physical_error->state);
+		printf("%s %e\n", error_string, probabilities[sym_to_ll(physical_error->state)]);
+		free(error_string);
+		s += probabilities[sym_to_ll(physical_error->state)];
+	}
+	sym_iter_free(physical_error);
 	printf("Sum of probabilities: %e\n", s);
 	return;
 }

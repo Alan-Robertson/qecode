@@ -113,7 +113,6 @@ double error_model_spatially_asymmetric(const sym* error, void* v_model_data)
 		}
 	}
 
-
 	for (int i = 0; i < model_data->n_phaseflip_qubits; i++)
 	{
 		if (sym_get(error, 0, i+(model_data->n_bitflip_qubits)))

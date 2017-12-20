@@ -63,9 +63,6 @@ void *decoder_logical_errors(void* data)
 
 		// Calculate the probability of this particular error occurring and store it
 		__atomic_fetch_add(pthread_data->flyweight->p_options + (sym_to_ll(syndrome) * *(pthread_data->flyweight->n_syndromes) + sym_to_ll(logical_state)), pthread_data->flyweight->error_model(physical_error->state, pthread_data->flyweight->model_data) , __ATOMIC_SEQ_CST);
-		//	&(pthread_data->flyweight->p_options + sym_to_ll(syndrome) * (*pthread_data->flyweight->n_syndromes) + sym_to_ll(logical_state)),
-		//	(double)(), 
-		//	__ATOMIC_SEQ_CST);
 
 		// Free our memory in order to prevent leaks and fragmentation
 		sym_free(logical_state);
