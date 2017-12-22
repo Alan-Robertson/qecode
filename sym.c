@@ -29,11 +29,12 @@ int main()
 	sym* logicals = r.logicals;
 
 	sym_print(code);
+	sym_print(logicals);
 	sym_free(code);
 	sym_free(logicals);
 
 	return 0;
-	
+
 	/*
 		Error Model
 	*/

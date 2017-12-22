@@ -91,7 +91,7 @@ random_code_return code_random(const unsigned n, const unsigned k, const unsigne
 	srand(time(NULL));
 
 	sym* code = sym_create(n - k, 2 * n);
-	sym* logicals = sym_create(n, 2 * k);
+	sym* logicals = sym_create(2 * n, 2 * k);
 
 	random_code_return return_object;
 	return_object.code = code;
@@ -298,20 +298,41 @@ random_code_return code_random(const unsigned n, const unsigned k, const unsigne
 
 	// Next, the logicals
 	// Logical X's
-	for (size_t i = r; size_t i < , i++)
+	for (size_t i = r; i < n - k - r; i++)
 	{
-		for (size_t j = 0; size_t j < k; j++)
+		for (size_t j = 0; j < k; j++)
 		{
-
+			sym_set(logicals, i, j, sym_get(code, i, 2 * n - k + j));
 		}
+	}
 
+	// Identity Matrix
+	for (size_t i = 0; i < k; i++)
+	{
+		sym_set(logicals, n - k - r + i, k, 1);
+	}
+
+	for (size_t i = 0; i < r; i++)
+	{
+		for (size_t j = 0; j < k; j++)
+		{
+			sym_set(logicals, i + n, j, sym_get(code, i, 2 * n - k + j));
+		}
 	}
 
 	// Logical Z's
-	for (size_t i = n; size_t i < 2 * n, i++)
+	for (size_t i = n; i < n + k; i++)
 	{
-		for (size_t j = k; size_t j < 2 * k; j++)
+		for (size_t j = k; j < 2 * k; j++)
+		{
+			sym_set(logicals, i, j, sym_get(code, A2_start_y + i, A2_start_x + j));
+		}
+	}
 
+	// Other Identity matrix
+	for (size_t i = 0; i < k; i++)
+	{
+		sym_set(logicals, 2 * n - k + i, k + i, 1);
 	}
 
 
