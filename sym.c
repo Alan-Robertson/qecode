@@ -8,6 +8,7 @@
 #include "dmatrix.h"
 #include "characterise.h"
 #include "channels.h"
+#include "random_codes.h"
 
 //using Eigen::MatrixXcd;
 //using Eigen::VectorXcd;
@@ -23,10 +24,16 @@ int main()
 	*/
 	// sym* code = code_11_1_5_gottesman();
 	// sym* logicals = code_11_1_5_gottesman_logicals();
+	random_code_return r = code_random(11, 1, 3); 
+	sym* code = r.code;
+	sym* logicals = r.logicals;
 
-	sym* code = code_steane();
-	sym* logicals = code_steane_logicals();
+	sym_print(code);
+	sym_free(code);
+	sym_free(logicals);
 
+	return 0;
+	
 	/*
 		Error Model
 	*/

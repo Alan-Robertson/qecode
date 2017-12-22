@@ -91,6 +91,17 @@ BYTE sym_get(const sym*  s, const unsigned height, const unsigned length);
 */
 void sym_set(sym* s, const unsigned height, const unsigned length, const BYTE value);
 
+/* 
+	sym_xor:
+	Xors the value with the bit at the specified position and saves it
+	:: sym* s :: Pointer to the matrix in question
+	:: const unsigned height :: Height of the element in question
+	:: const unsigned length :: Length of the element in question
+	:: const BYTE value :: The value to be xored
+	No return type
+*/
+void sym_xor(sym* s, const unsigned height, const unsigned length, const BYTE value);
+
 /*
 	sym_add:
 	Adds two symplectic matrices of the same size
@@ -220,7 +231,7 @@ BYTE sym_get(const sym* s, const unsigned height, const unsigned length)
 }
 
 /* 
-	sym_get:
+	sym_set:
 	Saves the specified value to that position in the matrix
 	:: sym* s :: Pointer to the matrix in question
 	:: const unsigned height :: Height of the element in question
@@ -233,6 +244,22 @@ void sym_set(sym* s, const unsigned height, const unsigned length, const BYTE va
 	ELEMENT_SET(s, height, length, value);
 	return;
 }
+
+/* 
+	sym_xor:
+	Xors the value with the bit at the specified position and saves it
+	:: sym* s :: Pointer to the matrix in question
+	:: const unsigned height :: Height of the element in question
+	:: const unsigned length :: Length of the element in question
+	:: const BYTE value :: The value to be xored
+	No return type
+*/
+void sym_xor(sym* s, const unsigned height, const unsigned length, const BYTE value)
+{
+	ELEMENT_XOR(s, height, length, value);
+	return;
+}
+
 
 /*
 	sym_add:
