@@ -24,17 +24,13 @@ int main()
 	*/
 	// sym* code = code_11_1_5_gottesman();
 	// sym* logicals = code_11_1_5_gottesman_logicals();
-	random_code_return r = code_random(7, 1, 3); 
+	random_code_return r = code_random(8, 3, 3); 
 	sym* code = r.code;
 	sym* logicals = r.logicals;
 
 	sym_print(code);
 	sym_print(logicals);
-	sym_free(code);
-	sym_free(logicals);
-
-	return 0;
-
+	
 	/*
 		Error Model
 	*/

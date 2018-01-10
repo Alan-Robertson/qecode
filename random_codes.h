@@ -82,8 +82,8 @@ void rand_bytes_free(rand_bytes b)
 *		
 *	Set everything to random, only anti-commutations between D and I,  A_2 and E, and A_1 and I, resolve these using D and B
 * 	D resolves the commutation relations between the last n-k-r stabilisers and the first r, while B resolves commutation relations 
-*	Within the first r stabilisers. In each case the first I block in the top left can be leveraged against B and D for predicable
-* 	Relations. If stabiliser j anti-commutes with stabiliser i, simply flip the [i, i]th element in the B or the D block as appropriate 
+*	within the first r stabilisers. In each case the first I block in the top left can be leveraged against B and D for predicable
+* 	relations. If stabiliser j anti-commutes with stabiliser i, simply flip the [i, j]th element in the B or the D block as appropriate 
 *
 */
 random_code_return code_random(const unsigned n, const unsigned k, const unsigned r)
@@ -100,20 +100,20 @@ random_code_return code_random(const unsigned n, const unsigned k, const unsigne
 	rand_bytes random_gen = rand_bytes_create(code->mem_size + 6); // This should be more than we need
 
 	// The Identity element in the top left
-/*						
-* 		[	I 	0	0	|	0 	0 	0 	]
-*		[	0	0	0	|	0 	0 	0 	]
-*/
+	/*						
+	* 		[	I 	0	0	|	0 	0 	0 	]
+	*		[	0	0	0	|	0 	0 	0 	]
+	*/
 	for (size_t i = 0; i < r; i++)
 	{
 		sym_set(code, i, i, 1);
 	}
 
-// The Identity element on the right
-/*						
-* 		[	I 	0	0	|	0 	0 	0 	]
-*		[	0	0	0	|	0 	I 	0 	]
-*/
+	// The Identity element on the right
+	/*						
+	* 		[	I 	0	0	|	0 	0 	0 	]
+	*		[	0	0	0	|	0 	I 	0 	]
+	*/
 	unsigned eye_b_start_x = n + r;
 	unsigned eye_b_start_y = r;
 	unsigned eye_b_end_x = 2 * n - k;
@@ -124,11 +124,11 @@ random_code_return code_random(const unsigned n, const unsigned k, const unsigne
 	}
 
 	
-// The "A_1 Element"
-/*						
-* 		[	I 	A_1	0	|	0 	0 	0 	]
-*		[	0	0	0	|	0 	I 	0 	]
-*/
+	// The "A_1 Element"
+	/*						
+	* 		[	I 	A_1	0	|	0 	0 	0 	]
+	*		[	0	0	0	|	0 	I 	0 	]
+	*/
 	unsigned A1_start_x = r;
 	unsigned A1_start_y = 0;
 	unsigned A1_end_x = n - k;
@@ -144,11 +144,11 @@ random_code_return code_random(const unsigned n, const unsigned k, const unsigne
 		}
 	}
 
-// The "A_2 Element"
-/*						
-* 		[	I 	A_1	A_2	|	0 	0 	0 	]
-*		[	0	0	0	|	0 	I 	0 	]
-*/
+	// The "A_2 Element"
+	/*						
+	* 		[	I 	A_1	A_2	|	0 	0 	0 	]
+	*		[	0	0	0	|	0 	I 	0 	]
+	*/
 	unsigned A2_start_x = n - k;
 	unsigned A2_start_y = 0;
 	unsigned A2_end_x = n;
@@ -164,11 +164,11 @@ random_code_return code_random(const unsigned n, const unsigned k, const unsigne
 		}
 	}
 
-// The "C Element"
-/*						
-* 		[	I 	A_1	A_2	|	0 	0 	C 	]
-*		[	0	0	0	|	0 	I 	0 	]
-*/
+	// The "C Element"
+	/*						
+	* 		[	I 	A_1	A_2	|	0 	0 	C 	]
+	*		[	0	0	0	|	0 	I 	0 	]
+	*/
 	unsigned C_start_x = 2 * n - k;
 	unsigned C_start_y = 0;
 	unsigned C_end_x = 2 * n;
@@ -184,11 +184,11 @@ random_code_return code_random(const unsigned n, const unsigned k, const unsigne
 		}
 	}
 
-// The "E Element"
-/*						
-* 		[	I 	A_1	A_2	|	0 	0 	C 	]
-*		[	0	0	0	|	0 	I 	E 	]
-*/
+	// The "E Element"
+	/*						
+	* 		[	I 	A_1	A_2	|	0 	0 	C 	]
+	*		[	0	0	0	|	0 	I 	E 	]
+	*/
 	unsigned E_start_x = 2 * n - k;
 	unsigned E_start_y = r;
 	unsigned E_end_x = 2 * n;
@@ -204,6 +204,13 @@ random_code_return code_random(const unsigned n, const unsigned k, const unsigne
 		}
 	}
 
+	// Set the diagonal of the E block to all 0's
+	for (size_t i = E_start_y; i < E_start_y + k; i++)
+	{
+		sym_set(code, i, E_start_x + i, 0);
+	}
+
+	// Setting D and B to the same portion of the bit stream requires that we first find which of the two is larger
 	unsigned B_start_x = n;
 	unsigned B_start_y = 0;
 	unsigned B_end_x = n + r;
@@ -224,11 +231,11 @@ random_code_return code_random(const unsigned n, const unsigned k, const unsigne
 		seed = rand_bytes_consume(random_gen, (D_end_x - D_start_x) * (D_end_y - D_start_y) / 8 + 1);
 	}
 
-// The D Element
-/*						
-* 		[	I 	A_1	A_2	|	0 	0 	C 	]
-*		[	0	0	0	|	D 	I 	E 	]
-*/
+	// The D Element
+	/*						
+	* 		[	I 	A_1	A_2	|	0 	0 	C 	]
+	*		[	0	0	0	|	D 	I 	E 	]
+	*/
 	for (size_t i = D_start_y; i < D_end_y; i++)
 	{
 		for (size_t j = D_start_x; j < D_end_x; j++)
@@ -260,11 +267,11 @@ random_code_return code_random(const unsigned n, const unsigned k, const unsigne
 		}
 	}
 
-// The B element
-/*						
-* 		[	I 	A_1	A_2	|	B 	0 	C 	]
-*		[	0	0	0	|	D 	I 	E 	]
-*/
+	// The B element
+	/*						
+	* 		[	I 	A_1	A_2	|	B 	0 	C 	]
+	*		[	0	0	0	|	D 	I 	E 	]
+	*/
 	for (size_t i = B_start_y; i < B_end_y; i++)
 	{
 		for (size_t j = B_start_x; j < B_end_x; j++)
@@ -278,26 +285,35 @@ random_code_return code_random(const unsigned n, const unsigned k, const unsigne
 	// The identity block in the top left of the X elements ensures that in order to guarantee commutation we only need to flip
 	// The corresponding [i, i]th bit in the B block.
 	for (size_t i = B_start_y; i < B_end_y; i++)
+	{
+		for (size_t j = A1_start_y; j < A1_end_y; j++)
 		{
-			for (size_t j = A1_start_y; j < A1_end_y; j++)
+			// Determine if the rows anti-commute
+			unsigned anti_commutes = 0;
+			for (size_t k = 0; k < n; k++)
 			{
-				// Determine if the rows anti-commute
-				unsigned anti_commutes = 0;
-				for (size_t k = 0; k < n; k++)
-				{
-					anti_commutes += sym_get(code, i, n + k) && sym_get(code, j, k);
-				}
-				// If they do, then flip the corresponding bit 
-				if (anti_commutes % 2)
-				{
-					sym_set(code, i, n + j, !sym_get(code, i, n + j));
-				}
+				anti_commutes += sym_get(code, i, n + k) && sym_get(code, j, k);
+			}
+			// If they do, then flip the corresponding bit 
+			if (anti_commutes % 2)
+			{
+				sym_set(code, i, n + j, !sym_get(code, i, n + j));
 			}
 		}
+	}
 
 	// Next, the logicals
+	/*
+	* [0 | 0]
+	* [0 | 0]
+	* [E | 0]
+	* -------
+	* [C | A_2]
+	* [0 | 0]
+	* [0 | I]
+	*/
 	// Logical X's
-	// This is the E block transposed
+	// This is the E block
 	for (size_t i = E_start_y; i <= E_end_y; i++)
 	{
 		for (size_t j = 0; j < k; j++)
@@ -337,7 +353,60 @@ random_code_return code_random(const unsigned n, const unsigned k, const unsigne
 		sym_set(logicals, 2 * n - k + i, k + i, 1);
 	}
 
-	//random_code_test(code, logicals);
+	// Fix the logical E block to ensure pairwise anti-commutation
+	for (size_t i = 0; i < k; i++)
+	{
+		for (size_t j = 0; j < k; j++)
+		{
+			// Only one element each in the identity matrix to worry about
+			// and that's already asserted to be 1, hence we only need to check a single element
+			unsigned anti_commutes = sym_get(logicals, E_start_y + j, i); 
+
+			if ((1 == anti_commutes && i != j) || (0 == anti_commutes && i == j) )
+			{
+				// Flip element in E to ensure proper commutation relations
+				sym_set(logicals, E_start_y + j, i, !sym_get(logicals, E_start_y + j, i));
+			}
+		}
+	}
+
+	// Fix the C and A_2 blocks to ensure commutation with the stabilisers
+	for (size_t i = 0; i < 2 * k; i++)
+	{
+		// The first r stabilisers, these are corrected using the C and A_2 blocks
+		for (size_t j = 0; j < r; j++)
+		{
+			unsigned anti_commutes = 0;
+			for (size_t kter = 0; kter < n; kter ++)
+			{
+				anti_commutes += (sym_get(logicals, kter, i) & sym_get(code, j, kter + n)) + (sym_get(logicals, kter + n, i) & sym_get(code, j, kter));
+			}
+			anti_commutes %= 2;
+
+			// Flip the element of the C or A_2 block on the logical
+			if (1 == anti_commutes)
+			{
+				sym_set(logicals, n + j, i, !sym_get(logicals, n + j, i));
+			}
+		}
+
+		// The last n - k - r stabilisers, these commute using the X elements r to n-k 
+		for (size_t j = r; j < n - k; j++)
+		{
+			unsigned anti_commutes = 0;
+			for (size_t kter = 0; kter < n; kter ++)
+			{
+				anti_commutes += (sym_get(logicals, kter, i) & sym_get(code, j, kter + n)) + (sym_get(logicals, kter + n, i) & sym_get(code, j, kter));
+			}
+			anti_commutes %= 2;
+
+			// Flip the element of the C or A_2 block on the logical
+			if (1 == anti_commutes)
+			{
+				sym_set(logicals, j, i, !sym_get(logicals, j, i));
+			}
+		}
+	}
 
 	rand_bytes_free(random_gen);
 	return return_object;
