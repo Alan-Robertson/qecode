@@ -1,75 +1,48 @@
 #ifndef RANDOM_CODES
 #define RANDOM_CODES
 
-#include "sym.h"
-#include "logical.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-
+#include "sym.h"
+#include "logical.h"
+#include "rand_bytes.h"
 
 // STRUCT OBJECTS ----------------------------------------------------------------------------------------
 
+/*
+	random_code_return:
+	A struct that contains both the code and the logicals for a random code
+	:: sym* code :: The random QECC
+	:: sym* logicals :: The associated logical operators
+*/
 typedef struct 
 {
 	sym* code;
 	sym* logicals;
 } random_code_return;
 
-/*
-	Struct to generate and consume random random bytes for use in generating the random codes
-*/
-
-typedef struct 
-{
-	unsigned consumed;
-	unsigned total;
-	BYTE* bytes;
-} rand_bytes;
-
-
 // FUNCTION DECLARATIONS ----------------------------------------------------------------------------------------
-
-rand_bytes rand_bytes_create(const unsigned n_bytes);
-BYTE* rand_bytes_consume(rand_bytes b, const unsigned n_bytes);
-void rand_bytes_free(rand_bytes b);
+/* 
+    code_random:
+	Creates a random QECC code with the specified properties
+	:: const unsigned n :: The number of qubits
+	:: const unsigned k :: The number of logical operators
+	:: const unsigned r :: The distance of the code (should be minimum 3)
+	Returns a 'random_code_return' struct containing a pointer to the code and another to the logicals
+*/
 random_code_return code_random(const unsigned n, const unsigned k, const unsigned r);
+
+/* 
+    random_code_test:
+	Tests the validity of a random code, currently not completely implemented
+	:: const sym* code :: The code to test
+	:: const sym* logicals :: The associated logicals
+	No return object
+*/
 void random_code_test(const sym* code, const sym* logicals);
 
 // FUNCTION DEFINITIONS ----------------------------------------------------------------------------------------
-
-rand_bytes rand_bytes_create(const unsigned n_bytes)
-{
-	rand_bytes b;
-	b.consumed = 0;
-	b.total = n_bytes;
-	b.bytes = (BYTE*)malloc(sizeof(BYTE) * n_bytes);
-
-	for (size_t i = 0; i < b.total; i++)
-	{
-		b.bytes[i] = (BYTE)rand();
-	}
-	return b;
-}
-
-BYTE* rand_bytes_consume(rand_bytes b, const unsigned n_bytes)
-{
-	if (n_bytes + b.consumed > b.total)
-	{
-		printf("Too many bytes requested!\n");
-		return NULL;
-	}
-	else
-	{
-		b.consumed += n_bytes;
-		return b.bytes + (b.consumed - n_bytes);
-	}
-}
-
-void rand_bytes_free(rand_bytes b)
-{
-	free(b.bytes);
-}
 
 //-----------------------------------------------------------
 // Random Codes
@@ -84,7 +57,6 @@ void rand_bytes_free(rand_bytes b)
 * 	D resolves the commutation relations between the last n-k-r stabilisers and the first r, while B resolves commutation relations 
 *	within the first r stabilisers. In each case the first I block in the top left can be leveraged against B and D for predicable
 * 	relations. If stabiliser j anti-commutes with stabiliser i, simply flip the [i, j]th element in the B or the D block as appropriate 
-*
 */
 random_code_return code_random(const unsigned n, const unsigned k, const unsigned r)
 {
