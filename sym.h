@@ -48,7 +48,6 @@ typedef struct
 	BYTE* matrix;
 	size_t mem_size;
 } sym;
-// FOR SPEED: Replace the 1D array with an array of byte arrays to perform row operations faster
 
 // FUNCTION DECLARATIONS ----------------------------------------------------------------------------------------
 /* 
@@ -156,6 +155,32 @@ sym* sym_multiply(const sym* const a, const sym* const b);
 	Returns null if the error does not match the physical dimensions of the code, or if a pointer is invalid 
 */
 sym* sym_sydrome(const sym* code, const sym* error);
+
+/*
+	sym_to_ll:
+	Provides a long long representation of a sym object, useful for indexing
+	:: const sym* s :: Pointer to the sym object to be represented
+	Returns an unsigned long long
+*/
+unsigned long long sym_to_ll(const sym* s);
+/*
+	ll_to_sym:
+	Given a long long representation of a sym object, constructs the sym object
+	:: unsigned long long ll :: The long long that is to be used to build the sym object
+	:: const unsigned height :: height of the sym object
+	:: const unsigned length :: length of the sym object
+	Returns a sym object
+*/
+sym* ll_to_sym(unsigned long long ll, const unsigned height, const unsigned length);
+/*
+	ll_to_sym_t:
+	Given a long long representation of a sym object, constructs the sym object transposed
+	:: unsigned long long ll :: The long long that is to be used to build the sym object
+	:: const unsigned height :: height of the sym object
+	:: const unsigned length :: length of the sym object
+	Returns a sym object
+*/
+sym* ll_to_sym_t(unsigned long long ll, const unsigned height, const unsigned length);
 
 /*
 	sym_print:
@@ -461,6 +486,7 @@ sym* sym_transpose(const sym* s)
 
 /* sym_kron:
 	Performs a Kronecker product on two sym matrix objects
+	This is a terrible idea but might be useful
 */
 sym* sym_kron(sym* a, sym* b)
 {
@@ -617,7 +643,12 @@ void sym_row_copy(sym* s, const sym* t, const unsigned s_row, const unsigned t_r
 	}
 }
 
-
+/*
+	sym_to_ll:
+	Provides a long long representation of a sym object, useful for indexing
+	:: const sym* s :: Pointer to the sym object to be represented
+	Returns an unsigned long long
+*/
 unsigned long long sym_to_ll(const sym* s)
 {
 	if (s->mem_size > 8)
@@ -637,6 +668,14 @@ unsigned long long sym_to_ll(const sym* s)
 	return ll;
 }
 
+/*
+	ll_to_sym:
+	Given a long long representation of a sym object, constructs the sym object
+	:: unsigned long long ll :: The long long that is to be used to build the sym object
+	:: const unsigned height :: height of the sym object
+	:: const unsigned length :: length of the sym object
+	Returns a sym object
+*/
 sym* ll_to_sym(unsigned long long ll, const unsigned height, const unsigned length)
 {
 	if ((length * height) / 8 > 64)
@@ -655,6 +694,14 @@ sym* ll_to_sym(unsigned long long ll, const unsigned height, const unsigned leng
 	return s;
 }
 
+/*
+	ll_to_sym_t:
+	Given a long long representation of a sym object, constructs the sym object transposed
+	:: unsigned long long ll :: The long long that is to be used to build the sym object
+	:: const unsigned height :: height of the sym object
+	:: const unsigned length :: length of the sym object
+	Returns a sym object
+*/
 sym* ll_to_sym_t(unsigned long long ll, const unsigned height, const unsigned length)
 {
 	sym* s = ll_to_sym(ll, height, length);

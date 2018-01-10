@@ -8,43 +8,66 @@
 #include "dmatrix.h"
 #include "characterise.h"
 #include "channels.h"
-#include "random_codes.h"
+#include "random_code_search.h"
 
 //using Eigen::MatrixXcd;
 //using Eigen::VectorXcd;
 
 /*
- IF YOU SEE A MEMORY LEAK of  72,704 bytes in 1 block, it's caused by bloody iostream
+ IF YOU SEE A RECOVERABLE MEMORY LEAK of 72,704 bytes in 1 block, it's caused by iostream
 */
 
 int main()
 {	
 	/*
-		CODE
-	*/
-	// sym* code = code_11_1_5_gottesman();
-	// sym* logicals = code_11_1_5_gottesman_logicals();
-	random_code_return r = code_random(8, 1, 3); 
-	sym* code = r.code;
-	sym* logicals = r.logicals;
-
-	sym_print(code);
-	sym_print(logicals);
-	
-	/*
 		Error Model
 	*/
+	unsigned n_qubits = 7, n_logicals = 1, distance = 3;
+	unsigned n_codes_searched = 1000;
 	// Setup the error model
 	double (*error_model)(const sym*, void*) =  error_model_iid;
 
 	// Pass the data to the model
 	iid_model_data model_data;
 	model_data.p_error = 0.01;
-	model_data.n_qubits = code->length / 2;
+	model_data.n_qubits = n_qubits;
 
 	/*
-		Decoder
+		QECC
 	*/
+	struct random_search_results r = random_code_search_best_of_n_codes_with_stats(
+		n_qubits, 
+		n_logicals,
+		distance,
+		error_model,
+		(void*)&model_data, 
+		n_codes_searched); 
+	sym* code = r.code;
+	sym* logicals = r.logicals;
+
+	double average = 0;
+
+	for (size_t i = 0; i < n_codes_searched; i++)
+	{
+		average += r.probs[i];
+	}
+	average /=n_codes_searched;
+	printf(" Searched: %d\n Average correction probability: %e\n Best performance: %e\n", n_codes_searched, average, r.p_best);
+
+	sym_print(code);
+	sym_print(logicals);
+	free(r.probs);
+	// Free allocated objects
+	//sym_free(code);
+	//sym_free(logicals);
+	return 0;	
+}
+
+
+/*
+	In progress
+	// Decoder
+	
 	// Determine the tailored recovery operators
 	sym** decoder_data = tailor_decoder(code, logicals, error_model, (void*)&model_data);
 	// Pick the decoder
@@ -53,10 +76,9 @@ int main()
 	printf("Logical Error Channel\n");
 	MatrixXcd lc = channel_logical(code, logicals, error_model, (void*)&model_data, decoder, (void*)&decoder_data);
 	std::cout << lc << std::endl;
-
-	/*
-		Characterisation
-	*/
+	
+		// Characterisation
+	
 	// Get the Krauss operators after performing error correction
 	double* probabilities = characterise_code(code, logicals, error_model, (void*)&model_data, decoder, (void*)&decoder_data);
 
@@ -68,11 +90,6 @@ int main()
 	sym_free(code);
 	sym_free(logicals);
 	free(probabilities);
-	return 0;	
-}
-
-
-/*
 
 	// Determine the logical error channel
 	//printf("Logical Error Channel\n");
@@ -87,6 +104,3 @@ int main()
 	//MatrixXcd cl = logical_closure(code, logicals, error_model, (void*)&model_data, decoder, (void*)&decoder_data);
 	//std::cout << cl << std::endl;
 */
-
-	
-

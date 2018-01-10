@@ -57,6 +57,13 @@ void random_code_test(const sym* code, const sym* logicals);
 * 	D resolves the commutation relations between the last n-k-r stabilisers and the first r, while B resolves commutation relations 
 *	within the first r stabilisers. In each case the first I block in the top left can be leveraged against B and D for predicable
 * 	relations. If stabiliser j anti-commutes with stabiliser i, simply flip the [i, j]th element in the B or the D block as appropriate 
+*
+*	code_random:
+*	Creates a random QECC code with the specified properties
+*	:: const unsigned n :: The number of qubits
+*	:: const unsigned k :: The number of logical operators
+*	:: const unsigned r :: The distance of the code (should be minimum 3)
+*	Returns a 'random_code_return' struct containing a pointer to the code and another to the logicals
 */
 random_code_return code_random(const unsigned n, const unsigned k, const unsigned r)
 {
