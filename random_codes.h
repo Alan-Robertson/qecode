@@ -2,13 +2,13 @@
 #define RANDOM_CODES
 
 #include "sym.h"
+#include "logical.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
 
 // STRUCT OBJECTS ----------------------------------------------------------------------------------------
-
 
 typedef struct 
 {
@@ -34,9 +34,9 @@ rand_bytes rand_bytes_create(const unsigned n_bytes);
 BYTE* rand_bytes_consume(rand_bytes b, const unsigned n_bytes);
 void rand_bytes_free(rand_bytes b);
 random_code_return code_random(const unsigned n, const unsigned k, const unsigned r);
+void random_code_test(const sym* code, const sym* logicals);
 
 // FUNCTION DEFINITIONS ----------------------------------------------------------------------------------------
-
 
 rand_bytes rand_bytes_create(const unsigned n_bytes)
 {
@@ -295,23 +295,24 @@ random_code_return code_random(const unsigned n, const unsigned k, const unsigne
 			}
 		}
 
-
 	// Next, the logicals
 	// Logical X's
-	for (size_t i = r; i < n - k - r; i++)
+	// This is the E block transposed
+	for (size_t i = E_start_y; i <= E_end_y; i++)
 	{
 		for (size_t j = 0; j < k; j++)
 		{
-			sym_set(logicals, i, j, sym_get(code, i, 2 * n - k + j));
+			sym_set(logicals, i, j, sym_get(code, i, E_start_x + j));
 		}
 	}
 
 	// Identity Matrix
 	for (size_t i = 0; i < k; i++)
 	{
-		sym_set(logicals, n - k - r + i, k, 1);
+		sym_set(logicals, E_end_y + i, i, 1);
 	}
 
+	// This is the C block
 	for (size_t i = 0; i < r; i++)
 	{
 		for (size_t j = 0; j < k; j++)
@@ -321,11 +322,12 @@ random_code_return code_random(const unsigned n, const unsigned k, const unsigne
 	}
 
 	// Logical Z's
-	for (size_t i = n; i < n + k; i++)
+	// This is the A2 block
+	for (size_t i = A2_start_y; i < A2_end_y; i++)
 	{
-		for (size_t j = k; j < 2 * k; j++)
+		for (size_t j = A2_start_x; j < A2_end_x; j++)
 		{
-			sym_set(logicals, i, j, sym_get(code, A2_start_y + i, A2_start_x + j));
+			sym_set(logicals, i + n, j - A2_start_x + k, sym_get(code, i, j));
 		}
 	}
 
@@ -335,9 +337,30 @@ random_code_return code_random(const unsigned n, const unsigned k, const unsigne
 		sym_set(logicals, 2 * n - k + i, k + i, 1);
 	}
 
+	//random_code_test(code, logicals);
 
 	rand_bytes_free(random_gen);
 	return return_object;
+}
+
+void random_code_test(const sym* code, const sym* logicals)
+{
+	// Check that it all works...
+	sym* test = sym_create(1, code->height);
+	for (size_t i = 0; i < code->height; i++)
+	{
+		sym_row_copy(test, code, 0, i);
+		sym* commutes = logical_error(logicals, test);
+		for (size_t i = 0; i < commutes->length; i++)
+		{
+			if (1 == i)
+			{
+				printf("DOES NOT COMMUTE WITH LOGICALS!\n");
+			}
+		}
+		sym_free(commutes);
+	} 
+	sym_free(test);
 }
 
 #endif
