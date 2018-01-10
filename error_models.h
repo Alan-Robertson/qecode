@@ -129,12 +129,14 @@ double error_model_spatially_asymmetric(const sym* error, void* v_model_data)
 }
 
 // Shitty qubits -------------------------------------------------------------------------------
+ 
+// This needs a better name and is WIP
 
 typedef struct {
 	double p_error;
 	unsigned n_good_qubits;
 	unsigned n_bordell_qubits;
-} bordell_model_data;
+} shitty_model_data;
 
 double error_model_bordell(const sym* error, void* model_data)
 {

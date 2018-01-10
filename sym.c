@@ -25,12 +25,14 @@ int main()
 	unsigned n_qubits = 7, n_logicals = 1, distance = 3;
 	unsigned n_codes_searched = 1000;
 	// Setup the error model
-	double (*error_model)(const sym*, void*) =  error_model_iid;
+	double (*error_model)(const sym*, void*) =  error_model_spatially_asymmetric;
 
 	// Pass the data to the model
-	iid_model_data model_data;
-	model_data.p_error = 0.01;
-	model_data.n_qubits = n_qubits;
+	spatially_asymmetric_model_data model_data;
+	model_data.n_bitflip_qubits = 2;
+	model_data.n_phaseflip_qubits = 5;
+	model_data.p_bitflip = 0.01;
+	model_data.p_phaseflip = 0.05;
 
 	/*
 		QECC
@@ -52,14 +54,16 @@ int main()
 		average += r.probs[i];
 	}
 	average /=n_codes_searched;
-	printf(" Searched: %d\n Average correction probability: %e\n Best performance: %e\n", n_codes_searched, average, r.p_best);
+	printf(" Codes Searched: %d\n Average correction probability: %e\n Best performance: %e\n", n_codes_searched, average, r.p_best);
 
 	sym_print(code);
 	sym_print(logicals);
-	free(r.probs);
+	
+
 	// Free allocated objects
-	//sym_free(code);
-	//sym_free(logicals);
+	sym_free(code);
+	sym_free(logicals);
+	free(r.probs);
 	return 0;	
 }
 
