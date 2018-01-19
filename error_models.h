@@ -18,10 +18,12 @@ unsigned double error_model(sym* error, void* v_m);
 	Evaluate the error string
 	If you need to view the error in a string format use the error_sym_to_str() function
 
-	return FLOAT
+	return double
 }
 
 */
+
+typedef double (*error_model_f)(const sym*, void*);
 
 // IID ERROR MODEL ------------------------------------------------------------------------------------------------
 
@@ -133,12 +135,11 @@ double error_model_spatially_asymmetric(const sym* error, void* v_model_data)
 // This needs a better name and is WIP
 
 typedef struct {
-	double p_error;
-	unsigned n_good_qubits;
-	unsigned n_bordell_qubits;
-} shitty_model_data;
+	unsigned n_models;
+	unsigned* model_split;
+} multi_model_data;
 
-double error_model_bordell(const sym* error, void* model_data)
+double error_model_multi(const sym* error, void* model_data)
 {
 	// Going to need to make sure this is normalised
 

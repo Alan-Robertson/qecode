@@ -25,7 +25,7 @@ int main()
 	unsigned n_qubits = 3, n_logicals = 1, distance = 1;
 	unsigned n_codes_searched = 10;
 	// Setup the error model
-	double (*error_model)(const sym*, void*) =  error_model_iid;
+	error_model_f error_model = error_model_iid;
 
 	// Setup the model data
 	iid_model_data model_data;
@@ -62,7 +62,7 @@ int main()
 	sym* (*decoder)(const sym* syndrome, void* decoder_data) = decoder_tailored;
 
 	printf("Logical Error Channel\n");
-	MatrixXcd lc = channel_physical_closure(code, logicals, error_model, (void*)&model_data, decoder, (void*)&decoder_data);
+	MatrixXcd lc = channel_logical(code, logicals, error_model, (void*)&model_data, decoder, (void*)&decoder_data);
 	std::cout << lc << std::endl;	
 	//std::cout << lc.trace() << std::endl;
 
