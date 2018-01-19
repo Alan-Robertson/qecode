@@ -124,6 +124,12 @@ MatrixXcd dmatrix_sym_to_matrix(const sym* s)
     return p;
 }
 
+MatrixXcd dmatrix_vectorise(MatrixXcd* m)
+{
+    MatrixXcd m_bar = m->conjugate();
+    return kroneckerProduct(*m, m_bar).eval();
+}
+
 /*
 Eigen::VectorXcd dmatrix_state_from_vec(const std::vector<Eigen::VectorXcd> states)
 {

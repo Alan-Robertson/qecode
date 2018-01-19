@@ -284,8 +284,8 @@ random_code_return code_random(const unsigned n, const unsigned k, const unsigne
 	// Next, the logicals
 	/*
 	* [0 | 0]
-	* [0 | 0]
 	* [E | 0]
+	* [I | 0]
 	* -------
 	* [C | A_2]
 	* [0 | 0]
@@ -293,7 +293,7 @@ random_code_return code_random(const unsigned n, const unsigned k, const unsigne
 	*/
 	// Logical X's
 	// This is the E block
-	for (size_t i = E_start_y; i <= E_end_y; i++)
+	for (size_t i = E_start_y; i < E_end_y; i++)
 	{
 		for (size_t j = 0; j < k; j++)
 		{
@@ -302,7 +302,7 @@ random_code_return code_random(const unsigned n, const unsigned k, const unsigne
 	}
 
 	// Identity Matrix
-	for (size_t i = 0; i < k; i++)
+	for (size_t i = 0; i < n - E_end_y; i++)
 	{
 		sym_set(logicals, E_end_y + i, i, 1);
 	}
@@ -330,61 +330,6 @@ random_code_return code_random(const unsigned n, const unsigned k, const unsigne
 	for (size_t i = 0; i < k; i++)
 	{
 		sym_set(logicals, 2 * n - k + i, k + i, 1);
-	}
-
-	// Fix the logical E block to ensure pairwise anti-commutation
-	for (size_t i = 0; i < k; i++)
-	{
-		for (size_t j = 0; j < k; j++)
-		{
-			// Only one element each in the identity matrix to worry about
-			// and that's already asserted to be 1, hence we only need to check a single element
-			unsigned anti_commutes = sym_get(logicals, E_start_y + j, i); 
-
-			if ((1 == anti_commutes && i != j) || (0 == anti_commutes && i == j) )
-			{
-				// Flip element in E to ensure proper commutation relations
-				sym_set(logicals, E_start_y + j, i, !sym_get(logicals, E_start_y + j, i));
-			}
-		}
-	}
-
-	// Fix the C and A_2 blocks to ensure commutation with the stabilisers
-	for (size_t i = 0; i < 2 * k; i++)
-	{
-		// The first r stabilisers, these are corrected using the C and A_2 blocks
-		for (size_t j = 0; j < r; j++)
-		{
-			unsigned anti_commutes = 0;
-			for (size_t kter = 0; kter < n; kter ++)
-			{
-				anti_commutes += (sym_get(logicals, kter, i) & sym_get(code, j, kter + n)) + (sym_get(logicals, kter + n, i) & sym_get(code, j, kter));
-			}
-			anti_commutes %= 2;
-
-			// Flip the element of the C or A_2 block on the logical
-			if (1 == anti_commutes)
-			{
-				sym_set(logicals, n + j, i, !sym_get(logicals, n + j, i));
-			}
-		}
-
-		// The last n - k - r stabilisers, these commute using the X elements r to n-k 
-		for (size_t j = r; j < n - k; j++)
-		{
-			unsigned anti_commutes = 0;
-			for (size_t kter = 0; kter < n; kter ++)
-			{
-				anti_commutes += (sym_get(logicals, kter, i) & sym_get(code, j, kter + n)) + (sym_get(logicals, kter + n, i) & sym_get(code, j, kter));
-			}
-			anti_commutes %= 2;
-
-			// Flip the element of the C or A_2 block on the logical
-			if (1 == anti_commutes)
-			{
-				sym_set(logicals, j, i, !sym_get(logicals, j, i));
-			}
-		}
 	}
 
 	rand_bytes_free(random_gen);

@@ -20,7 +20,12 @@ MatrixXcd channel_logical(const sym* code,
 						sym* (*decoder)(const sym*, void*),
 						void* decoder_data)
 {
-	MatrixXcd sum_logical_operator = dmatrix_zeros(1 << (logicals->length/2), 1 << (logicals->length/2));
+	const unsigned krauss_size = (1 << (logicals->length/2));
+	const unsigned channel_size = (1 << (logicals->length/2)) * (1 << (logicals->length/2));
+	
+	MatrixXcd sum_logical_operator = dmatrix_zeros(krauss_size, krauss_size);
+	MatrixXcd channel = dmatrix_zeros(channel_size, channel_size);
+
 
 	sym_iter* physical_error = sym_iter_create(code->length);	
 	while (sym_iter_next(physical_error)) {
@@ -43,7 +48,7 @@ MatrixXcd channel_logical(const sym* code,
 		MatrixXcd logical_operator = dmatrix_sym_to_matrix(logical_state);
 
 		// Add this particular matrix with the appropriate weighting to the sum
-		sum_logical_operator += error_prob * logical_operator;
+		sum_logical_operator += sqrt(error_prob) * logical_operator;
 		
 		sym_free(syndrome);
 		sym_free(recovery);
@@ -52,7 +57,10 @@ MatrixXcd channel_logical(const sym* code,
 	}
 	sym_iter_free(physical_error);
 
-	return sum_logical_operator;
+	// Vectorise the Krauss operators to get the channel
+	channel = dmatrix_vectorise(sum_logical_operator);
+
+	return channel;
 }
 
 MatrixXcd channel_physical(const sym* code, 
@@ -62,13 +70,17 @@ MatrixXcd channel_physical(const sym* code,
 						sym* (*decoder)(const sym*, void*),
 						void* decoder_data)
 {
-	MatrixXcd sum_physical_operator = dmatrix_zeros(1 << (code->length/2), 1 << (code->length/2));
+	const unsigned krauss_size = (1 << (code->length/2));
+	const unsigned channel_size = (1 << (code->length/2)) * (1 << (code->length/2));
+	
+	MatrixXcd sum_physical_operator = dmatrix_zeros(krauss_size, krauss_size);
+	MatrixXcd channel = dmatrix_zeros(channel_size, channel_size);
 
 	sym_iter* physical_error = sym_iter_create(code->length);	
 	while (sym_iter_next(physical_error)) {
 		// Calculate the probability of the error occurring
 		double error_prob = error_model(physical_error->state, model_data);
-		if (error_prob != 0)
+		if (0 != error_prob)
 		{
 			// What syndrome is caused by this error
 			sym* syndrome = sym_syndrome(code, physical_error->state);
@@ -83,7 +95,7 @@ MatrixXcd channel_physical(const sym* code,
 			MatrixXcd physical_operator = dmatrix_sym_to_matrix(corrected);
 
 			// Add this particular matrix with the appropriate weighting to the sum
-			sum_physical_operator += error_prob * physical_operator;
+			sum_physical_operator += sqrt(error_prob) * physical_operator; 
 
 			sym_free(syndrome);
 			sym_free(recovery);
@@ -92,7 +104,10 @@ MatrixXcd channel_physical(const sym* code,
 	}
 	sym_iter_free(physical_error);
 
-	return sum_physical_operator;
+	// Vectorise the Krauss operators to get the channel
+	channel = dmatrix_vectorise(physical_operator);
+	
+	return channel;
 }
 
 MatrixXcd logical_closure(const sym* code, 
@@ -125,7 +140,7 @@ MatrixXcd logical_closure(const sym* code,
 		MatrixXcd logical_operator = dmatrix_sym_to_matrix(logical_state);
 
 		// Add this particular matrix with the appropriate weighting to the sum
-		sum_logical_operator += error_prob * error_prob * logical_operator * logical_operator.adjoint();
+		sum_logical_operator += error_prob* logical_operator * logical_operator.adjoint();
 		
 		sym_free(syndrome);
 		sym_free(recovery);

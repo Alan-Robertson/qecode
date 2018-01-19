@@ -7,8 +7,8 @@
 #include "decoders.h"
 #include "dmatrix.h"
 #include "characterise.h"
-#include "channels.h"
 #include "random_code_search.h"
+#include "channel.h"
 
 //using Eigen::MatrixXcd;
 //using Eigen::VectorXcd;
@@ -22,17 +22,15 @@ int main()
 	/*
 		Error Model
 	*/
-	unsigned n_qubits = 7, n_logicals = 1, distance = 3;
-	unsigned n_codes_searched = 1000;
+	unsigned n_qubits = 3, n_logicals = 1, distance = 1;
+	unsigned n_codes_searched = 10;
 	// Setup the error model
-	double (*error_model)(const sym*, void*) =  error_model_spatially_asymmetric;
+	double (*error_model)(const sym*, void*) =  error_model_iid;
 
-	// Pass the data to the model
-	spatially_asymmetric_model_data model_data;
-	model_data.n_bitflip_qubits = 2;
-	model_data.n_phaseflip_qubits = 5;
-	model_data.p_bitflip = 0.01;
-	model_data.p_phaseflip = 0.05;
+	// Setup the model data
+	iid_model_data model_data;
+	model_data.n_qubits = n_qubits;
+	model_data.p_error = 0.1;
 
 	/*
 		QECC
@@ -42,8 +40,9 @@ int main()
 		n_logicals,
 		distance,
 		error_model,
-		(void*)&model_data, 
+		(void*)&model_data,
 		n_codes_searched); 
+
 	sym* code = r.code;
 	sym* logicals = r.logicals;
 
@@ -53,12 +52,19 @@ int main()
 	{
 		average += r.probs[i];
 	}
-	average /=n_codes_searched;
+	average /= n_codes_searched;
 	printf(" Codes Searched: %d\n Average correction probability: %e\n Best performance: %e\n", n_codes_searched, average, r.p_best);
 
 	sym_print(code);
 	sym_print(logicals);
-	
+		
+	sym** decoder_data = tailor_decoder(code, logicals, error_model, (void*)&model_data);
+	sym* (*decoder)(const sym* syndrome, void* decoder_data) = decoder_tailored;
+
+	printf("Logical Error Channel\n");
+	MatrixXcd lc = channel_physical_closure(code, logicals, error_model, (void*)&model_data, decoder, (void*)&decoder_data);
+	std::cout << lc << std::endl;	
+	//std::cout << lc.trace() << std::endl;
 
 	// Free allocated objects
 	sym_free(code);
@@ -107,4 +113,11 @@ int main()
 	//printf("Logical Closure\n");
 	//MatrixXcd cl = logical_closure(code, logicals, error_model, (void*)&model_data, decoder, (void*)&decoder_data);
 	//std::cout << cl << std::endl;
+
+	// Pass the data to the model
+	/*spatially_asymmetric_model_data model_data;
+	model_data.n_bitflip_qubits = 4;
+	model_data.n_phaseflip_qubits = 4;
+	model_data.p_bitflip = 0.01;
+	model_data.p_phaseflip = 0.05;
 */
