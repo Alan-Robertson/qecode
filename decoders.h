@@ -24,6 +24,8 @@ sym* decoder(sym* error, void* v_m);
 
 */
 
+typedef sym* (*decoder_f)(const sym* syndrome, void* decoder_data);
+
 //2 Qubit Bit Flip Decoder--------------------------------------------------------------------
 
 sym* decoder_2_qubit_bit_flip(const sym* syndrome, void* decoder_data)

@@ -19,57 +19,48 @@
 
 int main()
 {	
+	/* 
+		Code
+	*/
+	sym* code = code_five_qubit();
+	sym* logicals = code_five_qubit_logicals();
+
 	/*
 		Error Model
 	*/
-	unsigned n_qubits = 3, n_logicals = 1, distance = 1;
-	unsigned n_codes_searched = 10;
 	// Setup the error model
-	error_model_f error_model = error_model_iid;
+	error_model_f error_model = error_model_multi_composition;
+
+	multi_composition_error_model_data model_data;
+	model_data.n_models = 2;
+	model_data.model_split = (unsigned*)malloc(sizeof(unsigned) * model_data.n_models);
+	
 
 	// Setup the model data
-	iid_model_data model_data;
-	model_data.n_qubits = n_qubits;
+	
+	model_data.n_qubits = code->length/2;
 	model_data.p_error = 0.1;
 
-	/*
-		QECC
+
+	/* 
+		Tailor the Decoder
 	*/
-	struct random_search_results r = random_code_search_best_of_n_codes_with_stats(
-		n_qubits, 
-		n_logicals,
-		distance,
-		error_model,
-		(void*)&model_data,
-		n_codes_searched); 
-
-	sym* code = r.code;
-	sym* logicals = r.logicals;
-
-	double average = 0;
-
-	for (size_t i = 0; i < n_codes_searched; i++)
-	{
-		average += r.probs[i];
-	}
-	average /= n_codes_searched;
-	printf(" Codes Searched: %d\n Average correction probability: %e\n Best performance: %e\n", n_codes_searched, average, r.p_best);
-
-	sym_print(code);
-	sym_print(logicals);
-		
+	decoder_f decoder = decoder_tailored;
 	sym** decoder_data = tailor_decoder(code, logicals, error_model, (void*)&model_data);
-	sym* (*decoder)(const sym* syndrome, void* decoder_data) = decoder_tailored;
 
-	printf("Logical Error Channel\n");
-	MatrixXcd lc = channel_logical(code, logicals, error_model, (void*)&model_data, decoder, (void*)&decoder_data);
-	std::cout << lc << std::endl;	
-	//std::cout << lc.trace() << std::endl;
+	// Get the Probabilities of each logical error occurring
+	double* probabilities = characterise_code(code, logicals, error_model, (void*)&model_data, decoder, (void*)&decoder_data);	
+
+	/*
+		Display and Cleanup
+	*/
+	characterise_print(probabilities, logicals->length);	
 
 	// Free allocated objects
+	free(probabilities);
+	destabilisers_free(decoder_data, 1 << (code->height));
 	sym_free(code);
 	sym_free(logicals);
-	free(r.probs);
 	return 0;	
 }
 

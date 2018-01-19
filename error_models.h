@@ -4,6 +4,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include "errors.h"
 
 
@@ -130,21 +131,91 @@ double error_model_spatially_asymmetric(const sym* error, void* v_model_data)
 
 }
 
-// Shitty qubits -------------------------------------------------------------------------------
+// Multi Model Composition -------------------------------------------------------------------------------
  
-// This needs a better name and is WIP
-
 typedef struct {
 	unsigned n_models;
 	unsigned* model_split;
-} multi_model_data;
+	error_model_f* error_models;
+	void** error_models_data;
+} multi_composition_error_model_data;
 
-double error_model_multi(const sym* error, void* model_data)
+double error_model_multi_composition(const sym* error, void* v_model_data)
 {
-	// Going to need to make sure this is normalised
+	double prob = 1;
+	unsigned current_qubit = 0;
+	multi_composition_error_model_data* model_data = (multi_composition_error_model_data*) v_model_data;
+
+	for (size_t i = 0; i < model_data->n_models; i++)
+	{
+		sym* partial_error = sym_create(1, model_data->model_split[i]);
+
+		for (size_t j = 0; j < model_data->model_split[i]; j++)
+		{
+			sym_set(partial_error, 0, j, sym_get(error, 0, current_qubit + j));
+		}
+
+		prob *= model_data->error_models[i](partial_error, model_data->error_models_data[i]);
+
+		current_qubit += model_data->model_split[i];
+		sym_free(partial_error);
+	}	
+
+	return prob;
+}
 
 
-	return 1;
+multi_composition_error_model_data error_model_multi_builder(unsigned n_models, const BYTE* fmt, ...)
+{
+	multi_composition_error_model_data model_data;
+	model_data.n_models = n_models;
+	model_data.model_split = (unsigned*)malloc(sizeof(unsigned) * model_data.n_models);
+	model_data.error_models = (error_model_f*)malloc(sizeof(error_model_f) * model_data.n_models);
+	model_data.error_models_data = (void**)malloc(sizeof(void*) * model_data.n_models);
+
+	unsigned counter = 0;
+
+	va_list argv;
+	va_start(argv, fmt);
+
+	enum mode {MODEL_SPLIT_e, ERROR_MODELS_e, MODEL_DATA_e, TERM_e};
+	unsigned current_mode = MODEL_SPLIT_e;
+
+	while (*fmt != '\0' && current_mode != TERM_e)
+	{
+		switch (current_mode)
+		{
+			case MODEL_SPLIT_e:
+				model_data.model_split[counter] = va_arg(args, unsigned);
+			break;
+
+			case ERROR_MODELS_e:
+				model_data.error_models[counter] = va_arg(args, error_model_f);
+			break;
+
+			case MODEL_DATA_e:
+				model_data.error_models_data[counter] = va_arg(args, void*);
+			break;
+		}
+		counter++;
+
+		if (counter = model_data.n_models)
+		{
+			current_mode++;
+			counter = 0;
+		}
+
+		fmt++;
+	}
+	va_end(args);
+}
+
+void error_model_multi_free(multi_composition_error_model_data model_data)
+{
+	free(model_data.model_split);
+	free(model_data.error_models);
+	free(models_data.error_models_data);
+	return;
 }
 
 #endif

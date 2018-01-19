@@ -5,6 +5,7 @@
 #include "sym.h"
 #include "sym_iter.h"
 #include "errors.h"
+#include "error_models.h"
 #include "decoders.h"
 #include "logical.h"
 #include <iostream>
@@ -22,7 +23,7 @@ MatrixXcd channel_logical(const sym* code,
 
 MatrixXcd channel_logical(const sym* code, 
 						const sym* logicals, 
-						double (*error_model)(const sym*, void*), 
+						error_model_f error_model, 
 						void* model_data, 
 						sym* (*decoder)(const sym*, void*),
 						void* decoder_data)
@@ -90,9 +91,6 @@ MatrixXcd channel_physical(const sym* code,
 
 			// Get the density matrix representation of the logical state
 			MatrixXcd physical_operator = dmatrix_sym_to_matrix(corrected);
-
-			// Add this particular matrix with the appropriate weighting to the sum
-			sum_physical_operator += sqrt(error_prob) * physical_operator; 
 
 			// Vectorise the Krauss operator to get the channel
 			channel += error_prob * dmatrix_vectorise(&physical_operator);

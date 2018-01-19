@@ -285,7 +285,6 @@ void sym_xor(sym* s, const unsigned height, const unsigned length, const BYTE va
 	return;
 }
 
-
 /*
 	sym_add:
 	Adds two symplectic matrices of the same size
