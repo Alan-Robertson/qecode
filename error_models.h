@@ -144,28 +144,28 @@ double error_model_multi_composition(const sym* error, void* v_model_data)
 {
 	double prob = 1;
 	unsigned current_qubit = 0;
-	multi_composition_error_model_data* model_data = (multi_composition_error_model_data*) v_model_data;
+	multi_composition_error_model_data* model_data = (multi_composition_error_model_data*)v_model_data;
 
 	for (size_t i = 0; i < model_data->n_models; i++)
 	{
-		sym* partial_error = sym_create(1, model_data->model_split[i]);
+		sym* partial_error = sym_create(1, model_data->model_split[i] * 2);
 
 		for (size_t j = 0; j < model_data->model_split[i]; j++)
 		{
 			sym_set(partial_error, 0, j, sym_get(error, 0, current_qubit + j));
+			sym_set(partial_error, 0, j + model_data->model_split[i], sym_get(error, 0, (error->length / 2) + current_qubit + j));
 		}
 
 		prob *= model_data->error_models[i](partial_error, model_data->error_models_data[i]);
-
 		current_qubit += model_data->model_split[i];
+		
 		sym_free(partial_error);
 	}	
-
 	return prob;
 }
 
 
-multi_composition_error_model_data error_model_multi_builder(unsigned n_models, const BYTE* fmt, ...)
+multi_composition_error_model_data error_model_multi_builder(unsigned n_models, ...)
 {
 	multi_composition_error_model_data model_data;
 	model_data.n_models = n_models;
@@ -176,45 +176,45 @@ multi_composition_error_model_data error_model_multi_builder(unsigned n_models, 
 	unsigned counter = 0;
 
 	va_list argv;
-	va_start(argv, fmt);
+	va_start(argv, n_models);
 
 	enum mode {MODEL_SPLIT_e, ERROR_MODELS_e, MODEL_DATA_e, TERM_e};
 	unsigned current_mode = MODEL_SPLIT_e;
 
-	while (*fmt != '\0' && current_mode != TERM_e)
+	while (current_mode != TERM_e)
 	{
 		switch (current_mode)
 		{
 			case MODEL_SPLIT_e:
-				model_data.model_split[counter] = va_arg(args, unsigned);
+				model_data.model_split[counter] = va_arg(argv, unsigned);
 			break;
 
 			case ERROR_MODELS_e:
-				model_data.error_models[counter] = va_arg(args, error_model_f);
+				model_data.error_models[counter] = va_arg(argv, error_model_f);
 			break;
 
 			case MODEL_DATA_e:
-				model_data.error_models_data[counter] = va_arg(args, void*);
+				model_data.error_models_data[counter] = va_arg(argv, void*);
 			break;
 		}
+
 		counter++;
 
-		if (counter = model_data.n_models)
+		if (counter == model_data.n_models)
 		{
 			current_mode++;
 			counter = 0;
 		}
-
-		fmt++;
 	}
-	va_end(args);
+	va_end(argv);
+	return model_data;
 }
 
-void error_model_multi_free(multi_composition_error_model_data model_data)
+void error_model_multi_free(multi_composition_error_model_data* model_data)
 {
-	free(model_data.model_split);
-	free(model_data.error_models);
-	free(models_data.error_models_data);
+	free(model_data->model_split);
+	free(model_data->error_models);
+	free(model_data->error_models_data);
 	return;
 }
 

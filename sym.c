@@ -29,34 +29,51 @@ int main()
 		Error Model
 	*/
 	// Setup the error model
+	const unsigned n_models = 3;
 	error_model_f error_model = error_model_multi_composition;
 
-	multi_composition_error_model_data model_data;
-	model_data.n_models = 2;
-	model_data.model_split = (unsigned*)malloc(sizeof(unsigned) * model_data.n_models);
+	iid_model_data iid_a;
+	iid_a.n_qubits = 2;
+	iid_a.p_error = 0.01;
 	
+	iid_model_data iid_b;
+	iid_b.n_qubits = 2;
+	iid_b.p_error = 0.01;
 
-	// Setup the model data
-	
-	model_data.n_qubits = code->length/2;
-	model_data.p_error = 0.1;
+	iid_model_data iid_c;
+	iid_c.n_qubits = 1;
+	iid_c.p_error = 0.98;
 
+	//multi_composition_error_model_data* model_data = error_model_multi_builder(
+	//	n_models, iid_a.n_qubits, iid_b.n_qubits, error_model_iid, error_model_iid, (void*)&iid_a, (void*)&iid_b);
+	multi_composition_error_model_data model_data = error_model_multi_builder(
+		n_models, iid_a.n_qubits, iid_b.n_qubits, iid_c.n_qubits,
+		error_model_iid, error_model_iid, error_model_iid,
+		(void*)&iid_a, (void*)&iid_b, (void*)&iid_c);
 
 	/* 
 		Tailor the Decoder
 	*/
 	decoder_f decoder = decoder_tailored;
 	sym** decoder_data = tailor_decoder(code, logicals, error_model, (void*)&model_data);
-
+	
 	// Get the Probabilities of each logical error occurring
 	double* probabilities = characterise_code(code, logicals, error_model, (void*)&model_data, decoder, (void*)&decoder_data);	
+
+	MatrixXcd lc = channel_logical(code, logicals, error_model, (void*)&model_data, decoder, (void*)&decoder_data);
+	
 
 	/*
 		Display and Cleanup
 	*/
+	
 	characterise_print(probabilities, logicals->length);	
 
+	printf("Logical Error Channel\n");	
+	std::cout << lc << std::endl;
+
 	// Free allocated objects
+	error_model_multi_free(&model_data);
 	free(probabilities);
 	destabilisers_free(decoder_data, 1 << (code->height));
 	sym_free(code);
