@@ -4,6 +4,7 @@
 #include "sym.h"
 #include "random_codes.h"
 #include "tailored.h"
+#include "progress_bar.h"
 
 // FUNCTION DECLARATIONS ----------------------------------------------------------------------------------------
 
@@ -103,13 +104,24 @@ struct random_search_results random_code_search_best_of_n_codes_with_stats(
 	sym* code_best = NULL, * logicals_best = NULL;
 	double* code_stat = (double*)malloc(sizeof(double) * n_codes);
 
+	char name[] = "Searching Random Codes: ";
+	struct progress_bar bar = progress_bar_create(n_codes - 1, name);
 	for (size_t i = 0; i < n_codes; i++)
 	{
+		progress_bar_update(bar, i);
+
 		random_code_return rand_code = code_random(n, k, r); 
 		sym* code = rand_code.code;
 		sym* logicals = rand_code.logicals;
-
-		double p_test = tailor_decoder_prob_only(code, logicals, error_model, model_data); 
+		double p_test = tailor_decoder_prob_only_ignore_failures(code, logicals, error_model, model_data); 
+		
+		if (p_test < 0) // If we get a code without destabilisers due to some degeneracy, find a new code
+		{
+			sym_free(code);
+			sym_free(logicals);
+			i--;
+			continue;
+		}
 
 		if (p_best < p_test)
 		{
@@ -129,7 +141,7 @@ struct random_search_results random_code_search_best_of_n_codes_with_stats(
 			sym_free(logicals);
 		}
 	}
-
+	printf("\n");
 	struct random_search_results res = {code_stat, p_best, code_best, logicals_best};
 	return res;
 }
