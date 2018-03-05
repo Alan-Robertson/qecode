@@ -9,6 +9,7 @@
 #include "random_code_search.h"
 #include "channel.h"
 #include "gates.h"
+#include "circuit_builder.h"
 
 int main()
 {
@@ -24,12 +25,12 @@ int main()
 	cnot_model_data.n_qubits = 2;
 	cnot_model_data.p_error = 0.001;
 
-	gate* cnot = gate_build(cnot_model_data.n_qubits, error_model, &cnot_model_data);
+	gate* cnot = gate_create(cnot_model_data.n_qubits, error_model, &cnot_model_data);
 	unsigned cnot_qubits[2] = {3,4};
 
 	double initial_error_rate[1 << (2*n_qubits)];
 	initial_error_rate[0] = 1;
-	for (unsigned i = 1; i < (1<< (2*n_qubits)); i++)
+	for (unsigned i = 1; i < (1 << (2*n_qubits)); i++)
 	{
 		initial_error_rate[i] = 0;
 	}
@@ -37,8 +38,6 @@ int main()
 	double* gate_error_rate = gate_apply_noisy(n_qubits, initial_error_rate, cnot, cnot_qubits);
 	double* gate_error_rate_two = gate_apply_noisy(n_qubits, gate_error_rate, cnot, cnot_qubits);
 	characterise_print(gate_error_rate_two, code->length);
-
-
 
 	free(cnot);
 	sym_free(code);

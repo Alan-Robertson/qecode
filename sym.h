@@ -112,6 +112,17 @@ void sym_xor(sym* s, const unsigned height, const unsigned length, const BYTE va
 sym* sym_add(const sym* a, const sym*  b);
 
 /*
+	sym_partial_add:
+	Adds two symplectic matrices that are not of the same size
+	:: const sym* a :: One of the matrices to be added 
+	:: const sym* b :: The other matrix
+	:: const unsigned* target_bits :: The mapping from each bit in b to the corresponding bit in a
+	Returns a heap pointer to a new matrix containing the result
+	If the matrices are incompatible or NULL, this function returns NULL
+*/
+sym* sym_partial_add(const sym* a, const sym* b, const unsigned* target_bits);
+
+/*
 	sym_add_in_place:
 	Adds two symplectic matrices of the same size in place; the object 'a' will inherit the changes
 	:: const sym* a :: One of the matrices to be added 

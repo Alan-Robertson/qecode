@@ -25,7 +25,7 @@ int main()
 	double logical_rate[10][10];
 
 	unsigned n_qubits = 7, n_logicals = 1, distance = 3;
-	unsigned n_codes_searched = 100000;
+	unsigned n_codes_searched = 10000;
 
 	for (unsigned i = 0; i < n_increments; i++)
 	{
