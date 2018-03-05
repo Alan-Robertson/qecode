@@ -57,7 +57,7 @@ sym** tailor_decoder(const sym* code,
 
 	// Initialise the recovery operators to prevent fragmentation
 	sym_iter* syndromes = sym_iter_create(code->height);
-	while(sym_iter_next(syndromes))
+	while (sym_iter_next(syndromes))
 	{
 		unsigned long long index = sym_to_ll(syndromes->state);
 		tailored_decoder[index] = (sym*)sym_create(1, code->length);

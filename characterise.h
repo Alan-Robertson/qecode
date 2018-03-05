@@ -26,8 +26,6 @@ double* characterise_code(const sym* code,
 {
 	double* p_error_probabilities = (double*)calloc(1ull << (logicals->length), sizeof(double));
 
-
-
 	// Iterate through errors and map back to the code-space
 	sym_iter* physical_error = sym_iter_create(code->length);
 	while (sym_iter_next(physical_error))
@@ -68,19 +66,16 @@ void characterise_save(const double* probabilities, const size_t length, const c
 		return;
 	}
 	double s = 0;
-	int i = 0;
 	sym_iter* physical_error = sym_iter_create(length);	
 	while (sym_iter_next(physical_error))
 	{
 		char* error_string = error_sym_to_str(physical_error->state);
-		fprintf(f, "%s %f\n", error_string, probabilities[i]);
+		fprintf(f, "%s %e\n", error_string, probabilities[sym_to_ll(physical_error->state)]);
 		free(error_string);
-		s += probabilities[i];
-		i++;
+		s += probabilities[sym_to_ll(physical_error->state)];
 	}
 	sym_iter_free(physical_error);
 	fclose(f);
-	printf("Sum of probabilities: %e\n", s);
 	return;
 }
 
@@ -96,7 +91,7 @@ void characterise_print(const double* probabilities, const size_t length)
 		s += probabilities[sym_to_ll(physical_error->state)];
 	}
 	sym_iter_free(physical_error);
-	printf("Sum of probabilities: %e\n", s);
+	//printf("Sum of probabilities: %e\n", s);
 	return;
 }
 
