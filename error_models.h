@@ -218,4 +218,17 @@ void error_model_multi_free(multi_composition_error_model_data* model_data)
 	return;
 }
 
+// Lookup Model Composition -------------------------------------------------------------------------------
+ 
+typedef struct {
+	double* lookup_table;
+} lookup_error_model_data;
+
+double error_model_lookup(const sym* error, void* v_model_data)
+{
+	lookup_error_model_data* model_data = (lookup_error_model_data*)v_model_data;
+	return model_data-->lookup_table[sym_to_ll(error)];
+}
+
+
 #endif

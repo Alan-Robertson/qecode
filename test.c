@@ -9,7 +9,7 @@
 #include "random_code_search.h"
 #include "channel.h"
 #include "gates.h"
-#include "circuit_builder.h"
+#include "circuit.h"
 
 int main()
 {
@@ -18,7 +18,7 @@ int main()
 	sym* code = code_five_qubit();
 	sym* logicals = code_five_qubit_logicals();
 
-	error_model_f error_model = error_model_iid;
+	error_model_f error_model = error_model_bit_flip;
 	decoder_f decoder = decoder_tailored;
 
 	bit_flip_model_data cnot_model_data;
@@ -26,21 +26,25 @@ int main()
 	cnot_model_data.p_error = 0.001;
 
 	gate* cnot = gate_create(cnot_model_data.n_qubits, error_model, &cnot_model_data);
-	unsigned cnot_qubits[2] = {3,4};
+	unsigned cnot_qubits[2] = {0,1};
 
-	double initial_error_rate[1 << (2*n_qubits)];
+	circuit* encode = circuit_create();
+	circuit_add_gate(encode, cnot, cnot_qubits);
+	circuit_add_gate(encode, cnot, cnot_qubits);
+	circuit_add_gate(encode, cnot, cnot_qubits);
+	circuit_add_gate(encode, cnot, cnot_qubits);
+
+	double initial_error_rate[1 << (2 * n_qubits)];
+	memset(initial_error_rate, 0, (1 << (2 * n_qubits)) * sizeof(double));
 	initial_error_rate[0] = 1;
-	for (unsigned i = 1; i < (1 << (2*n_qubits)); i++)
-	{
-		initial_error_rate[i] = 0;
-	}
 	
-	double* gate_error_rate = gate_apply_noisy(n_qubits, initial_error_rate, cnot, cnot_qubits);
-	double* gate_error_rate_two = gate_apply_noisy(n_qubits, gate_error_rate, cnot, cnot_qubits);
-	characterise_print(gate_error_rate_two, code->length);
+	double* encoded_error_rate = circuit_run(initial_error_rate, encode, n_qubits);
 
+	characterise_print(encoded_error_rate, code->length);
+
+	circuit_delete(encode);
 	free(cnot);
 	sym_free(code);
 	sym_free(logicals);
-	free(gate_error_rate);
+	free(encoded_error_rate);
 }

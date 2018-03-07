@@ -24,7 +24,7 @@ int main()
 
 	double logical_rate[10][10];
 
-	unsigned n_qubits = 7, n_logicals = 1, distance = 3;
+	unsigned n_qubits = 6, n_logicals = 1, distance = 3;
 	unsigned n_codes_searched = 10000;
 
 	for (unsigned i = 0; i < n_increments; i++)
@@ -47,7 +47,7 @@ int main()
 		bf_a.p_error = a_error_rate;
 		
 		iid_model_data bf_b;
-		bf_b.n_qubits = 1;
+		bf_b.n_qubits = 0;
 		bf_b.p_error = b_error_rate;
 		
 		multi_composition_error_model_data model_data = error_model_multi_builder(
