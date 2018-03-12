@@ -68,6 +68,7 @@ double* circuit_run(double* initial_error_rates, circuit* c, const unsigned n_qu
 	No return
 */
 void circuit_free(circuit* c);
+
 // FUNCTION DEFINITIONS ----------------------------------------------------------------------------------------
 /* 
     circuit_create:

@@ -227,7 +227,7 @@ typedef struct {
 double error_model_lookup(const sym* error, void* v_model_data)
 {
 	lookup_error_model_data* model_data = (lookup_error_model_data*)v_model_data;
-	return model_data-->lookup_table[sym_to_ll(error)];
+	return model_data->lookup_table[sym_to_ll(error)];
 }
 
 

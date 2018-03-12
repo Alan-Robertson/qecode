@@ -14,26 +14,30 @@
 //using Eigen::VectorXcd;
 
 /*
- IF YOU SEE A RECOVERABLE MEMORY LEAK of 72,704 bytes in 1 block, it's caused by iostream
+IF YOU SEE A RECOVERABLE MEMORY LEAK of 72,704 bytes in 1 block, it's caused by iostream
 */
 
 int main()
 {	
-	double rate_min = 0.01, rate_delta = 0.02;
+	double rate_min = 0.0001, rate_delta = 2;
 	unsigned n_increments = 10;
 
 	double logical_rate[10][10];
 
-	unsigned n_qubits = 6, n_logicals = 1, distance = 3;
-	unsigned n_codes_searched = 10000;
+	unsigned n_qubits = 5, n_logicals = 1, distance = 3;
+	unsigned n_codes_searched = 100000;
+
+	sym* code = code_five_qubit();
+	sym* logicals = code_five_qubit_logicals();
 
 	for (unsigned i = 0; i < n_increments; i++)
 	{
 		for (unsigned j = 0 ; j < n_increments; j++)
 		{
 
-		double a_error_rate = (i * rate_delta) + rate_min; 
-		double b_error_rate = (j * rate_delta) + rate_min; 
+		double a_error_rate = rate_min * pow(rate_delta, i); 
+		double b_error_rate = rate_min * pow(rate_delta, j); 
+		
 
 		/*
 			Error Model
@@ -43,11 +47,11 @@ int main()
 		error_model_f error_model = error_model_multi_composition;
 
 		iid_model_data bf_a;
-		bf_a.n_qubits = 6;
+		bf_a.n_qubits = 4;
 		bf_a.p_error = a_error_rate;
 		
 		iid_model_data bf_b;
-		bf_b.n_qubits = 0;
+		bf_b.n_qubits = 1;
 		bf_b.p_error = b_error_rate;
 		
 		multi_composition_error_model_data model_data = error_model_multi_builder(
@@ -59,7 +63,7 @@ int main()
 			Tailor the Decoder
 		*/
 		decoder_f decoder = decoder_tailored;
-
+		/*
 		struct random_search_results r = random_code_search_best_of_n_codes_with_stats(
 			n_qubits, 
 			n_logicals,
@@ -70,10 +74,10 @@ int main()
 
 		sym* random_code = r.code;
 		sym* random_logicals = r.logicals;
+		*/
+		sym** decoder_data = tailor_decoder(code, logicals, error_model, &model_data);
 
-		sym** random_decoder_data = tailor_decoder(random_code, random_logicals, error_model, (void*)&model_data);
-
-		double* probabilities = characterise_code(random_code, random_logicals, error_model, (void*)&model_data, decoder, (void*)&random_decoder_data);	
+		double* probabilities = characterise_code(code, logicals, error_model, (void*)&model_data, decoder, &decoder_data);	
 
 		logical_rate[i][j] = probabilities[0];
 
@@ -282,7 +286,6 @@ int main()
 		}
 		printf("\n");
 	}
-
 
 	return 0;	
 }*/
