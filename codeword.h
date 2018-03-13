@@ -5,6 +5,14 @@
 #include "circuit.h"
 
 
+sym* codeword_find(const sym* code, const sym* logicals);
+
+
+bool codeword_is_codeword(
+	const sym* code, 
+	const sym* logicals,
+	const sym* codeword_candidate);
+
 sym* codeword_find(const sym* code, const sym* logicals)
 {
 	sym* codeword = NULL;
