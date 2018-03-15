@@ -10,10 +10,36 @@
 #include "channel.h"
 #include "gates.h"
 #include "circuit.h"
+#include "codewords.h"
 
 int main()
 {
-	const unsigned n_qubits = 5;
+	
+	sym* code = code_steane();
+	sym* logicals = code_steane_logicals();
+
+	// Our initial codeword |000....00>
+	sym* codeword = sym_create(1, code->length);
+	for (int i = 0; i < codeword->length/2; i++)
+	{
+		sym_set(codeword, 0, i, 1);
+	}
+
+	sym* codewords = codewords_find(codeword, code, logicals);
+
+	sym_print(codewords);
+
+	sym_free(codewords);
+	sym_free(codeword);
+	sym_free(logicals);
+	sym_free(code);
+}
+
+
+
+/*
+
+const unsigned n_qubits = 5;
 
 	sym* code = code_five_qubit();
 	sym* logicals = code_five_qubit_logicals();
@@ -46,5 +72,4 @@ int main()
 	free(cnot);
 	sym_free(code);
 	sym_free(logicals);
-	free(encoded_error_rate);
-}
+	free(encoded_error_rate); */

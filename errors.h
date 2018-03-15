@@ -11,6 +11,26 @@
 	:: const sym* code :: The code the error is being applied to
 	Returns a sym* object representing the error string
 */
+sym* error_create_simple(const char pauli, const unsigned qubit, const sym* code);
+
+/* 
+	error_add:
+	Adds an error to an existing error string
+	:: const char pauli :: What error is being created, takes 'I', 'X', 'Y' or 'Z'
+	:: const unsigned qubit :: Which qubit the error is being applied on
+	:: sym* error :: The error that this error is being added to
+	Nothing returned, however modifies the contents of error
+*/
+void error_add(const char pauli, const unsigned qubit, sym* error);
+
+/* 
+	error_create_simple:
+	Creates a simple 1 qubit error
+	:: const char pauli :: What error is being created, takes 'I', 'X', 'Y' or 'Z'
+	:: const unsigned qubit :: Which qubit the error is being applied on
+	:: const sym* code :: The code the error is being applied to
+	Returns a sym* object representing the error string
+*/
 sym* error_create_simple(const char pauli, const unsigned qubit, const sym* code)
 {
 	if ( code == NULL || qubit > code->length / 2) 
