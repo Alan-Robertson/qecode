@@ -61,6 +61,7 @@ sym* codewords_find(sym* basis,  sym* code, const sym* logicals)
 		// If we don't already have this codeword, add it to the list
 		if (codeword_list_check(head, codeword_candidate))
 		{
+			printf("%llu\n", bitmask);
 			codeword_list_add(head, codeword_candidate);
 			n_codewords++;
 		}
@@ -130,6 +131,7 @@ unsigned codeword_phase(sym* codeword_candidate)
 		{
 			phase++;
 		}
+		// Clear the phase after it's checked, Z|0> -> |0> 
 		sym_set(codeword_candidate, 0, (codeword_candidate->length / 2) + i, 0);
 	}
 	return phase;

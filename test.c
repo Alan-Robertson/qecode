@@ -20,10 +20,10 @@ int main()
 
 	// Our initial codeword |000....00>
 	sym* codeword = sym_create(1, code->length);
-	for (int i = 0; i < codeword->length/2; i++)
+	/*for (int i = 0; i < codeword->length/2; i++)
 	{
 		sym_set(codeword, 0, i, 1);
-	}
+	}*/
 
 	sym* codewords = codewords_find(codeword, code, logicals);
 
