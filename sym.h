@@ -159,13 +159,149 @@ void sym_copy_in_place(sym* d, const sym* s);
 sym* sym_multiply(const sym* const a, const sym* const b);
 
 /*
-	sym_ancilla:
-	Applies an error to a given code and returns the syndrome
-	:: const sym* code :: The error correcting code being used
-	:: const sym* error :: The error being applied
-	Returns null if the error does not match the physical dimensions of the code, or if a pointer is invalid 
-*/
+ *	sym_ancilla:
+ *	Applies an error to a given code and returns the syndrome
+ *	:: const sym* code :: The error correcting code being used
+ *	:: const sym* error :: The error being applied
+ *	Returns null if the error does not match the physical dimensions of the code, or if a pointer is invalid 
+ */
 sym* sym_sydrome(const sym* code, const sym* error);
+
+/*
+ * sym_row_commutation
+ * Determines if two rows in two sym objects commute
+ * :: const sym* a :: The first sym object
+ * :: const sym* b :: The second sym object
+ * :: const row_a :: The row from the first sym object
+ * :: const row_b :: The row from the second sym object
+ * Returns an unsigned value 0 or 1, where 0 indicates that the rows commute, while 1
+ * Indicates that they do not commute.
+ */
+unsigned sym_row_commutes(
+	const sym* a, 
+	const sym* b, 
+	const unsigned row_a, 
+	const unsigned row_b);
+
+/*
+ * sym_row_column_commutes
+ * Determines if one row and one column commute
+ * :: const sym* a :: The first sym object
+ * :: const sym* b :: The second sym object
+ * :: const row_a :: The row from the first sym object
+ * :: const column_b :: The column from the second sym object
+ * Returns an unsigned value 0 or 1, where 0 indicates that the rows commute, while 1
+ * Indicates that they do not commute.
+ */
+unsigned sym_row_column_commutes(
+	const sym* a, 
+	const sym* b, 
+	const unsigned row_a, 
+	const unsigned column_b);
+
+/*
+ * sym_is_not_I
+ * Checks whether the value of a gate on qubit i in a sym object is not the identity
+ * :: const sym* s :: The sym object being checked
+ * :: const unsigned i :: The column within the sym object
+ * :: const unsigned j :: The row within the sym object
+ * Returns a single byte containing either 0 if it is I, or 1 if it is not I
+ */
+BYTE sym_is_not_I(const sym* s, const unsigned i, const unsigned j);
+
+/*
+ * sym_is_I
+ * Checks whether the value of a gate on qubit i in a sym object is the identity
+ * :: const sym* s :: The sym object being checked
+ * :: const unsigned i :: The column within the sym object
+ * :: const unsigned j :: The row within the sym object
+ * Returns a single byte containing either 1 if it is I, or 0 if it is not I 
+ */
+BYTE sym_is_I(const sym* s, const unsigned i, const unsigned j);
+
+/*
+ * sym_is_X
+ * Checks whether the value of a gate on qubit i in a sym object is X
+ * :: const sym* s :: The sym object being checked
+ * :: const unsigned i :: The column within the sym object
+ * :: const unsigned j :: The row within the sym object
+ * Returns a single byte containing either 1 if it is X, or 0 if it is not X 
+ */
+BYTE sym_is_X(const sym* s, const unsigned i, const unsigned j);
+
+/*
+ * sym_is_Y
+ * Checks whether the value of a gate on qubit i in a sym object is Y
+ * :: const sym* s :: The sym object being checked
+ * :: const unsigned i :: The column within the sym object
+ * :: const unsigned j :: The row within the sym object
+ * Returns a single byte containing either 1 if it is Y, or 0 if it is not Y 
+ */
+BYTE sym_is_Y(const sym* s, const unsigned i, const unsigned j);
+
+/*
+ * sym_is_Z
+ * Checks whether the value of a gate on qubit i in a sym object is Z
+ * :: const sym* s :: The sym object being checked
+ * :: const unsigned i :: The column within the sym object
+ * :: const unsigned j :: The row within the sym object
+ * Returns a single byte containing either 1 if it is Z, or 0 if it is not Z 
+ */
+BYTE sym_is_Z(const sym* s, const unsigned i, const unsigned j);
+/*
+	sym_weight_type_partial:
+	Returns the weight of a symplectic matrix object with specified bounds, this function is wrapped by the 
+	other weight functions and serves as a more generic type
+	:: const sym* s :: Pointer to the object to be weighed
+	:: const char type :: The type of weight being checked, either I, X, Y, Z or \0
+	:: unsigned start :: The start of where the weight is being checked
+	:: unsigned end :: The end of where the weight is being checked
+	Returns the weight as an unsigned integer
+*/
+unsigned sym_weight_type_partial(const sym* s, const char type, unsigned start, unsigned end);
+
+/*
+ *	sym_weight:
+ *	Returns the weight of a symplectic matrix object
+ *	:: const sym* s :: Pointer to the object to be weighed
+ *	Returns the weight as an unsigned integer
+ */
+unsigned int sym_weight(const sym* s);
+
+/*
+ *	sym_weight_X:
+ *	Returns the weight of a symplectic matrix object, only counting X paulis
+ *	:: const sym* s :: Pointer to the object to be weighed
+ *	Returns the weight as an unsigned integer
+ */
+unsigned int sym_weight_X(const sym* s);
+
+/*
+ *	sym_weight_Y:
+ *	Returns the weight of a symplectic matrix object, only counting Y paulis
+ *	:: const sym* s :: Pointer to the object to be weighed
+ *	Returns the weight as an unsigned integer
+ */
+unsigned int sym_weight_Y(const sym* s);
+
+/*
+ *	sym_weight_Z:
+ *	Returns the weight of a symplectic matrix object, only counting Z paulis
+ *	:: const sym* s :: Pointer to the object to be weighed
+ *	Returns the weight as an unsigned integer
+ */
+unsigned int sym_weight_Z(const sym* s);
+
+/*
+ * sym_row_copy
+ * Copies a row from one sym object to a row on another sym object
+ * :: sym* s :: The sym object to be copied to
+ * :: const sym* t :: The sym object to be copied from
+ * :: const unsigned s_row :: The row to be copied to
+ * :: const unsigned t_row :: The row to be copied from
+ * The operation happens in place and nothing is returned
+ */
+void sym_row_copy(sym* s, const sym* t, const unsigned s_row, const unsigned t_row);
 
 /*
 	sym_to_ll:
@@ -183,6 +319,7 @@ unsigned long long sym_to_ll(const sym* s);
 	Returns a sym object
 */
 sym* ll_to_sym(unsigned long long ll, const unsigned height, const unsigned length);
+
 /*
 	ll_to_sym_t:
 	Given a long long representation of a sym object, constructs the sym object transposed
@@ -513,6 +650,81 @@ sym* sym_syndrome(const sym* code, const sym* error)
 	return syndrome;
 }
 
+/*
+ * sym_row_commutes
+ * Determines if two rows in two sym objects commute
+ * :: const sym* a :: The first sym object
+ * :: const sym* b :: The second sym object
+ * :: const row_a :: The row from the first sym object
+ * :: const row_b :: The row from the second sym object
+ * Returns an unsigned value 0 or 1, where 0 indicates that the rows commute, while 1
+ * Indicates that they do not commute.
+ */
+unsigned sym_row_commutes(
+	const sym* a, 
+	const sym* b, 
+	const unsigned row_a, 
+	const unsigned row_b)
+{
+	// Check the validity of the arguments
+	if (a == NULL 
+		|| b == NULL 
+		|| a->length != b->length
+		|| a->height <= row_a
+		|| b->height <= row_b)
+	{
+		printf("Incorrect sizes of sym objects.\n");
+		return 2;
+	}
+
+	unsigned commutes = 0;
+
+	for (size_t i = 0; i < a->length; i++)
+	{
+		commutes += sym_get(a, row_a, i) * sym_get(b, row_b, (i + a->length / 2) % a->length);
+	}
+	return commutes % 2;
+}
+
+/*
+ * sym_row_column_commutes
+ * Determines if one row and one column commute
+ * :: const sym* a :: The first sym object
+ * :: const sym* b :: The second sym object
+ * :: const row_a :: The row from the first sym object
+ * :: const column_b :: The column from the second sym object
+ * Returns an unsigned value 0 or 1, where 0 indicates that the rows commute, while 1
+ * Indicates that they do not commute.
+ */
+unsigned sym_row_column_commutes(
+	const sym* a, 
+	const sym* b, 
+	const unsigned row_a, 
+	const unsigned column_b)
+{
+	// Check the validity of the arguments
+	if (a == NULL 
+		|| b == NULL 
+		|| a->length != b->height
+		|| a->height <= row_a
+		|| b->length <= column_b)
+	{
+		printf("sym_row_column_commutes: Incorrect sizes of sym objects.\n");
+		printf("Pointers: [%p %p]\n", a, b);
+		printf("Heights Match: [%u %u]\n", a->length, b->height);
+		printf("Coordinate Checks: [%u %u] [%u %u]\n", a->height, row_a, b->length, column_b);
+		return 2;
+	}
+
+	unsigned commutes = 0;
+
+	for (size_t i = 0; i < a->length; i++)
+	{
+		commutes += sym_get(a, row_a, i) * sym_get(b, (i + a->length / 2) % a->length, column_b);
+	}
+	return commutes % 2;
+}
+
 /* 
 sym_transpose:
 Performs a transpose operation on a symplectic matrix object
@@ -532,72 +744,81 @@ sym* sym_transpose(const sym* s)
 	return t;
 }
 
-/* sym_kron:
-	Performs a Kronecker product on two sym matrix objects
-	This is a terrible idea but might be useful
-*/
-sym* sym_kron(sym* a, sym* b)
-{
-	if (!a || !b) // Either a or b is a null pointer
-	{
-		return NULL;
-	}
-	sym* kron = sym_create(a->height * b->height, a->length * b->length);
-
-	for (size_t a_i = 0; a_i < a->height; a_i++)
-	{
-		for (size_t a_j = 0; a_j < a->length; a_j++)
-		{
-			if (ELEMENT_GET(a, a_i, a_j)) // Element is non zero
-			{
-				for (size_t b_i = 0; b_i < b->height; b_i++)
-				{
-					for (size_t b_j = 0; b_j < b->length; b_j++)
-					{
-						if (ELEMENT_GET(b, b_i, b_j))
-						{
-							ELEMENT_SET(kron, 
-								a_i * b->height + b_i, 
-								a_j * b->length + b_j, 
-								1);
-						}
-					}
-				}
-			}
-		}
-	}
-	return kron;
-}
-
-
 /*
-	sym_weight:
-	Returns the weight of a symplectic matrix object
-	:: const sym* s :: Pointer to the object to be weighed
-	Returns the weight as an unsigned integer
-*/
-
-BYTE sym_is_not_I(const sym* s, const unsigned i, const unsigned j){
+ * sym_is_not_I
+ * Checks whether the value of a gate on qubit i in a sym object is not the identity
+ * :: const sym* s :: The sym object being checked
+ * :: const unsigned i :: The column within the sym object
+ * :: const unsigned j :: The row within the sym object
+ * Returns a single byte containing either 0 if it is I, or 1 if it is not I
+ */
+BYTE sym_is_not_I(const sym* s, const unsigned i, const unsigned j)
+{
 	return ((ELEMENT_GET(s, i, j)) || ELEMENT_GET(s, i, j + s->length / 2));	
 }
 
-BYTE sym_is_I(const sym* s, const unsigned i, const unsigned j){
+/*
+ * sym_is_I
+ * Checks whether the value of a gate on qubit i in a sym object is the identity
+ * :: const sym* s :: The sym object being checked
+ * :: const unsigned i :: The column within the sym object
+ * :: const unsigned j :: The row within the sym object
+ * Returns a single byte containing either 1 if it is I, or 0 if it is not I 
+ */
+BYTE sym_is_I(const sym* s, const unsigned i, const unsigned j)
+{
 	return (!(ELEMENT_GET(s, i, j)) && !(ELEMENT_GET(s, i, j + s->length / 2)));	
 }
 
-BYTE sym_is_X(const sym* s, const unsigned i, const unsigned j){
+/*
+ * sym_is_X
+ * Checks whether the value of a gate on qubit i in a sym object is X
+ * :: const sym* s :: The sym object being checked
+ * :: const unsigned i :: The column within the sym object
+ * :: const unsigned j :: The row within the sym object
+ * Returns a single byte containing either 1 if it is X, or 0 if it is not X 
+ */
+BYTE sym_is_X(const sym* s, const unsigned i, const unsigned j)
+{
 	return (ELEMENT_GET(s, i, j) && !(ELEMENT_GET(s, i, j + s->length / 2)));	
 }
 
-BYTE sym_is_Y(const sym* s, const unsigned i, const unsigned j){
+/*
+ * sym_is_Y
+ * Checks whether the value of a gate on qubit i in a sym object is Y
+ * :: const sym* s :: The sym object being checked
+ * :: const unsigned i :: The column within the sym object
+ * :: const unsigned j :: The row within the sym object
+ * Returns a single byte containing either 1 if it is Y, or 0 if it is not Y 
+ */
+BYTE sym_is_Y(const sym* s, const unsigned i, const unsigned j)
+{
 	return (ELEMENT_GET(s, i, j) && ELEMENT_GET(s, i, j + s->length / 2));	
 }
 
-BYTE sym_is_Z(const sym* s, const unsigned i, const unsigned j){
+/*
+ * sym_is_Z
+ * Checks whether the value of a gate on qubit i in a sym object is Z
+ * :: const sym* s :: The sym object being checked
+ * :: const unsigned i :: The column within the sym object
+ * :: const unsigned j :: The row within the sym object
+ * Returns a single byte containing either 1 if it is Z, or 0 if it is not Z 
+ */
+BYTE sym_is_Z(const sym* s, const unsigned i, const unsigned j)
+{
 	return (!(ELEMENT_GET(s, i, j)) && ELEMENT_GET(s, i, j + s->length / 2));	
 }
 
-
+/*
+	sym_weight_type_partial:
+	Returns the weight of a symplectic matrix object with specified bounds, this function is wrapped by the 
+	other weight functions and serves as a more generic type
+	:: const sym* s :: Pointer to the object to be weighed
+	:: const char type :: The type of weight being checked, either I, X, Y, Z or \0
+	:: unsigned start :: The start of where the weight is being checked
+	:: unsigned end :: The end of where the weight is being checked
+	Returns the weight as an unsigned integer
+*/
 unsigned sym_weight_type_partial(const sym* s, const char type, unsigned start, unsigned end)
 {
 	unsigned weight = 0;
@@ -639,50 +860,59 @@ unsigned sym_weight_type_partial(const sym* s, const char type, unsigned start, 
 }
 
 /*
-	sym_weight:
-	Returns the weight of a symplectic matrix object
-	:: const sym* s :: Pointer to the object to be weighed
-	Returns the weight as an unsigned integer
-*/
+ *	sym_weight:
+ *	Returns the weight of a symplectic matrix object
+ *	:: const sym* s :: Pointer to the object to be weighed
+ *	Returns the weight as an unsigned integer
+ */
 unsigned int sym_weight(const sym* s)
 {
 	return sym_weight_type_partial(s, '\0', 0, s->length);
 }
 
 /*
-	sym_weight_X:
-	Returns the weight of a symplectic matrix object, only counting X paulis
-	:: const sym* s :: Pointer to the object to be weighed
-	Returns the weight as an unsigned integer
-*/
+ *	sym_weight_X:
+ *	Returns the weight of a symplectic matrix object, only counting X paulis
+ *	:: const sym* s :: Pointer to the object to be weighed
+ *	Returns the weight as an unsigned integer
+ */
 unsigned int sym_weight_X(const sym* s)
 {
 	return sym_weight_type_partial(s, 'X', 0, s->length);
 }
 
 /*
-	sym_weight_Y:
-	Returns the weight of a symplectic matrix object, only counting Y paulis
-	:: const sym* s :: Pointer to the object to be weighed
-	Returns the weight as an unsigned integer
-*/
+ *	sym_weight_Y:
+ *	Returns the weight of a symplectic matrix object, only counting Y paulis
+ *	:: const sym* s :: Pointer to the object to be weighed
+ *	Returns the weight as an unsigned integer
+ */
 unsigned int sym_weight_Y(const sym* s)
 {
 	return sym_weight_type_partial(s, 'Y', 0, s->length);
 }
 
 /*
-	sym_weight_Z:
-	Returns the weight of a symplectic matrix object, only counting Z paulis
-	:: const sym* s :: Pointer to the object to be weighed
-	Returns the weight as an unsigned integer
-*/
+ *	sym_weight_Z:
+ *	Returns the weight of a symplectic matrix object, only counting Z paulis
+ *	:: const sym* s :: Pointer to the object to be weighed
+ *	Returns the weight as an unsigned integer
+ */
 unsigned int sym_weight_Z(const sym* s)
 {
 	return sym_weight_type_partial(s, 'Z', 0, s->length);
 }
 
 
+/*
+ * sym_row_copy
+ * Copies a row from one sym object to a row on another sym object
+ * :: sym* s :: The sym object to be copied to
+ * :: const sym* t :: The sym object to be copied from
+ * :: const unsigned s_row :: The row to be copied to
+ * :: const unsigned t_row :: The row to be copied from
+ * The operation happens in place and nothing is returned
+ */
 void sym_row_copy(sym* s, const sym* t, const unsigned s_row, const unsigned t_row)
 {
 	for (size_t i = 0; i < s->length; i++)

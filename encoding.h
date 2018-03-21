@@ -2,53 +2,66 @@
 #define ENCODING
 
 #include "circuit.h"
-#include "codeword.h"
+#include "destabilisers.h"
+#include "tableau.h"
 
 
-circuit* encoding_circuit(
-	const sym* code, 
-	const sym** destabilisers
-	)
+sym* encoding_circuit(const sym* code, const sym* logicals, sym** destabilisers)
 {
-	sym* tableu = sym_create(code->height * 2; code->length);
-
-	// Create the tableau from 10.1103/PhysRevA.70.052328
-	for (size_t i = 0; i < code->height * 2; i++)
+	// Get a tableau
+	sym* tableau = tableau_create(code, logicals, destabilisers);
+	
+	// Extend the tableau to full rank in X
+	for (size_t i = 0; i < tableau->height / 2; i++)
 	{
-		if (i / code->height)
+		bool rank_deficient = true;
+		for (size_t j = 0; j < tableau->length / 2 && rank_deficient; j++)
 		{
-			sym_row_copy(tableu, destabilisers[i], i, 0);	
+			if (1 == sym_get(tableau, i + tableau->height / 2, j))
+			{
+				rank_deficient = false;
+			}
 		}
-		else
+
+		// If it's not rank deficient, this loop will be skipped
+		for (size_t j = 0; j < tableau->length / 2 && rank_deficient; j++)
 		{
-			sym_row_copy(tableu, code, i, i % code->height);
+			if (1 == sym_get(tableau, i + tableau->height / 2, j + tableau->height / 2))
+			{
+				tableau_hadamard(tableau, j);
+			}
+		}
+		
+	}
+
+	// CNOT bottom left to Identity via Gaussian elimination
+	for (size_t i = 0 ; i < tableau->height / 2; i++)
+	{
+		// Ensure that [i,i] is 1
+		if ( 0 == sym_get(tableau, i + tableau->height / 2, i) )
+		{
+			bool pivot_found = false;
+			for (size_t j = 0; j < tableau->length / 2 && !pivot_found; j++)
+			{
+				if (1 == sym_get(tableau, i + tableau->height / 2, j)) 
+				{
+					tableau_CNOT(tableau, j, i);
+					pivot_found = true;
+				}
+			}	
+		}
+		
+		// Use i,i to pivot and eliminate the rest of the row
+		for (size_t j = 0; j < tableau->length / 2; j++)
+		{
+			if (i != j && 1 == sym_get(tableau, i + tableau->height / 2, j))
+			{
+				tableau_CNOT(tableau, i, j);
+			}
 		}
 	}
-
-
-	// Get a codeword
-	sym* codeword = codeword_find(code, logicals);
-
-
-
-
-	// Find an encoding from the all |0>^n state to the codeword
-	for (size_t i = 0; i < codeword->length/2; i++)
-	{
-
-
-	}
-
-
-	// Verify the encoding worked correctly
-	for (size_t i = 0; i < codeword->length/2; i++)
-	{
-
-
-	}
-
+	return tableau;
 }
-
 
 
 #endif

@@ -177,7 +177,7 @@ bool destabilisers_is_destabiliser(
 {
 	// Check that it commutes with the logicals
 	sym* logical_syndrome = logical_error(logicals, destabiliser_candidate);
-	for (int i = 0; i <= logicals->height; i++)
+	for (int i = 0; i < logicals->height; i++)
 	{
 		if (sym_get(logical_syndrome, 0, i))
 		{
@@ -189,7 +189,7 @@ bool destabilisers_is_destabiliser(
 
 	// Check that it commutes with all bar one of the stabilisers
 	sym* syndrome = sym_syndrome(code, destabiliser_candidate);
-	for (int i = 0; i <= code->height; i++)
+	for (int i = 0; i < code->height; i++)
 	{
 		if (i != row)
 		{

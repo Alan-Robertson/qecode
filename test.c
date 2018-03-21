@@ -10,7 +10,7 @@
 #include "channel.h"
 #include "gates.h"
 #include "circuit.h"
-#include "codewords.h"
+#include "encoding.h"
 
 int main()
 {
@@ -18,19 +18,10 @@ int main()
 	sym* code = code_steane();
 	sym* logicals = code_steane_logicals();
 
-	// Our initial codeword |000....00>
-	sym* codeword = sym_create(1, code->length);
-	/*for (int i = 0; i < codeword->length/2; i++)
-	{
-		sym_set(codeword, 0, i, 1);
-	}*/
+	sym* tableau = encoding_circuit(code, logicals, NULL);
+	sym_print(tableau);
 
-	sym* codewords = codewords_find(codeword, code, logicals);
-
-	sym_print(codewords);
-
-	sym_free(codewords);
-	sym_free(codeword);
+	sym_free(tableau);
 	sym_free(logicals);
 	sym_free(code);
 }
@@ -39,6 +30,8 @@ int main()
 
 /*
 
+
+	sym* codewords = codewords_find(codeword, code, logicals);
 const unsigned n_qubits = 5;
 
 	sym* code = code_five_qubit();
