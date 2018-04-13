@@ -18,6 +18,18 @@ int main()
 	sym* code = code_steane();
 	sym* logicals = code_steane_logicals();
 
+	sym** destabilisers = (sym**)malloc(sizeof(sym*) * code->height); 
+
+	unsigned destab_a[] = { 
+		0, 0, 0, 0, 1, 1, 														// IZZ
+	};
+	destabilisers[0] = sym_create_valued(2, 6, destab_a);
+
+	unsigned destab_b[] = { 
+		0, 0, 0, 1, 1, 0, 														// ZZI
+	};
+	destabilisers[1] = sym_create_valued(2, 6, destab_b);
+
 	sym* tableau = encoding_circuit(code, logicals, NULL);
 	sym_print(tableau);
 

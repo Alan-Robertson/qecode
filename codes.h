@@ -32,7 +32,6 @@ sym* code_two_qubit_logicals();
 	Creates a new symplectic matrix object containing the 7 qubit Steane code
 	Returns a heap pointer to the new sym object
 */
-
 sym* code_steane()
 {
 	unsigned steane[] = 
@@ -216,9 +215,30 @@ sym* code_two_qubit_logicals()
 {
 	unsigned code[] = {
 		0, 1, 0, 0,																// IX
-		0, 0, 1, 1																// ZZ
+		0, 0, 0, 1																// IZ
 	};
 	sym* s = sym_create_valued(2, 4, code);
+	sym* t = sym_transpose(s);
+	sym_free(s);
+	return t;
+}
+
+sym* code_three_qubit()
+{
+	unsigned code[] = { 
+		1, 1, 0, 0, 0, 0, 														// XXI
+		0, 1, 1, 0, 0, 0														// IXX
+	};
+	return sym_create_valued(2, 6, code);
+}
+
+sym* code_three_qubit_logicals()
+{
+	unsigned code[] = { 
+		0, 1, 0, 0, 0, 0, 														// IXI
+		0, 0, 0, 1, 1, 1														// ZZZ
+	};
+	sym* s = sym_create_valued(2, 6, code);
 	sym* t = sym_transpose(s);
 	sym_free(s);
 	return t;
@@ -247,6 +267,8 @@ sym* code_five_qubit_logicals()
 	return t;
 }
 
+
+// Need to remember where this code came from, looks like the logicals are LD on the stabilisers
 sym* code_asymmetric_five()
 {
 	unsigned code[] = {

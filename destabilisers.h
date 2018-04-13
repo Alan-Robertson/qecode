@@ -88,6 +88,8 @@ sym** destabilisers_generate(
 	const sym* code, 
 	const sym* logicals)
 {
+	sym_print(code);
+	sym_print(logicals);
 	// Setup the array of destabilisers
 	sym** destabilisers = (sym**)malloc(sizeof(sym*) * code->height); 
 	for (int i = 0; i < code->height; i++)
@@ -104,7 +106,7 @@ sym** destabilisers_generate(
 	else
 	{
 		// No destabilisers found, this should be dealt with
-		//printf("Could not find a set of destabilisers for this code.\n");
+		printf("Could not find a set of destabilisers for this code.\n");
 		return NULL;
 	}
 	// Should not reach this point
