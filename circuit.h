@@ -28,6 +28,7 @@ struct circuit_element
 */
 typedef struct
 {
+	unsigned n_qubits;
 	unsigned n_gates;
 	circuit_element* start;
 	circuit_element* end;
@@ -39,7 +40,7 @@ typedef struct
 	Creates a new circuit object
 	Returns a heap pointer to the new circuit
 */
-circuit* circuit_create();
+circuit* circuit_create(unsigned n_qubits);
 
 /* 
     circuit_add_gate:
@@ -75,9 +76,10 @@ void circuit_free(circuit* c);
 	Creates a new circuit object
 	Returns a heap pointer to the new circuit
 */
-circuit* circuit_create()
+circuit* circuit_create(const unsigned n_qubits)
 {
 	circuit* c = (circuit*)malloc(sizeof(circuit));
+	c->n_qubits = n_qubits;
 	c->n_gates = 0;
 	c->start = NULL;
 	c->end = NULL;
@@ -132,7 +134,8 @@ double* circuit_run(double* initial_error_rates, circuit* c, const unsigned n_qu
 	circuit_element* ce = c->start;
 	while(ce != NULL)
 	{
-		double* tmp_error_rate = gate_apply_noisy(n_qubits, error_rate, ce->gate_element, ce->target_qubits);
+		printf("qwop\n");
+		double* tmp_error_rate = gate_apply(n_qubits, error_rate, ce->gate_element, ce->target_qubits);
 		memcpy(error_rate, tmp_error_rate, n_bytes);
 		free(tmp_error_rate);
 		ce = ce->next;

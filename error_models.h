@@ -86,6 +86,7 @@ double error_model_bit_flip(const sym* error, void* v_model_data)
 
 	if (weight == x_weight) // No non-x errors allowed
 	{
+		printf("%d %d %d\n", model_data->p_error, model_data->n_qubits, weight);
 		return pow(model_data->p_error, weight) * pow(1 - model_data->p_error, model_data->n_qubits - weight);
 	}
 	return 0;
