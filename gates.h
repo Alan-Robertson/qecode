@@ -45,7 +45,7 @@ double* gate_apply(const unsigned n_qubits,
 	Returns a heap pointer to a block of allocated memory containing the new probabilities
 */
 double* gate_noise(const unsigned n_qubits, 
-	double* probabilities, 
+	const double* probabilities, 
 	const gate* g,
 	const unsigned* target_qubits);
 
@@ -111,18 +111,20 @@ double* gate_apply(const unsigned n_qubits,
 	Returns a heap pointer to a block of allocated memory containing the new probabilities
 */
 double* gate_noise(const unsigned n_qubits, 
-	double* initial_probabilities, 
+	const double* initial_probabilities, 
 	const gate* g,
 	const unsigned* target_qubits)
 {
-	// Noiseless gate, no operationfadd
+	// Allocate memory for the new output probabilities
+	double* p_error_probabilities = (double*)malloc(sizeof(double) * 1ull << (n_qubits * 2));
+	memset(p_error_probabilities, 0, (1ull << (2 * n_qubits)) * sizeof(double));
+
+	// Noiseless gate, no operation
 	if (NULL == g->error_model)
 	{
-		return initial_probabilities;
+		memcpy(p_error_probabilities, initial_probabilities, sizeof(double) * 1ull << (n_qubits * 2));
+		return p_error_probabilities;
 	}
-
-	// Allocate memory for the new output probabilities
-	double* p_error_probabilities = (double*)calloc(1ull << (n_qubits * 2), sizeof(double));
 
 	// Use the sym_iterator to loop over all the possible errors caused by this noise model
 	sym_iter* gate_error = sym_iter_create(g->n_qubits * 2);
@@ -130,9 +132,8 @@ double* gate_noise(const unsigned n_qubits,
 	{
 		// Determine the error rate associated with each possible error
 		double p_error = g->error_model(gate_error->state, g->error_model_data);
-		printf("%f\n", p_error);
 		// If the error rate is non zero, apply the error
-		/*if (p_error > 0)
+		if (p_error > 0)
 		{
 			// Loop over all possible states
 			sym_iter* initial_state = sym_iter_create(n_qubits * 2);
@@ -142,13 +143,13 @@ double* gate_noise(const unsigned n_qubits,
 				sym* physical_error = sym_partial_add(initial_state->state, gate_error->state, target_qubits);
 
 				// Cumulatively determine the new probability of each state after the gate has been applied
-				//p_error_probabilities[sym_to_ll(physical_error)] += initial_probabilities[sym_to_ll(initial_state->state)] * p_error; 
+				p_error_probabilities[sym_to_ll(physical_error)] += initial_probabilities[sym_to_ll(initial_state->state)] * p_error; 
 
 				// Free allocated memory
 				sym_free(physical_error);
 			}
 			sym_iter_free(initial_state);
-		}*/
+		}
 	}
 	sym_iter_free(gate_error);
 
@@ -191,7 +192,7 @@ double* gate_operator(const unsigned n_qubits,
 		// Free allocated memory
 		sym_free(operation_output);
 	}
-	free(initial_probabilities);
+	sym_iter_free(initial_state);
 
 	return p_state_probabilities;
 }

@@ -40,7 +40,6 @@ sym* gate_cnot(const sym* initial_state, void* gate_data, const unsigned* target
 }
 
 
-
 typedef struct {} gate_data_hadamard;
 
 sym* gate_hadamard(const sym* initial_state, void* gate_data, const unsigned* target_qubit)

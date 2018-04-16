@@ -2,6 +2,7 @@
 #define CIRCUIT_STRUCT
 #include "sym.h" 
 #include "gates.h"
+#include <stdarg.h>
 
 // STRUCT OBJECTS ----------------------------------------------------------------------------------------
 
@@ -43,14 +44,24 @@ typedef struct
 circuit* circuit_create(unsigned n_qubits);
 
 /* 
-    circuit_add_gate:
+    circuit_add_non_varg:
 	Adds a gate to an existing circuit
 	:: circuit* c :: The circuit the gate is being added to
 	:: gate* g :: The gate being added
 	:: unsigned* target_qubits :: The qubits the gate is to be applied to
 	Does not return anything
 */
-void circuit_add_gate(circuit* c, gate* g, unsigned* target_qubits);
+void circuit_add_non_varg(circuit* c, gate* g, unsigned* target_qubits);
+
+/* 
+    circuit_add:
+	Adds a gate to an existing circuit uses vargs for ease of readability
+	:: circuit* c :: The circuit the gate is being added to
+	:: gate* g :: The gate being added
+	:: ... :: Variadic target qubits
+	Does not return anything
+*/
+void circuit_add_gate(circuit* c, gate* g, ...);
 
 /* 
     circuit_run:
@@ -60,7 +71,7 @@ void circuit_add_gate(circuit* c, gate* g, unsigned* target_qubits);
 	:: const unsigned n_qubits :: The number of qubits
 	Returns a heap pointer to the new set of error rates
 */
-double* circuit_run(double* initial_error_rates, circuit* c, const unsigned n_qubits);
+double* circuit_run(circuit* c, double* initial_error_rates);
 
 /*
 	circuit_free:
@@ -87,14 +98,14 @@ circuit* circuit_create(const unsigned n_qubits)
 
 
 /* 
-    circuit_add_gate:
+    circuit_add_non_varg:
 	Adds a gate to an existing circuit
 	:: circuit* c :: The circuit the gate is being added to
 	:: gate* g :: The gate being added
 	:: unsigned* target_qubits :: The qubits the gate is to be applied to
 	Does not return anything
 */
-void circuit_add_gate(circuit* c, gate* g, unsigned* target_qubits)
+void circuit_add_non_varg(circuit* c, gate* g, unsigned* target_qubits)
 {
 	circuit_element* ce = (circuit_element*)malloc(sizeof(circuit_element));
 	ce->gate_element = g;
@@ -117,6 +128,31 @@ void circuit_add_gate(circuit* c, gate* g, unsigned* target_qubits)
 }
 
 /* 
+    circuit_add_gate:
+	Adds a gate to an existing circuit uses vargs for ease of readability
+	:: circuit* c :: The circuit the gate is being added to
+	:: gate* g :: The gate being added
+	:: ... :: Variadic target qubits
+	Does not return anything
+*/
+void circuit_add_gate(circuit* c, gate* g, ...)
+{
+	va_list args;
+	va_start(args, g);
+
+	unsigned* target_qubits = (unsigned*)malloc(sizeof(unsigned) * g->n_qubits);
+
+	for (unsigned i = 0; i < g->n_qubits; i++)
+	{
+		target_qubits[i] = va_arg(args, unsigned);
+	}
+	
+	circuit_add_non_varg(c, g, target_qubits);
+	free(target_qubits);
+	return;
+}
+
+/* 
     circuit_run:
 	Applies a circuit to an existing set of error probabilities
 	:: double* initial_error_rates :: The error rates before the circuit is applied
@@ -124,18 +160,17 @@ void circuit_add_gate(circuit* c, gate* g, unsigned* target_qubits)
 	:: const unsigned n_qubits :: The number of qubits
 	Returns a heap pointer to the new set of error rates
 */
-double* circuit_run(double* initial_error_rates, circuit* c, const unsigned n_qubits)
+double* circuit_run(circuit* c, double* initial_error_rates)
 {
-	const unsigned n_bytes = sizeof(double) * (1 << (2 * n_qubits));
+	const unsigned n_bytes = sizeof(double) * (1 << (2 * c->n_qubits));
 
-	double* error_rate = (double*)calloc(1 << (2 * n_qubits), sizeof(double));
+	double* error_rate = (double*)calloc(1 << (2 * c->n_qubits), sizeof(double));
 	memcpy(error_rate, initial_error_rates, n_bytes);
 
 	circuit_element* ce = c->start;
 	while(ce != NULL)
 	{
-		printf("qwop\n");
-		double* tmp_error_rate = gate_apply(n_qubits, error_rate, ce->gate_element, ce->target_qubits);
+		double* tmp_error_rate = gate_apply(c->n_qubits, error_rate, ce->gate_element, ce->target_qubits);
 		memcpy(error_rate, tmp_error_rate, n_bytes);
 		free(tmp_error_rate);
 		ce = ce->next;
