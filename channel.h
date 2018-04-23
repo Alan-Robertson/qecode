@@ -32,6 +32,7 @@ MatrixXcd channel_logical(const sym* code,
 	MatrixXcd channel = dmatrix_zeros(channel_size, channel_size);
 
 	sym_iter* physical_error = sym_iter_create(code->length);	
+
 	while (sym_iter_next(physical_error)) {
 		// Calculate the probability of the error occurring
 		double error_prob = error_model(physical_error->state, model_data);

@@ -20,7 +20,7 @@
 */
 sym** tailor_decoder(const sym* code, 
 				const sym* logicals, 
-				double (*error_model)(const sym*, void*), 
+				error_model_f error_model, 
 				void* model_data);
 
 /* 
@@ -34,14 +34,14 @@ sym** tailor_decoder(const sym* code,
 */
 double tailor_decoder_prob_only(const sym* code, 
 				const sym* logicals, 
-				double (*error_model)(const sym*, void*), 
+				error_model_f error_model, 
 				void* model_data);
 
 // FUNCTION DEFINITIONS ----------------------------------------------------------------------------------------
 
 sym** tailor_decoder(const sym* code, 
 				const sym* logicals, 
-				double (*error_model)(const sym*, void*), 
+				error_model_f error_model, 
 				void* model_data)
 {
 	// -------------------------------------
@@ -66,6 +66,7 @@ sym** tailor_decoder(const sym* code,
 		tailored_decoder[index]->mem_size = 0;
 	}
 	sym_iter_free(syndromes);
+
 	// Initialise the probabilities and set them to 0 efficiently
 	double p_options[n_syndromes][n_logical_operations];
 	memset(&p_options, 0, sizeof(double) * n_syndromes * n_logical_operations);
@@ -107,6 +108,7 @@ sym** tailor_decoder(const sym* code,
 		sym* logical_state = logical_error(logicals, corrected);
 
 		// Calculate the probability of this particular error occurring and store it
+		
 		p_options[sym_to_ll(syndrome)][sym_to_ll(logical_state)] += error_model(physical_error->state, model_data); 
 
 		// Free our memory in order to prevent leaks and fragmentation
@@ -116,7 +118,7 @@ sym** tailor_decoder(const sym* code,
 		sym_free(syndrome);
 	}
 	sym_iter_free(physical_error);
-
+	
 	// ---------------------------------------------------
 	// Calculate and store the optimal recovery operator
 	// For each possible logical error associated with each syndrome, determine the best choice of logical correction
@@ -176,7 +178,7 @@ sym** tailor_decoder(const sym* code,
 
 double tailor_decoder_prob_only(const sym* code, 
 				const sym* logicals, 
-				double (*error_model)(const sym*, void*), 
+				error_model_f error_model, 
 				void* model_data)
 {
 	// -------------------------------------
@@ -307,7 +309,7 @@ double tailor_decoder_prob_only(const sym* code,
 
 double tailor_decoder_prob_only_ignore_failures(const sym* code, 
 				const sym* logicals, 
-				double (*error_model)(const sym*, void*), 
+				error_model_f error_model, 
 				void* model_data)
 {
 	// -------------------------------------

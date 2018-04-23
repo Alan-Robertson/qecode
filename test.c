@@ -11,70 +11,54 @@
 #include "gates.h"
 #include "circuit.h"
 #include "encoding.h"
+#include "gate_operations.h"
 
 int main()
 {
-	
 	sym* code = code_steane();
 	sym* logicals = code_steane_logicals();
+	
+	bit_flip_model_data bf;
+	bf.n_qubits = code->length / 2;
+	bf.p_error = 0.001;
 
-	sym** destabilisers = (sym**)malloc(sizeof(sym*) * code->height); 
+	gate* cnot = gate_create(2,  
+		gate_cnot,
+		error_model_iid,
+		&bf,
+		&bf);
 
-	unsigned destab_a[] = { 
-		0, 0, 0, 0, 1, 1, 														// IZZ
-	};
-	destabilisers[0] = sym_create_valued(2, 6, destab_a);
+	gate* hadamard = gate_create(1,
+		gate_hadamard,
+		error_model_iid,
+		&bf,
+		&bf);
 
-	unsigned destab_b[] = { 
-		0, 0, 0, 1, 1, 0, 														// ZZI
-	};
-	destabilisers[1] = sym_create_valued(2, 6, destab_b);
+	gate* phase = gate_create(1,
+		gate_phase,
+		error_model_iid,
+		&bf,
+		&bf);
 
-	sym* tableau = encoding_circuit(code, logicals, NULL);
-	sym_print(tableau);
+	circuit* encode = encoding_circuit(code, logicals, NULL, cnot, hadamard, phase);
 
-	sym_free(tableau);
+	double* initial_error_rate = (double*)malloc(sizeof(double) * (1 << (code->length)));
+	memset(initial_error_rate, 0, (1 << (code->length)) * sizeof(double));
+	initial_error_rate[0] = 1; // Set the identity to 1
+		
+	double* error_rates = circuit_run(encode, initial_error_rate);
+	
+	lookup_error_model_data md;
+	md.lookup_table = error_rates;
+	sym** decoder_data = tailor_decoder(code, logicals, error_model_lookup, &md);
+
+	double* probabilities = characterise_code(code, logicals, error_model_lookup, &md, decoder_tailored, (void*)&decoder_data);	
+		
+
+	free(probabilities);
+	free(initial_error_rate);
+	//free(error_rates);
+	circuit_free(encode);
 	sym_free(logicals);
 	sym_free(code);
 }
-
-
-
-/*
-
-
-	sym* codewords = codewords_find(codeword, code, logicals);
-const unsigned n_qubits = 5;
-
-	sym* code = code_five_qubit();
-	sym* logicals = code_five_qubit_logicals();
-
-	error_model_f error_model = error_model_bit_flip;
-	decoder_f decoder = decoder_tailored;
-
-	bit_flip_model_data cnot_model_data;
-	cnot_model_data.n_qubits = 2;
-	cnot_model_data.p_error = 0.001;
-
-	gate* cnot = gate_create(cnot_model_data.n_qubits, error_model, &cnot_model_data);
-	unsigned cnot_qubits[2] = {0,1};
-
-	circuit* encode = circuit_create();
-	circuit_add_gate(encode, cnot, cnot_qubits);
-	circuit_add_gate(encode, cnot, cnot_qubits);
-	circuit_add_gate(encode, cnot, cnot_qubits);
-	circuit_add_gate(encode, cnot, cnot_qubits);
-
-	double initial_error_rate[1 << (2 * n_qubits)];
-	memset(initial_error_rate, 0, (1 << (2 * n_qubits)) * sizeof(double));
-	initial_error_rate[0] = 1;
-	
-	double* encoded_error_rate = circuit_run(initial_error_rate, encode, n_qubits);
-
-	characterise_print(encoded_error_rate, code->length);
-
-	circuit_delete(encode);
-	free(cnot);
-	sym_free(code);
-	sym_free(logicals);
-	free(encoded_error_rate); */

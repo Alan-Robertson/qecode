@@ -118,7 +118,7 @@ int main()
 	MatrixXcd lc = channel_logical(code, logicals, error_model, (void*)&model_data, decoder, (void*)&decoder_data);
 	std::cout << lc << std::endl;
 	
-		// Characterisation
+	// Characterisation
 	
 	// Get the Krauss operators after performing error correction
 	double* probabilities = characterise_code(code, logicals, error_model, (void*)&model_data, decoder, (void*)&decoder_data);

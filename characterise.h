@@ -21,21 +21,21 @@ double* characterise_code(const sym* code,
 						const sym* logicals, 
 						double (*error_model)(const sym*, void*), 
 						void* model_data, 
-						sym* (*decoder)(const sym*, void*),
+						decoder_f decoder,
 						void* decoder_data)
 {
 	double* p_error_probabilities = (double*)calloc(1ull << (logicals->length), sizeof(double));
-
+	
 	// Iterate through errors and map back to the code-space
 	sym_iter* physical_error = sym_iter_create(code->length);
 	while (sym_iter_next(physical_error))
 	{
 		// Calculate the syndrome
 		sym* syndrome = sym_syndrome(code, physical_error->state);
-		
+			
 		// Get the recovery operator
 		sym* recovery = decoder(syndrome, decoder_data);
-
+		
 		// Determine the state after correction
 		sym* corrected = sym_add(recovery, physical_error->state);
 

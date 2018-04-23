@@ -88,8 +88,6 @@ sym** destabilisers_generate(
 	const sym* code, 
 	const sym* logicals)
 {
-	sym_print(code);
-	sym_print(logicals);
 	// Setup the array of destabilisers
 	sym** destabilisers = (sym**)malloc(sizeof(sym*) * code->height); 
 	for (int i = 0; i < code->height; i++)
@@ -109,6 +107,7 @@ sym** destabilisers_generate(
 		printf("Could not find a set of destabilisers for this code.\n");
 		return NULL;
 	}
+	printf("Borked");
 	// Should not reach this point
 	return NULL;
 }
@@ -216,7 +215,8 @@ bool destabilisers_is_destabiliser(
 	for (int i = 0; i < row; i++)
 	{
 		sym* destabiliser_syndrome = sym_syndrome(destabilisers[i], destabiliser_candidate);
-		if (sym_get(destabiliser_syndrome, i, 0) == 1)
+		
+		if (sym_get(destabiliser_syndrome, 0, 0) == 1)
 		{
 			sym_free(destabiliser_syndrome);
 			return false;

@@ -15,7 +15,7 @@ sym* tableau_create(const sym* code, const sym* logicals, sym** destabilisers);
 
 /*
  * tableau_extend: 
- * Extends the tableau to fill the full 2n by 2n matrix, this function is a wrapper for the backtrack methods 
+ * Extends the tableau to fill the full 2n by 2n matrix
  * used to find the stabilisers and associated destabilisers in turn
  * :: sym* tableau :: The current tableau object containing the stabilisers and destabilisers 
  * :: sym* logicals :: The logicals associated with the code
@@ -48,14 +48,14 @@ bool tableau_is_destabiliser(
 void tableau_rank_deficient(sym* tableau);
 
 /*
- * tableau_CNOT
+ * tableau_cnot
  * Performs a CNOT gate on the tableau
  * :: sym* tableau :: The tableau object being operated on
  * :: const unsigned control :: The control qubit in the CNOT gate
  * :: const unsigned target :: The target qubit in the CNOT gate
  * Operations are performed in place, nothing is returned
  */
-void tableau_CNOT(sym* tableau, const unsigned control, const unsigned target);
+void tableau_cnot(sym* tableau, const unsigned control, const unsigned target);
 /*
  * tableau_hadamard
  * Performs a Hadamard gate on the tableau
@@ -83,18 +83,13 @@ void tableau_phase(sym* tableau, const unsigned target);
  */
 sym* tableau_create(const sym* code, const sym* logicals, sym** destabilisers)
 {
-	// If the destabilisers havent been generated, generate them
+	// If the destabilisers haven't been generated, generate them
 	bool free_destabilisers = false;
 	if (NULL == destabilisers)
 	{
 		destabilisers = destabilisers_generate(code, logicals);
 		free_destabilisers = true;
 	}
-
-	sym_print(code);
-	sym_print(logicals);
-	destabilisers_print(destabilisers, code->height);
-	printf("----\n");
 
 	sym* tableau = sym_create(code->length, code->length);
 
@@ -104,8 +99,7 @@ sym* tableau_create(const sym* code, const sym* logicals, sym** destabilisers)
 		sym_row_copy(tableau, destabilisers[i], i, 0);	
 		
 		sym_row_copy(tableau, code, i + tableau->height/2, i);
-
-		
+	
 	}
 
 	// Add the additional stabilisers and destabilisers
@@ -116,6 +110,7 @@ sym* tableau_create(const sym* code, const sym* logicals, sym** destabilisers)
 	{
 		destabilisers_free(destabilisers, code->height);
 	}
+
 	return tableau;
 }
 
@@ -131,15 +126,14 @@ sym* tableau_create(const sym* code, const sym* logicals, sym** destabilisers)
 void tableau_extend(sym* tableau, const sym* logicals, const unsigned n_stabilisers)
 {
 	sym* t = sym_transpose(logicals);
-	sym_print(t);
 
 	for (size_t i = 0; i < t->height / 2; i++)
 	{
 		// Copy the Z to the destabilisers
-		sym_row_copy(tableau, t, tableau->length/2 - (i+1), i + t->height/2);
+		sym_row_copy(tableau, t, tableau->length/2 - (i+1), i);
 
 		// Copy the X to the stabilisers
-		sym_row_copy(tableau, t, tableau->length - (i+1), i);
+		sym_row_copy(tableau, t, tableau->length - (i+1), i  + t->height/2);
 	}
 
 	sym_free(t);
@@ -237,14 +231,13 @@ bool tableau_is_stabiliser(
 	const unsigned n_stabiliser)
 {	
 	// Check that it commutes with the logicals
-	/*for (size_t i = 0; i < logicals->length; i++)
+	for (size_t i = 0; i < logicals->length; i++)
 	{
 		if (1 == sym_row_column_commutes(stabiliser_candidate, logicals, 0, i))
 		{
-			printf("L\n");
 			return false;
 		}
-	}*/
+	}
 
 	// Check that it commutes with the current stabilisers
 	for (size_t i = tableau->length / 2; i < tableau->length / 2 + n_stabiliser; i++)
@@ -275,14 +268,13 @@ bool tableau_is_destabiliser(
 	const unsigned n_stabiliser)
 {
 	// Check that it commutes with the logicals
-	/*for (size_t i = 0; i < logicals->length; i++)
+	for (size_t i = 0; i < logicals->length; i++)
 	{
 		if (1 == sym_row_column_commutes(destabiliser_candidate, logicals, 0, i))
 		{
-			printf("Ld\n");
 			return false;
 		}
-	}*/
+	}
 
 	// Check that it commutes with the current stabilisers
 	for (size_t i = tableau->length / 2; i < tableau->length / 2 + n_stabiliser - 1; i++)
@@ -313,79 +305,6 @@ bool tableau_is_destabiliser(
 }
 
 
-void tableau_rank_deficient(sym* tableau)
-{
-	
-	unsigned max_rank = 0;
-	unsigned logicals_start = 0;
-
-	// Check that the tableau is full rank in S_X
-	for (size_t i = 0; i < tableau->height / 2 && (max_rank == 0 || logicals_start == 0); i++)
-	{
-		bool rank_deficient = true;
-		for (size_t j = 0; j < tableau->length / 2 && rank_deficient; j++)
-		{
-			if (1 == sym_get(tableau, i + tableau->height / 2, j))
-			{
-				rank_deficient = false;
-			}
-		}
-
-		if (true == rank_deficient)
-		{
-			max_rank = i;
-		}
-
-		if (0 != max_rank && false == rank_deficient)
-		{
-			logicals_start = i;
-		}
-		
-	}
-
-	if (max_rank == 0)
-	{
-		return;
-	}
-
-	// CNOT S_Z subset k to Identity via Gaussian elimination
-	for (size_t i = max_rank; i < tableau->height / 2; i++)
-	{
-		// Ensure that [i,i] is 1
-		if ( 0 == sym_get(tableau, i + tableau->height / 2, i + tableau->height / 2) )
-		{
-			bool pivot_found = false;
-			for (size_t j = i; j < tableau->length / 2 && !pivot_found; j++)
-			{
-				if (1 == sym_get(tableau, i + tableau->height / 2, j + tableau->length / 2)) 
-				{
-					tableau_CNOT(tableau, j, i);
-					pivot_found = true;
-				}
-			}	
-		}
-		
-		// Use i,i to pivot and eliminate the rest of the row
-		for (size_t j = 0; j < tableau->length / 2; j++)
-		{
-			if (i != j && 1 == sym_get(tableau, i + tableau->height / 2, j + tableau->length / 2))
-			{
-				tableau_CNOT(tableau, i, j);
-			}
-		}
-	}
-
-	// Hadamard on k to map the identity over to X
-	for (size_t i = max_rank; i < tableau->height / 2; i++)
-	{
-		tableau_hadamard(tableau, i);
-	}
-
-
-	return;
-}
-
-
 /*
  * tableau_CNOT
  * Performs a CNOT gate on the tableau
@@ -394,7 +313,7 @@ void tableau_rank_deficient(sym* tableau)
  * :: const unsigned target :: The target qubit in the CNOT gate
  * Operations are performed in place, nothing is returned
  */
-void tableau_CNOT(sym* tableau, const unsigned control, const unsigned target)
+void tableau_cnot(sym* tableau, const unsigned control, const unsigned target)
 {
 	if (control > tableau->length / 2 
 		|| target > tableau->length / 2)
@@ -402,13 +321,12 @@ void tableau_CNOT(sym* tableau, const unsigned control, const unsigned target)
 		printf("Invalid operation attempted\n");
 	}
 
-	printf("%u %u\n", control, target);
 	for (size_t i = 0; i < tableau->height; i++)
 	{
-		// Set the target column to the control column XORed with the 
-		sym_set(tableau, i, target, sym_get(tableau, i, control) ^ sym_get(tableau,i,target));
+		// Set the target column to the control column XORed with the target column for both X and Z sub-matricies
+		sym_set(tableau, i, target, sym_get(tableau, i, target ) ^ sym_get(tableau, i, control));
 
-		sym_set(tableau, i, target + tableau->length / 2, sym_get(tableau, i, control + tableau->length / 2) ^ sym_get(tableau, i, target + tableau->length/2));
+		sym_set(tableau, i, control + tableau->length / 2, sym_get(tableau, i, target  + tableau->length / 2 ) ^ sym_get(tableau, i, control + tableau->length / 2));
 	}
     return;
 }
@@ -447,8 +365,5 @@ void tableau_phase(sym* tableau, const unsigned target)
 	}
 	return;
 }
-
-
-
 
 #endif
