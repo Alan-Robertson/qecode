@@ -54,7 +54,6 @@ int main()
 
 	double* probabilities = characterise_code(code, logicals, error_model_lookup, &md, decoder_tailored, (void*)&decoder_data);	
 		
-
 	free(probabilities);
 	free(initial_error_rate);
 	//free(error_rates);

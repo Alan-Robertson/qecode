@@ -104,7 +104,7 @@ sym** destabilisers_generate(
 	else
 	{
 		// No destabilisers found, this should be dealt with
-		printf("Could not find a set of destabilisers for this code.\n");
+		//printf("Could not find a set of destabilisers for this code.\n");
 		return NULL;
 	}
 	printf("Borked");

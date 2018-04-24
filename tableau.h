@@ -91,6 +91,12 @@ sym* tableau_create(const sym* code, const sym* logicals, sym** destabilisers)
 		free_destabilisers = true;
 	}
 
+	// Could not find destabilisers
+	if (NULL == destabilisers)
+	{
+		return NULL;
+	}
+
 	sym* tableau = sym_create(code->length, code->length);
 
 	// Create the tableau object

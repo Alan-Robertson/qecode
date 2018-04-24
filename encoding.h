@@ -16,6 +16,12 @@ circuit* encoding_circuit(const sym* code, const sym* logicals, sym** destabilis
 	// Get a tableau
 	sym* tableau = tableau_create(code, logicals, destabilisers);
 
+	// Could not create tableau
+	if (NULL == tableau)
+	{
+		return NULL;
+	}
+
 	encoding_rank_deficient(tableau, encode, cnot, hadamard);
 
 	// CNOT S_X to Identity via Gaussian elimination
