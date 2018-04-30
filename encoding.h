@@ -62,10 +62,10 @@ circuit* encoding_circuit(const sym* code, const sym* logicals, sym** destabilis
 			circuit_add_gate(encode, phase, i);
 			tableau_phase(tableau, i);
 		}
-
+		
+		// Eliminate the upper triangular section of the matrix
 		for (size_t j = i + 1; j < tableau->length / 2; j++)
 		{	
-			// Ensure that [i,i] is 1
 			if ( 1 == sym_get(tableau, i + tableau->height / 2, j + tableau->height / 2) )
 			{
 				circuit_add_gate(encode, cnot, j, i);

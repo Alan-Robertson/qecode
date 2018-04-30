@@ -43,6 +43,51 @@ double error_model_iid(const sym* error, void* v_model_data)
 	return pow(model_data->p_error / 3, weight) * pow(1 - model_data->p_error, model_data->n_qubits - weight);
 }
 
+typedef struct {
+	double p_error;
+	unsigned int n_qubits;
+	double bias;
+} biased_iid_model_data;
+
+double error_model_biased_X_iid(const sym* error, void* v_model_data)
+{
+	// Recast
+	biased_iid_model_data* model_data = (biased_iid_model_data*)v_model_data;
+	
+	unsigned int weight = sym_weight(error);
+	unsigned int x_weight = sym_weight_X(error);
+	
+	return (pow(model_data->p_error * model_data->bias / (model_data->bias + 2.0), x_weight)  // p_x
+		* pow(model_data->p_error / (model_data->bias + 2.0), weight - x_weight)  // p_z, p_y
+		* pow(1 - model_data->p_error, model_data->n_qubits - weight));           // p_i
+}
+
+double error_model_biased_Y_iid(const sym* error, void* v_model_data)
+{
+	// Recast
+	biased_iid_model_data* model_data = (biased_iid_model_data*)v_model_data;
+	
+	unsigned int weight = sym_weight(error);
+	unsigned int y_weight = sym_weight_Y(error);
+	
+	return (pow(model_data->p_error * model_data->bias / (model_data->bias + 2.0), y_weight)  // p_x
+		* pow(model_data->p_error / (model_data->bias + 2.0), weight - y_weight)  // p_z, p_y
+		* pow(1 - model_data->p_error, model_data->n_qubits - weight));           // p_i
+}
+
+double error_model_biased_Z_iid(const sym* error, void* v_model_data)
+{
+	// Recast
+	biased_iid_model_data* model_data = (biased_iid_model_data*)v_model_data;
+	
+	unsigned int weight = sym_weight(error);
+	unsigned int z_weight = sym_weight_Z(error);
+	
+	return (pow(model_data->p_error * model_data->bias / (model_data->bias + 2.0), z_weight)  // p_x
+		* pow(model_data->p_error / (model_data->bias + 2.0), weight - z_weight)  // p_z, p_y
+		* pow(1 - model_data->p_error, model_data->n_qubits - weight));           // p_i
+}
+
 
 // Trivial Bit flip model ------------------------------------------------------------------------------------
 // Error only occurs on the first bit
