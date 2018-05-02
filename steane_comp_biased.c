@@ -11,6 +11,7 @@
 #include "gates.h"
 #include "circuit.h"
 #include "encoding.h"
+#include "progress_bar.h"
 
 int main()
 {	
@@ -27,11 +28,13 @@ int main()
 	//sym* code = code_steane();
 	//sym* logicals = code_steane_logicals();
 
+	char name[] = "Biased Comparison";
+	struct progress_bar bar = progress_bar_create(n_increments, name);
 	for (unsigned i = 0; i < n_increments; i++)
 	{
+		progress_bar_update(&bar);
+
 		double bias = pow(10, i); 
-		printf("%e \n", bias);
-		continue;
 		biased_iid_model_data bf;
 		bf.n_qubits = n_qubits;
 		bf.bias = bias;

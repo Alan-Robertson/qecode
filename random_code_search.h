@@ -108,7 +108,7 @@ struct random_search_results random_code_search_best_of_n_codes_with_stats(
 	struct progress_bar bar = progress_bar_create(n_codes - 1, name);
 	for (size_t i = 0; i < n_codes; i++)
 	{
-		progress_bar_update(bar, i);
+		progress_bar_update(&bar);
 
 		random_code_return rand_code = code_random(n, k, r); 
 		sym* code = rand_code.code;
