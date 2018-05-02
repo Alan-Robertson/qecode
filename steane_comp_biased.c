@@ -14,10 +14,11 @@
 
 int main()
 {	
-	double rate_min = 0.0001, rate_delta = 2;
+	double rate_min = 0.001, rate_delta = 2;
 	unsigned n_increments = 10;
 
-	double logical_rate[10];
+	double* logical_rate = (double*)malloc(sizeof(double) * n_increments);
+	memset(logical_rate, 0, sizeof(double) * n_increments);
 	double error_rate = 0.0001;
 
 	unsigned n_qubits = 7, n_logicals = 1, distance = 3;
@@ -28,8 +29,9 @@ int main()
 
 	for (unsigned i = 0; i < n_increments; i++)
 	{
-		double bias = rate_min * pow(rate_delta, i); 
-	
+		double bias = pow(10, i); 
+		printf("%e \n", bias);
+		continue;
 		biased_iid_model_data bf;
 		bf.n_qubits = n_qubits;
 		bf.bias = bias;
@@ -95,8 +97,7 @@ int main()
 
 	for (unsigned i = 0; i < n_increments; i++)
 	{
-		printf("%e ", logical_rate[i]);
-		printf("\n");
+		printf("%e, %e\n", logical_rate[i], pow(10, i));
 	}
 
 	return 0;	
