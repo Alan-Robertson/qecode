@@ -95,4 +95,24 @@ sym* decoder_tailored(const sym* syndrome, void* decoder_data)
 	return recovery_operator;
 }
 
+/* 
+    decoder_free:
+	Frees all elements in a destabiliser
+	:: sym** d :: The set of destabilisers to free
+	:: const unsigned length ::  The number of destabilisers in the set
+	Returns nothing
+*/
+void decoder_free(sym** d, const unsigned n_syndrome_bits)
+{
+	for (int i = 0; i < (1ull << (n_syndrome_bits)); i++)
+	{
+		if (d[i] != NULL)
+		{
+			sym_free(d[i]);	
+		}
+	}
+	free(d);
+	return;
+}
+
 #endif

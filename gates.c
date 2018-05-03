@@ -13,11 +13,11 @@ int main()
 	sym* code = code_steane();
 	sym* logicals = code_steane_logicals();
 
-	for (int i = 1; i < 100; i++)
-	{
+	//for (int i = 1; i < 100; i++)
+	//{
 		iid_model_data bf;
 		bf.n_qubits = n_qubits;
-		bf.p_error = i * 0.0001;
+		bf.p_error = 0.001;//i * 0.0001;
 
 		double initial_error_rate[1 << (2 * n_qubits)];
 		memset(initial_error_rate, 0, (1 << (2 * n_qubits)) * sizeof(double));
@@ -43,7 +43,7 @@ int main()
 		circuit_add_gate(encode, hadamard, 1);
 		circuit_add_gate(encode, hadamard, 2);
 
-		circuit_add_gate(encode, cnot, 3, 4);
+		/*circuit_add_gate(encode, cnot, 3, 4);
 		circuit_add_gate(encode, cnot, 3, 5);
 
 		circuit_add_gate(encode, cnot, 2, 3);
@@ -56,7 +56,7 @@ int main()
 
 		circuit_add_gate(encode, cnot, 0, 6);
 		circuit_add_gate(encode, cnot, 0, 5);
-		circuit_add_gate(encode, cnot, 0, 4);	
+		circuit_add_gate(encode, cnot, 0, 4);*/	
 
 		final_error_rate = circuit_run(encode, initial_error_rate);
 
@@ -74,7 +74,7 @@ int main()
 		circuit_free(encode);
 		free(cnot);
 		free(hadamard);
-	}
+	//}
 
 	sym_free(code);
 	sym_free(logicals);

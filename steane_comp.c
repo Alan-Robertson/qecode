@@ -25,9 +25,9 @@ int main()
 	sym* code = code_steane();
 	sym* logicals = code_steane_logicals();
 
-	for (unsigned i = 0; i < n_increments; i++)
-	{
-		double error_rate = rate_min * pow(rate_delta, i); 
+	//for (unsigned i = 0; i < n_increments; i++)
+	//{
+		double error_rate = 0.01; // rate_min * pow(rate_delta, i); 
 	
 		bit_flip_model_data bf;
 		bf.n_qubits = n_qubits;
@@ -78,12 +78,12 @@ int main()
 
 		double* probabilities = characterise_code(code, logicals, error_model_lookup, &md, decoder_tailored, (void*)&decoder_data);
 
-		logical_rate[i] = probabilities[0];
+		logical_rate[0] = probabilities[0];
 
 		// Free allocated objects 
 		free(initial_error_rate);
 		free(probabilities);		
-	}
+	//}
 
 	printf("--------------------------------------\n");
 	printf("Best Random of %d \n", n_codes_searched);

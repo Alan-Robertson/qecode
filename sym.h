@@ -14,7 +14,7 @@
 #define BYTE unsigned char
 
 // Calculate the number of bytes required to store the symplectic matrix
-#define MATRIX_BYTES(s) ((((s)->height) * ((s)->length)) % 8 ? (((s)->height) * ((s)->length) ) / 8 + 1 : (((s)->height) * ((s)->length)) / 8) 
+#define MATRIX_BYTES(s) ((((s)->height) * ((s)->length)) % 8 ? ((((s)->height) * ((s)->length) ) / 8) + 1 : (((s)->height) * ((s)->length)) / 8) 
 
 // Given a matrix, find the byte containing the i, j'th element
 #define BYTE_FROM_MATRIX(s, i, j) (((s)->length * (i) + (j)) / 8)
@@ -556,12 +556,6 @@ void sym_copy_in_place(sym* d, const sym* s)
 	memcpy(d->matrix, s->matrix, s->mem_size);
 }
 
-
-unsigned sym_matrix_bytes(sym* s)
-{
-	return MATRIX_BYTES(s);
-}
-
 /*
 	sym_multiply:
 	Multiplies two symplectic matrices of the appropriate size
@@ -632,17 +626,17 @@ sym* sym_syndrome(const sym* code, const sym* error)
 		return NULL;
 	}
 
+	// Also the number of qubits
 	const int half_length = code->length / 2;
 
 	sym* syndrome = sym_create(code->height, 1);
-
-	for (int i = 0; i <= error->length; i++)
+	for (int i = 0; i < error->length; i++)
 	{
 		if (ELEMENT_GET(error, 0, i)) // If there is no error on this qubit, skip it
 		{
-			for (int j = 0; j <= code->height; j++)
+			for (int j = 0; j < syndrome->height; j++)
 			{
-				ELEMENT_XOR(syndrome, j, 0, ELEMENT_GET(code, j, (i + half_length) % code->length) & ELEMENT_GET(error, 0, i));
+				ELEMENT_XOR(syndrome, j, 0, ELEMENT_GET(code, j, i % code->length) & ELEMENT_GET(error, 0, i % code->length));
 			}
 		}
 	}

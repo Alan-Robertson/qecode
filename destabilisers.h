@@ -104,10 +104,10 @@ sym** destabilisers_generate(
 	else
 	{
 		// No destabilisers found, this should be dealt with
-		//printf("Could not find a set of destabilisers for this code.\n");
+		// printf("Could not find a set of destabilisers for this code.\n");
+		destabilisers_free(destabilisers, code->height);
 		return NULL;
 	}
-	printf("Borked");
 	// Should not reach this point
 	return NULL;
 }
@@ -137,7 +137,6 @@ bool destabilisers_backtrack(
 	sym_iter* destabiliser_candidate = sym_iter_create(code->length);
 	while(sym_iter_next(destabiliser_candidate) && !found_destabiliser)
 	{
-
 		// Check whether our proposal is a destabiliser
 		if (destabilisers_is_destabiliser(
 			code,
@@ -178,7 +177,7 @@ bool destabilisers_is_destabiliser(
 {
 	// Check that it commutes with the logicals
 	sym* logical_syndrome = logical_error(logicals, destabiliser_candidate);
-	for (int i = 0; i < logicals->height; i++)
+	for (int i = 0; i < logicals->length; i++)
 	{
 		if (sym_get(logical_syndrome, 0, i))
 		{
@@ -190,17 +189,18 @@ bool destabilisers_is_destabiliser(
 
 	// Check that it commutes with all bar one of the stabilisers
 	sym* syndrome = sym_syndrome(code, destabiliser_candidate);
-	for (int i = 0; i < code->height; i++)
+	for (int i = 0; i < syndrome->height; i++)
 	{
+		// Check against the elements that it doesn't anti-commute with
 		if (i != row)
 		{
 			if (sym_get(syndrome, i, 0) == 1)
 			{
 				sym_free(syndrome);
 				return false;
-			};
+			}
 		}
-		else
+		else // Check against the elements that it does anti-commute with
 		{
 			if (sym_get(syndrome, i, 0) == 0)
 			{

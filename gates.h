@@ -62,7 +62,13 @@ double* gate_operator(const unsigned n_qubits,
 	const gate* g,
 	const unsigned* target_qubits);
 
-
+/* 
+    gate_free:
+	Frees a gate object
+	:: gate* g :: The gate to be freed
+	Does not return anything
+*/
+void gate_free(gate* g);
 
 // FUNCTION DEFINITIONS ----------------------------------------------------------------------------------------
 /* 
@@ -195,6 +201,17 @@ double* gate_operator(const unsigned n_qubits,
 	sym_iter_free(initial_state);
 
 	return p_state_probabilities;
+}
+
+/* 
+    gate_free:
+	Frees a gate object
+	:: gate* g :: The gate to be freed
+	Does not return anything
+*/
+void gate_free(gate* g)
+{
+	free(g);
 }
 
 #endif

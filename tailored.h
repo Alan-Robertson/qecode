@@ -55,6 +55,7 @@ sym** tailor_decoder(const sym* code,
 	// Build the decoder table, there should be a single decoding operation for each syndrome
 	sym** tailored_decoder = (sym**)malloc(sizeof(sym*) * n_syndromes);
 
+
 	// Initialise the recovery operators to prevent fragmentation
 	sym_iter* syndromes = sym_iter_create(code->height);
 	while (sym_iter_next(syndromes))
@@ -63,7 +64,7 @@ sym** tailor_decoder(const sym* code,
 		tailored_decoder[index] = (sym*)sym_create(1, code->length);
 
 		// Set the mem_size to 0 as a flag for undiscovered recovery operators
-		tailored_decoder[index]->mem_size = 0;
+		//tailored_decoder[index]->mem_size = 0;
 	}
 	sym_iter_free(syndromes);
 

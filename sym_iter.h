@@ -198,7 +198,7 @@ bool sym_iter_next(sym_iter* siter)
 long long sym_iter_ll_from_state(const sym_iter* siter)
 {
 	long long val = 0;
-	for (int i = 0; i < sym_matrix_bytes(siter->state); i++)
+	for (int i = 0; i < siter->state->mem_size; i++)
 	{
 		val <<= 8ll;
 		val += (BYTE)(siter->state->matrix[i]);
@@ -217,7 +217,7 @@ long long sym_iter_ll_from_state(const sym_iter* siter)
 void sym_iter_state_from_ll(sym_iter* siter, long long val)
 {
 	val <<= ((siter->length % 8) ? 8 - (siter->length % 8) : 0);
-	for (int i = sym_matrix_bytes(siter->state)- 1; i >= 0; i--)
+	for (int i = siter->state->mem_size - 1; i >= 0; i--)
 	{
 		siter->state->matrix[i] = (BYTE)(val);
 		val >>= 8ll;
