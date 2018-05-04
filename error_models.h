@@ -7,9 +7,56 @@
 #include <stdarg.h>
 #include "errors.h"
 
+// Error model template ------------------------------------------------------------------------------------------------
+// Follow this for creating new error models
+/*
+	struct model_params_<model_name> 
+	{
+		model params
+		...
+	};
+
+	// Constructor
+	error_model* error_model_create_<model_name>(model_params...)
+	{
+		error_model* m = error_model_create(); // Sets default arguments
+		struct model_params_<model_name>* mp = (struct model_params_<model_name>*)malloc(sizeof(struct model_params_<model_name>));
+		//Fill in the model params
+		
+		// Set the params and call function
+		m->model_params = mp;
+		m->model_call = error_model_call_<model_name>;
+		
+		// Optional destructor!
+		m->model_free = error_model_free_<model_name>;
+		return m;
+	}
+
+	// Destructor
+	// There is already a default destructor, if you do not need to allocate any heap memory within your 
+	// model params, then this should be sufficient
+	// Otherwise you will need to create your own destructor and set m->param_free to point to it.
+	// The destructor should take the template: 
+	void error_model_param_free_<model_name>(void* model_params);
+
+	// Caller
+	unsigned double error_model_call_<model_name>(sym* error, void* v_m);
+	{
+		// Recast
+		model_params* m = (model_params*)v_m;
+		
+		//Evaluate the error string
+		//If you need to view the error in a string format use the error_sym_to_str() function
+
+		return <double: probability of the error occurring>
+	}*/
 
 
-// FUNCTION DECLARATIONS ----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
+// The Error Model Base 'class'
+//----------------------------------------------------------------------------------------
+
+// DECLARATIONS ----------------------------------------------------------------------------------------
 
 typedef double (*error_model_f)(const sym*, void*);
 typedef void (*param_free_f)(void*);
@@ -23,6 +70,8 @@ typedef struct error_model
 	error_model_f model_call; // Called to calculate the error probability
 	param_free_f param_free; // Called to free the model parameters
 }
+
+// FUNCTION DEFINITIONS ----------------------------------------------------------------------------------------
 
 // Default constructor method for creating a new error model
 error_model* error_model_create()
@@ -55,6 +104,8 @@ void error_model_param_free_default(void* model_params)
 	return;
 }
 
+// DISPATCH METHODS ------------------------------------------------------------------------------------------------
+
 // Dispatch method for calling the error model probability
 double error_model_prob(error_model m*, const sym* error)
 {
@@ -68,42 +119,9 @@ void error_model_param_free(error_model* m)
 }
 
 
-// Error model template ------------------------------------------------------------------------------------------------
-// Follow this for creating new error models
-/*
-	struct model_params_<model_name> 
-	{
-		model params
-		...
-	}
-
-	// Constructor
-	error_model* error_model_create_<model_name>(model_params...)
-	{
-		error_model* m = error_model_create(); // Sets default arguments
-		struct model_params_<model_name>* md = malloc
-		Fill in the model params
-		return m;
-	}
-
-	// Destructor
-	// There is already a default destructor, if you do not need to allocate any heap memory within your 
-	// model params, then this should be sufficient
-	// Otherwise you will need to create your own destructor and set m->param_free to point to it.
-	// The destructor should take the template: 
-	void error_model_param_free_<model_name>(void* model_params);
-
-	// Caller
-	unsigned double error_model_call_<model_name>(sym* error, void* v_m);
-	{
-		// Recast
-		model_params* m = (model_params*)v_m;
-		
-		Evaluate the error string
-		If you need to view the error in a string format use the error_sym_to_str() function
-
-		return double
-	}*/
+//----------------------------------------------------------------------------------------
+// Inheriting Error Models
+//----------------------------------------------------------------------------------------
 
 // IID ERROR MODEL ------------------------------------------------------------------------------------------------
 
@@ -113,13 +131,25 @@ struct {
 	unsigned int n_qubits;
 } model_params_iid;
 
-// Model Constructor
+/*
+	error_model_create_iid
+	Base model constructor for iid error models
+	:: const double p_error :: Probability of a physical error
+	:: const unsigned n_qubits :: Number of physical qubits
+	Returns a pointer to a new error model object on the heap
+*/
 error_model* error_model_create_iid(const double p_error, const unsigned int n_qubits);
 
 // Model Call
 double error_model_call_iid(const sym* error, void* v_model_params);
 
-// Model Constructor
+/*
+	error_model_create_iid
+	Base model constructor for iid error models
+	:: const double p_error :: Probability of a physical error
+	:: const unsigned n_qubits :: Number of physical qubits
+	Returns a pointer to a new error model object on the heap
+*/
 error_model* error_model_create_iid(const double p_error, const unsigned int n_qubits)
 {	
 	error_model* m = error_model_create();
@@ -153,17 +183,60 @@ struct {
 } model_params_iid_biased;
 
 // Model Constructors
-error_model* error_model_create_iid_biased(const double p_error, const unsigned int n_qubits, const double bias)
-error_model* error_model_create_iid_biased_X(const double p_error, const unsigned int n_qubits, const double bias)
-error_model* error_model_create_iid_biased_Y(const double p_error, const unsigned int n_qubits, const double bias)
-error_model* error_model_create_iid_biased_Z(const double p_error, const unsigned int n_qubits, const double bias)
+/*
+	error_model_create_iid_biased
+	Base model constructor for all biased iid error models
+	:: const double p_error :: Probability of a physical error
+	:: const unsigned n_qubits :: Number of physical qubits
+	:: const double bias :: The bias in the type of error
+	Returns a pointer to a new error model object on the heap
+*/
+error_model* error_model_create_iid_biased(const double p_error, const unsigned int n_qubits, const double bias);
+
+/*
+	error_model_create_iid_biased_X
+	Base model constructor for X biased iid error models
+	:: const double p_error :: Probability of a physical error
+	:: const unsigned n_qubits :: Number of physical qubits
+	:: const double bias :: The bias towards X errors
+	Returns a pointer to a new error model object on the heap
+*/
+error_model* error_model_create_iid_biased_X(const double p_error, const unsigned int n_qubits, const double bias);
+
+/*
+	error_model_create_iid_biased_Y
+	Base model constructor for Y biased iid error models
+	:: const double p_error :: Probability of a physical error
+	:: const unsigned n_qubits :: Number of physical qubits
+	:: const double bias :: The bias towards Y errors
+	Returns a pointer to a new error model object on the heap
+*/
+error_model* error_model_create_iid_biased_Y(const double p_error, const unsigned int n_qubits, const double bias);
+
+/*
+	error_model_create_iid_biased_Z
+	Base model constructor for Z biased iid error models
+	:: const double p_error :: Probability of a physical error
+	:: const unsigned n_qubits :: Number of physical qubits
+	:: const double bias :: The bias towards Z errors
+	Returns a pointer to a new error model object on the heap
+*/
+error_model* error_model_create_iid_biased_Z(const double p_error, const unsigned int n_qubits, const double bias);
 
 // Model Callers
 double error_model_call_iid_biased_X(const sym* error, void* v_model_params);
 double error_model_call_iid_biased_Y(const sym* error, void* v_model_params);
 double error_model_call_iid_biased_Z(const sym* error, void* v_model_params);
 
-// Model Constructor
+// Model Constructors
+/*
+	error_model_create_iid_biased
+	Base model constructor for all biased iid error models
+	:: const double p_error :: Probability of a physical error
+	:: const unsigned n_qubits :: Number of physical qubits
+	:: const double bias :: The bias in the type of error
+	Returns a pointer to a new error model object on the heap
+*/
 error_model* error_model_create_iid_biased(const double p_error, const unsigned int n_qubits, const double bias)
 {	
 	error_model* m = error_model_create();
@@ -178,6 +251,14 @@ error_model* error_model_create_iid_biased(const double p_error, const unsigned 
 }
 
 // Model Constructors
+/*
+	error_model_create_iid_biased_X
+	Base model constructor for X biased iid error models
+	:: const double p_error :: Probability of a physical error
+	:: const unsigned n_qubits :: Number of physical qubits
+	:: const double bias :: The bias towards X errors
+	Returns a pointer to a new error model object on the heap
+*/
 error_model* error_model_create_iid_biased_X(const double p_error, const unsigned int n_qubits, const double bias)
 {	
 	error_model* m = error_model_create_iid_biased(p_error, n_qubits, bias);
@@ -187,6 +268,14 @@ error_model* error_model_create_iid_biased_X(const double p_error, const unsigne
 	return m;
 }
 
+/*
+	error_model_create_iid_biased_Y
+	Base model constructor for Y biased iid error models
+	:: const double p_error :: Probability of a physical error
+	:: const unsigned n_qubits :: Number of physical qubits
+	:: const double bias :: The bias towards Y errors
+	Returns a pointer to a new error model object on the heap
+*/
 error_model* error_model_create_iid_biased_Y(const double p_error, const unsigned int n_qubits, const double bias)
 {	
 	error_model* m = error_model_create_iid_biased(p_error, n_qubits, bias);
@@ -196,6 +285,14 @@ error_model* error_model_create_iid_biased_Y(const double p_error, const unsigne
 	return m;
 }
 
+/*
+	error_model_create_iid_biased_Z
+	Base model constructor for Z biased iid error models
+	:: const double p_error :: Probability of a physical error
+	:: const unsigned n_qubits :: Number of physical qubits
+	:: const double bias :: The bias towards Z errors
+	Returns a pointer to a new error model object on the heap
+*/
 error_model* error_model_create_iid_biased_Z(const double p_error, const unsigned int n_qubits, const double bias)
 {	
 	error_model* m = error_model_create_iid_biased(p_error, n_qubits, bias);
