@@ -40,8 +40,6 @@ int main()
 	sym** decoder_data = tailor_decoder(code, logicals, error_model_lookup, &md);
 
 	double* probabilities = characterise_code(code, logicals, error_model_lookup, &md, decoder_tailored, (void*)&decoder_data);
-
-	
 	
 	error_probabilities_free(probabilities);
 	decoder_free(decoder_data, code->height);
