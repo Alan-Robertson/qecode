@@ -10,20 +10,17 @@
 int main()
 {
 	unsigned n_qubits = 7;
+	double p_error = 0.001;
 
 	sym* code = code_steane();
 	sym* logicals = code_steane_logicals();
 	
-	iid_model_data bf;
-	bf.n_qubits = n_qubits;
-	bf.p_error = 0.001;
+	error_model* em_iid = error_model_create_iid(n_qubits, p_error);
 
-	gate* cnot = gate_create(2,  
+	/*gate* cnot = gate_create(2,  
 			gate_cnot,
-			error_model_iid,
-			&bf,
-			&bf);
-
+			em_iid,
+			&md);
 
 	circuit* encode = circuit_create(n_qubits);
 
@@ -33,20 +30,26 @@ int main()
 	double* initial_error_probs = error_probabilities_identity(n_qubits);
 	double* final_error_probs = circuit_run(encode, initial_error_probs);
 
-	lookup_error_model_data md;
-	md.lookup_table = final_error_probs;
+	error_model* em_lookup = error_model_create_lookup(n_qubits, final_error_probs);
 
 	// Recovery!
-	sym** decoder_data = tailor_decoder(code, logicals, error_model_lookup, &md);
+	sym** decoder_data = tailor_decoder(code, logicals, em_lookup);
 
 	double* probabilities = characterise_code(code, logicals, error_model_lookup, &md, decoder_tailored, (void*)&decoder_data);
-	
-	error_probabilities_free(probabilities);
-	decoder_free(decoder_data, code->height);
-	error_probabilities_free(initial_error_probs);
-	error_probabilities_free(final_error_probs);
-	circuit_free(encode);
-	gate_free(cnot);
+	*/
+
+	error_model_free(em_iid);
+	//error_model_free(em_lookup);
+
+	//error_probabilities_free(probabilities);
+	//error_probabilities_free(initial_error_probs);
+	//error_probabilities_free(final_error_probs);
+
+	//decoder_free(decoder_data, code->height);
+
+	//circuit_free(encode);
+	//gate_free(cnot);
+
 	sym_free(code);
 	sym_free(logicals);
 
