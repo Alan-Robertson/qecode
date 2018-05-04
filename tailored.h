@@ -4,6 +4,7 @@
 #include "sym_iter.h"
 #include "decoders.h"
 #include "logical.h"
+#include "error_models/error_models.h"
 
 
 // FUNCTION DECLARATIONS ----------------------------------------------------------------------------------------

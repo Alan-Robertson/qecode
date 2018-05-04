@@ -1,3 +1,8 @@
+#ifndef ERROR_MODEL_ASYMMETRIC
+#define ERROR_MODEL_ASYMMETRIC
+
+#include "error_models.h"
+
 // Spatially Asymmetric Noise -------------------------------------------------------------------------------
 
 struct model_params_spatially_asymmetric {
@@ -37,3 +42,4 @@ double error_model_spatially_asymmetric(const sym* error, void* v_model_params)
 	return pow(1.0 - (model_params->p_bitflip), model_params->n_bitflip_qubits - x_weight) * pow((model_params->p_bitflip), x_weight) * pow(1.0 - (model_params->p_phaseflip), model_params->n_phaseflip_qubits - z_weight) * pow(model_params->p_phaseflip, z_weight);
 }
 
+#endif

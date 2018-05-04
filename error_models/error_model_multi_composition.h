@@ -1,3 +1,8 @@
+#ifndef ERROR_MODEL_MULTI_COMPOSITION
+#define ERROR_MODEL_MULTI_COMPOSITION
+
+#include "error_models.h"
+
 // Multi Model Composition -------------------------------------------------------------------------------
  
 struct error_model_params_multi_composition {
@@ -100,3 +105,5 @@ void error_model_free_multi_composition(void* v_model_params)
 	free(model_params);
 	return;
 }
+
+#endif

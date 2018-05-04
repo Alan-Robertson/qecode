@@ -5,7 +5,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include "errors.h"
+#include "../errors.h"
 
 // Error model template ------------------------------------------------------------------------------------------------
 // Follow this for creating new error models

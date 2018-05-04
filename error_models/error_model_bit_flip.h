@@ -1,6 +1,8 @@
 #ifndef ERROR_MODEL_BIT_FLIP
 #define ERROR_MODEL_BIT_FLIP
 
+#include "error_models.h"
+
 // Trivial Bit flip model ------------------------------------------------------------------------------------
 // Error only occurs on the first bit
 struct model_params_bit_flip_trivial {

@@ -1,3 +1,8 @@
+#ifndef ERROR_MODEL_LOOKUP
+#define ERROR_MODEL_LOOKUP
+
+#include "error_models.h"
+
 // Lookup Model Composition -------------------------------------------------------------------------------
  
 struct error_model_params_lookup {
@@ -38,3 +43,5 @@ void error_model_free_lookup(void* v_model_params)
 	free(model_params);
 	return;
 }
+
+#endif

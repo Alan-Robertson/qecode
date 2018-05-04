@@ -1,10 +1,10 @@
 #include "codes.h"
-#include "error_models.h"
 #include "tailored.h"
 #include "decoders.h"
 #include "characterise.h"
 #include "gates.h"
 #include "circuit.h"
+#include "error_models/error_model_iid.h"
 #include "error_probabilities.h"
 
 int main()
