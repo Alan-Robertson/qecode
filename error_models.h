@@ -74,6 +74,12 @@ typedef struct error_model
 // FUNCTION DEFINITIONS ----------------------------------------------------------------------------------------
 
 // Default constructor method for creating a new error model
+/*
+	error_model_create
+	Base model constructor for error models, no arguments,
+	Allocates memory for the error model and sets the default destructor
+	Returns a pointer to a new error model object on the heap
+*/
 error_model* error_model_create()
 {
 	error_model* m = (error_model*)malloc(sizeof(error_model));
@@ -83,7 +89,14 @@ error_model* error_model_create()
 	return m;
 }
 
-// Freeing the model and the associated parameters
+// Freeing the model and the associated parameters dispatch
+/*
+	error_model_free
+	Destructor for error models, frees the error model and any 
+	Associated parameters
+	:: error_model* m :: The error model object to be freed
+	Returns nothing
+*/
 void error_model_free(error_model* m)
 {
 	if (NULL != m)
@@ -97,7 +110,15 @@ void error_model_free(error_model* m)
 	return;
 }
 
-// Default paramater free
+// Default parameter free
+/*
+	error_model_param_free_default
+	Default destructor for error model parameters
+	Use this if none of the parameters have been allocated to heap memory
+	Else implement your own method and set error_model->param_free to point to it
+	:: error_model* m :: The error model object whose parameters are to be freed
+	Returns nothing
+*/
 void error_model_param_free_default(void* model_params)
 {
 	free(model_params);
@@ -107,12 +128,25 @@ void error_model_param_free_default(void* model_params)
 // DISPATCH METHODS ------------------------------------------------------------------------------------------------
 
 // Dispatch method for calling the error model probability
+/*
+	error_model_prob
+	Dispatch method to call the error model's probability function
+	:: error_model* m :: The error model object 
+	:: const sym* error :: The error
+	Returns the probability with which this error occurs under the given error model
+*/
 double error_model_prob(error_model m*, const sym* error)
 {
 	return m->prob_error(error, m->model_params);
 }
 
 // Dispatch method for calling parameter free
+/*
+	error_model_param_free
+	Dispatch method for freeing the parameters of an error model
+	:: error_model* m :: The error model object whose parameters are to be freed
+	Returns nothing
+*/
 void error_model_param_free(error_model* m)
 {
 	m->param_free(m->model_params);
@@ -250,7 +284,6 @@ error_model* error_model_create_iid_biased(const double p_error, const unsigned 
 	return m;
 }
 
-// Model Constructors
 /*
 	error_model_create_iid_biased_X
 	Base model constructor for X biased iid error models
@@ -352,7 +385,12 @@ struct {
 	double p_error;
 } model_params_bit_flip_trivial;
 
-// Model Constructor
+/*
+	error_model_create_bit_flip_trivial
+	Model constructor for the trivial bit flip error model
+	:: const double p_error :: Probability of an X error on the first qubit
+	Returns a pointer to a new error model object on the heap
+*/
 error_model* error_model_create_bit_flip_trivial(const double p_error)
 {	
 	error_model* m = error_model_create();
@@ -360,16 +398,18 @@ error_model* error_model_create_bit_flip_trivial(const double p_error)
 
 	mp->p_error = p_error;
 
-	m->model_call = error_model_bit_flip_trivial;
+	m->model_call = error_model_call_bit_flip_trivial;
 	m->model_params = mp;
 
 	return m;
 }
 
-double error_model_bit_flip_trivial(const sym* error, void* v_model_params)
+double error_model_call_bit_flip_trivial(const sym* error, void* v_model_params)
 {
 	// Recast
 	struct model_params_bit_flip_trivial* model_params = (struct model_params_bit_flip_trivial*)v_model_params;
+	
+	// Check the error string
 	char* error_string = error_sym_to_str(error);
 	if (!strcmp(error_string, "II"))
 	{
@@ -411,11 +451,11 @@ struct {
 	double p_bitflip;
 	unsigned n_phaseflip_qubits;
 	double p_phaseflip;
-} spatially_asymmetric_model_params;
+} model_params_spatially_asymmetric;
 
 double error_model_spatially_asymmetric(const sym* error, void* v_model_params)
 {
-	struct spatially_asymmetric_model_params* model_params = (struct spatially_asymmetric_model_params*) v_model_params;
+	struct model_params_spatially_asymmetric* model_params = (struct model_params_spatially_asymmetric*) v_model_params;
 	if (sym_weight_Y(error) > 0) // No Y errors
 	{
 		return 0;
@@ -451,9 +491,69 @@ struct {
 	unsigned* model_split;
 	error_model_f* error_models;
 	void** error_models_params;
-} multi_composition_error_model_params;
+} error_model_params_multi_composition;
 
-double error_model_multi_composition(const sym* error, void* v_model_params)
+error_model* error_model_create_multi_composition(unsigned n_models, ...);
+double error_model_call_multi_composition(const sym* error, void* v_model_params);
+void error_model_free_multi_composition(void* v_model_params);
+
+error_model* error_model_create_multi_composition(unsigned n_models, ...)
+{
+	error_model* m = error_model_create();
+	
+	// The parameters
+	struct multi_composition_error_model_params* model_params = (struct multi_composition_error_model_params*)malloc(sizeof(struct multi_composition_error_model_params));
+	
+	// Fill in the params
+	model_params->n_models = n_models;
+	model_params->model_split = (unsigned*)malloc(sizeof(unsigned) * model_params->n_models);
+	model_params->error_models = (error_model_f*)malloc(sizeof(error_model_f) * model_params->n_models);
+	model_params->error_models_params = (void**)malloc(sizeof(void*) * model_params->n_models);
+
+	unsigned counter = 0;
+
+	va_list argv;
+	va_start(argv, n_models);
+
+	enum mode {MODEL_SPLIT_e, ERROR_MODELS_e, MODEL_params_e, TERM_e};
+	unsigned current_mode = MODEL_SPLIT_e;
+
+	while (current_mode != TERM_e)
+	{
+		switch (current_mode)
+		{
+			case MODEL_SPLIT_e:
+				model_params->model_split[counter] = va_arg(argv, unsigned);
+			break;
+
+			case ERROR_MODELS_e:
+				model_params->error_models[counter] = va_arg(argv, error_model_f);
+			break;
+
+			case MODEL_params_e:
+				model_params->error_models_params[counter] = va_arg(argv, void*);
+			break;
+		}
+
+		counter++;
+
+		if (counter == model_params->n_models)
+		{
+			current_mode++;
+			counter = 0;
+		}
+	}
+	va_end(argv);
+
+	m->model_params = model_params;
+	m->model_call = error_model_call_multi_composition;
+	m->param_free = error_model_free_multi_composition;
+
+	return m;
+}
+
+
+double error_model_call_multi_composition(const sym* error, void* v_model_params)
 {
 	double prob = 1;
 	unsigned current_qubit = 0;
@@ -477,77 +577,55 @@ double error_model_multi_composition(const sym* error, void* v_model_params)
 	return prob;
 }
 
-error_model_create_multi_composition()
-{
-
-}
-
-
-multi_composition_error_model_params error_model_multi_builder(unsigned n_models, ...)
-{
-	struct multi_composition_error_model_params model_params;
-	model_params.n_models = n_models;
-	model_params.model_split = (unsigned*)malloc(sizeof(unsigned) * model_params.n_models);
-	model_params.error_models = (error_model_f*)malloc(sizeof(error_model_f) * model_params.n_models);
-	model_params.error_models_params = (void**)malloc(sizeof(void*) * model_params.n_models);
-
-	unsigned counter = 0;
-
-	va_list argv;
-	va_start(argv, n_models);
-
-	enum mode {MODEL_SPLIT_e, ERROR_MODELS_e, MODEL_params_e, TERM_e};
-	unsigned current_mode = MODEL_SPLIT_e;
-
-	while (current_mode != TERM_e)
-	{
-		switch (current_mode)
-		{
-			case MODEL_SPLIT_e:
-				model_params.model_split[counter] = va_arg(argv, unsigned);
-			break;
-
-			case ERROR_MODELS_e:
-				model_params.error_models[counter] = va_arg(argv, error_model_f);
-			break;
-
-			case MODEL_params_e:
-				model_params.error_models_params[counter] = va_arg(argv, void*);
-			break;
-		}
-
-		counter++;
-
-		if (counter == model_params.n_models)
-		{
-			current_mode++;
-			counter = 0;
-		}
-	}
-	va_end(argv);
-	return model_params;
-}
-
-void error_model_multi_free(void* v_model_params)
+void error_model_free_multi_composition(void* v_model_params)
 {
 	struct multi_composition_error_model_params* model_params = (struct multi_composition_error_model_params*)v_model_params;
 	free(model_params->model_split);
 	free(model_params->error_models);
 	free(model_params->error_models_params);
+	free(model_params);
 	return;
 }
 
 // Lookup Model Composition -------------------------------------------------------------------------------
  
 struct {
+	unsigned int n_qubits;
 	double* lookup_table;
-} lookup_error_model_params;
+} error_model_params_lookup;
 
-double error_model_lookup(const sym* error, void* v_model_params)
+
+error_model* error_model_create_lookup(unsigned int n_qubits, double* lookup_table);
+double error_model_call_lookup(const sym* error, void* v_model_params);
+void error_model_free_lookup(void* v_model_params);
+
+// The lookup table is copied!
+error_model* error_model_create_lookup(unsigned int n_qubits, double* lookup_table)
+{
+	error_model* m = error_model_create();
+	struct error_model_params_lookup* mp = (struct error_model_params_lookup*)malloc(sizeof(error_model_params_lookup));
+
+	mp->n_qubits = n_qubits;
+
+	mp->lookup_table = (double*)malloc(sizeof(double) * (1 << (2 * mp->n_qubits)));
+	memcpy(mp->lookup_table, lookup_table, 1 << (2 * mp->n_qubits));
+
+	m->model_call = error_model_call_lookup;
+	m->param_free = error_model_free_lookup;
+	return m;
+}
+
+double error_model_call_lookup(const sym* error, void* v_model_params)
 {
 	struct lookup_error_model_params* model_params = (lookup_error_model_params*)v_model_params;
 	return model_params->lookup_table[sym_to_ll(error)];
 }
 
+void error_model_free_lookup(void* v_model_params)
+{
+	free(v->lookup_table);
+	free(v);
+	return;
+}
 
 #endif
