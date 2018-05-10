@@ -3,28 +3,40 @@
 
 #include <string.h>
 #include <math.h>
-#include <stdio.h>
-#include "sym.h"
+#include "../sym.h"
 
-#include "destabilisers.h"
+#include "../destabilisers.h"
 
 // Decoder template:
 /*
 
 sym* decoder(sym* error, void* v_m);
 {
-	// Recast
-	model_data* m = (model_data*)v_m;
-	
 	Evaluate the error string
 	If you need to view the error in a string format use the error_sym_to_str() function
 
-	return FLOAT
+	return correction_operation;
 }
-
 */
 
-typedef sym* (*decoder_f)(const sym* syndrome, void* decoder_data);
+typedef sym* (*decoder_call_f)(void* decoder, const sym* syndrome);
+
+typedef void (*decoder_free_f)(void* decoder);
+
+typedef struct {
+	void* decoder_params;
+
+	decoder_call_f call_decoder;
+	decoder_free_f free_decoder;
+} decoder;
+
+
+
+
+
+
+
+
 
 //2 Qubit Bit Flip Decoder--------------------------------------------------------------------
 
@@ -65,26 +77,7 @@ sym* decoder_null(const sym* syndrome, void* decoder_data)
 	return recovery_operator;
 }
 
-// Destabiliser Decoder -------------------------------------------------------------------------------------
-typedef struct{
-	sym** destabilisers;
-} destabiliser_decoder_data;
 
-sym* decoder_destabiliser(const sym* syndrome, void* decoder_data)
-{
-	destabiliser_decoder_data* d = (destabiliser_decoder_data*)decoder_data;
-	
-	sym* correction = sym_create(1, d->destabilisers[0]->length);
-
-	for (int i = 0; i < syndrome->height; i++)
-	{
-		if (sym_get(syndrome, i, 0)) 
-		{
-			sym_add_in_place(correction, d->destabilisers[i]);
-		}
-	}
-	return correction;
-}
 
 //-------------------------------------------------------------------------------------------
 
