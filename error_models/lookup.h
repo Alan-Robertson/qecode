@@ -10,6 +10,7 @@ struct error_model_params_lookup {
 	double* lookup_table;
 };
 
+
 error_model* error_model_create_lookup(unsigned int n_qubits, double* lookup_table);
 double error_model_call_lookup(const sym* error, void* v_model_params);
 void error_model_free_lookup(void* v_model_params);
@@ -17,7 +18,7 @@ void error_model_free_lookup(void* v_model_params);
 // The lookup table is copied!
 error_model* error_model_create_lookup(unsigned int n_qubits, double* lookup_table)
 {
-	error_model* m = error_model_create();
+	error_model* m = error_model_create(sizeof(error_model_params_lookup));
 	struct error_model_params_lookup* mp = (struct error_model_params_lookup*)malloc(sizeof(error_model_params_lookup));
 
 	mp->n_qubits = n_qubits;

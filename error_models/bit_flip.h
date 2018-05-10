@@ -30,7 +30,7 @@ error_model* error_model_create_bit_flip_trivial(const double p_error)
 */
 error_model* error_model_create_bit_flip_trivial(const double p_error)
 {	
-	error_model* m = error_model_create();
+	error_model* m = error_model_create(sizeof(model_params_bit_flip_trivial));
 	struct model_params_bit_flip_trivial* mp = (struct model_params_bit_flip_trivial*)malloc(sizeof(model_params_iid));
 
 	mp->p_error = p_error;
@@ -69,7 +69,7 @@ double error_model_call_bit_flip_trivial(const sym* error, void* v_model_params)
 */
 error_model* error_model_create_bit_flip(const unsigned n_qubits, const double p_error)
 {	
-	error_model* m = error_model_create();
+	error_model* m = error_model_create(sizeof(model_params_bit_flip));
 	struct model_params_bit_flip_trivial* mp = (struct model_params_bit_flip_trivial*)malloc(sizeof(model_params_iid));
 
 	mp->n_qubits = n_qubits;

@@ -18,7 +18,7 @@ void error_model_free_multi_composition(void* v_model_params);
 
 error_model* error_model_create_multi_composition(unsigned n_models, ...)
 {
-	error_model* m = error_model_create();
+	error_model* m = error_model_create(sizeof(error_model_params_multi_composition));
 	
 	// The parameters
 	struct multi_composition_error_model_params* model_params = (struct multi_composition_error_model_params*)malloc(sizeof(struct multi_composition_error_model_params));

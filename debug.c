@@ -1,10 +1,10 @@
 #include "codes.h"
 #include "tailored.h"
-#include "decoders.h"
-#include "characterise.h"
-#include "gates.h"
-#include "circuit.h"
-#include "error_models/error_model_iid.h"
+//#include "decoders.h"
+//#include "characterise.h"
+//#include "gates.h"
+//#include "circuit.h"
+#include "error_models/iid.h"
 #include "error_probabilities.h"
 
 int main()
@@ -20,8 +20,8 @@ int main()
 	/*gate* cnot = gate_create(2,  
 			gate_cnot,
 			em_iid,
-			&md);
-
+			NULL);*/
+	/*
 	circuit* encode = circuit_create(n_qubits);
 
 	circuit_add_gate(encode, cnot, 0, 1);

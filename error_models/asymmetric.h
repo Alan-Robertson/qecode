@@ -12,7 +12,27 @@ struct model_params_spatially_asymmetric {
 	double p_phaseflip;
 };
 
-double error_model_spatially_asymmetric(const sym* error, void* v_model_params)
+error_model* error_model_create_spatially_asymmetric(
+	const unsigned n_bitflip_qubits, 
+	const double p_bitflip, 
+	const unsigned n_phaseflip_qubits, 
+	const double p_phaseflip)
+{
+	error_model* m = error_model_create(sizeof(model_params_spatially_asymmetric));
+	struct model_params_spatially_asymmetric* mp = (struct model_params_spatially_asymmetric*)malloc(sizeof(model_params_spatially_asymmetric));
+
+	mp->n_bitflip_qubits = n_bitflip_qubits;
+	mp->p_bitflip = p_bitflip;
+	mp->n_phaseflip_qubits = n_phaseflip_qubits;
+	mp->p_phaseflip = p_phaseflip;
+
+	m->model_call = error_model_call_bit_flip_trivial;
+	m->model_params = mp;
+}
+
+
+
+double error_model_call_spatially_asymmetric(const sym* error, void* v_model_params)
 {
 	struct model_params_spatially_asymmetric* model_params = (struct model_params_spatially_asymmetric*) v_model_params;
 	if (sym_weight_Y(error) > 0) // No Y errors

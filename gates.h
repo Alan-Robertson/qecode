@@ -19,8 +19,7 @@
 gate* gate_create(
 	const unsigned n_qubits, 
 	gate_operation_f operation,
-	error_model_f error_model, 
-	void* error_model_data,
+	error_model* em,
 	void* gate_data);
 
 /* 
@@ -82,21 +81,37 @@ void gate_free(gate* g);
 gate* gate_create(
 	const unsigned n_qubits,
 	gate_operation_f operation,
-	error_model_f error_model,
-	void* operation_data,
-	void* error_model_data)
+	error_model* em,
+	void* operation_data)
 {
 	gate* g = (gate*)malloc(sizeof(gate));
 
 	// Add all the arguments to the appropriate fields of the struct
 	g->n_qubits = n_qubits;
 	g->operation = operation;
-	g->error_model = error_model;
+	g->error_prob = em;
 	g->operation_data = operation_data;
-	g->error_model_data = error_model_data;
 	
 	return g;
 }
+
+gate* gate_create_independant(
+	const unsigned n_qubits,
+	gate_operation_f operation,
+	error_model* em,
+	void* operation_data)
+{
+	gate* g = (gate*)malloc(sizeof(gate));
+
+	// Add all the arguments to the appropriate fields of the struct
+	g->n_qubits = n_qubits;
+	g->operation = operation;
+	g->error_prob = error_model_copy(em);
+	g->operation_data = operation_data;
+	
+	return g;
+}
+
 
 double* gate_apply(const unsigned n_qubits,
 	double* probabilities,
@@ -126,7 +141,7 @@ double* gate_noise(const unsigned n_qubits,
 	memset(p_error_probabilities, 0, (1ull << (2 * n_qubits)) * sizeof(double));
 
 	// Noiseless gate, no operation
-	if (NULL == g->error_model)
+	if (NULL == g->error_prob)
 	{
 		memcpy(p_error_probabilities, initial_probabilities, sizeof(double) * 1ull << (n_qubits * 2));
 		return p_error_probabilities;
@@ -137,7 +152,7 @@ double* gate_noise(const unsigned n_qubits,
 	while (sym_iter_next(gate_error))
 	{
 		// Determine the error rate associated with each possible error
-		double p_error = g->error_model(gate_error->state, g->error_model_data);
+		double p_error = g->error_prob(gate_error->state, g->error_model_data);
 		// If the error rate is non zero, apply the error
 		if (p_error > 0)
 		{

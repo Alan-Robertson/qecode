@@ -20,7 +20,7 @@ typedef sym* (*gate_operation_f)(const sym*, void*, const unsigned* target_qubit
 typedef struct {
 	unsigned n_qubits; // Number of qubits the gate operates on
 	gate_operation_f operation; // The gate operation performed (any absolute operation)
-	error_model_f error_model; // The error operation performed (Any probabilistic operation)
+	error_model_t* error_model; // The error operation performed (Any probabilistic operation)
 	void* operation_data; // Any additional data to pass to the gate
 	void* error_model_data; // Any additional data to pass to the noise
 } gate;
