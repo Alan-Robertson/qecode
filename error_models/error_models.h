@@ -55,10 +55,13 @@
 // The Error Model Base 'class'
 //----------------------------------------------------------------------------------------
 
-// DECLARATIONS ----------------------------------------------------------------------------------------
+// The error model call function
+typedef double (*error_model_call_f)(const sym*, void*);
 
-typedef double (*error_model_f)(const sym*, void*);
-typedef void (*param_free_f)(void*);
+// The error model paramater free function
+typedef void (*error_model_param_free_f)(void*);
+
+// The copy constructor function for the error model
 typedef void* (*error_model_copy_f)(const void*);
 
 // Polymorphic error model
@@ -70,20 +73,21 @@ typedef struct {
 	unsigned n_bytes;
 
 	// V table
-	error_model_f model_call; // Called to calculate the error probability
+	error_model_call_f model_call; // Called to calculate the error probability
 	error_model_copy_f model_copy; // Called to copy the error model
-	param_free_f param_free; // Called to free the model parameters
+	error_model_param_free_f param_free; // Called to free the model parameters
 } error_model;
 
-
+// DECLARATIONS ----------------------------------------------------------------------------------------
 
 /*
 	error_model_create
-	Base model constructor for error models, no arguments,
-	Allocates memory for the error model and sets the default destructor
+	Base model constructor for error models
+	Allocates memory for the error model and sets the default destructor and copy constructor
+	:: const unsigned n_bytes :: The number of bytes used by the parameters
 	Returns a pointer to a new error model object on the heap
 */
-error_model* error_model_create();
+error_model* error_model_create(const unsigned n_bytes);
 
 /*
 	error_model_copy
