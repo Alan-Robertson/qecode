@@ -7,103 +7,114 @@
 
 #include "../destabilisers.h"
 
-// Decoder template:
-/*
+//----------------------------------------------------------------------------------------
+// The Decoder Base 'class'
+//----------------------------------------------------------------------------------------
 
-sym* decoder(sym* error, void* v_m);
-{
-	Evaluate the error string
-	If you need to view the error in a string format use the error_sym_to_str() function
+typedef sym* (*decoder_call_f)(void*, const sym*);
 
-	return correction_operation;
-}
-*/
-
-typedef sym* (*decoder_call_f)(void* decoder, const sym* syndrome);
-
-typedef void (*decoder_free_f)(void* decoder);
+typedef void (*decoder_param_free_f)(void*);
 
 typedef struct {
-	void* decoder_params;
+	// The decoder parameters
+	void* decoder_params; // The parameters for that particular decoder
 
-	decoder_call_f call_decoder;
-	decoder_free_f free_decoder;
+	// V table
+	decoder_call_f call_decoder; // Called to invoke the decoder on some syndrome
+	decoder_param_free_f free_decoder_params; // Called to free the decoder parameters object
 } decoder;
 
+// DECLARATIONS ----------------------------------------------------------------------------------------
 
+/*
+	decoder_create
+	Base model constructor for decoders, no arguments,
+	Allocates memory for the error model and sets the default destructor
+	Returns a pointer to a new error model object on the heap
+*/
+decoder* decoder_create();
 
-
-
-
-
-
-
-//2 Qubit Bit Flip Decoder--------------------------------------------------------------------
-
-sym* decoder_2_qubit_bit_flip(const sym* syndrome, void* decoder_data)
-{
-	//sym* recovery = sym_create(1, 4);
-	sym* recovery_operator;
-
-	switch (sym_get(syndrome, 0, 0))
-	{
-		case 0:
-			// Do Nothing, no error detected
-			recovery_operator = error_str_to_sym("II");
-			return recovery_operator;
-		break;
-
-		case 1:
-			// ZI error
-			recovery_operator = error_str_to_sym("XI");
-			return recovery_operator;
-			//sym_set(recovery, 0, 2, (BYTE) 1);
-		break;
-	}
-	//return recovery;
-	return NULL;
-}
-
-//Null Decoder--------------------------------------------------------------------
-
-typedef struct{
-	unsigned n_qubits;
-} null_decoder_data;
-
-// Don't actually decode anything
-sym* decoder_null(const sym* syndrome, void* decoder_data)
-{
-	sym* recovery_operator = sym_create(1, ((null_decoder_data*)decoder_data)->n_qubits * 2);
-	return recovery_operator;
-}
-
-
-
-//-------------------------------------------------------------------------------------------
-
-sym* decoder_tailored(const sym* syndrome, void* decoder_data)
-{
-	sym** recovery_operators = *(sym***)decoder_data;
-	sym* recovery_operator = sym_copy(*(recovery_operators + sym_to_ll(syndrome)));
-	return recovery_operator;
-}
-
-/* 
-    decoder_free:
-	Frees all elements in a destabiliser
-	:: sym** d :: The set of destabilisers to free
-	:: const unsigned length ::  The number of destabilisers in the set
+/*
+	decoder_param_free_default
+	Default destructor for decoder parameters
+	Use this if none of the parameters have been allocated to heap memory
+	Else implement your own method and set decoder->param_free to point to it
+	:: decoder* d :: The decoder object whose parameters are to be freed
 	Returns nothing
 */
-void decoder_free(sym** d, const unsigned n_syndrome_bits)
+void decoder_param_free_default(void* v_decoder);
+
+/*
+	decoder_call
+	Dispatch method to call the decoder
+	:: decoder* d:: The decoder object 
+	:: const sym* syndrome :: The  syndrome passed to the decoder
+	Returns the correction suggested by the decoder
+*/
+sym* decoder_call(decoder* d, const sym* syndrome);
+
+/*
+	decoder_free
+	Destructor dispatch method for a decoder, frees the decoder and any associated parameters
+	:: decoder* d :: The decoder object to be freed
+	Returns nothing
+*/
+void decoder_free(decoder* d);
+
+// FUNCTION DEFINITIONS ----------------------------------------------------------------------------------------
+
+
+/*
+	decoder_create
+	Base model constructor for decoders, no arguments,
+	Allocates memory for the error model and sets the default destructor
+	Returns a pointer to a new error model object on the heap
+*/
+decoder* decoder_create()
 {
-	for (int i = 0; i < (1ull << (n_syndrome_bits)); i++)
-	{
-		if (d[i] != NULL)
-		{
-			sym_free(d[i]);	
-		}
-	}
+	decoder* d = (decoder*)malloc(sizeof(decoder));
+	d->
+	return d;
+};
+
+/*
+	decoder_param_free_default
+	Default destructor for decoder parameters
+	Use this if none of the parameters have been allocated to heap memory
+	Else implement your own method and set decoder->param_free to point to it
+	:: decoder* d :: The decoder object whose parameters are to be freed
+	Returns nothing
+*/
+void decoder_param_free_default(void* v_decoder)
+{
+	decoder* d = (decoder*)v_decoder;
+	free(d->decoder_params);
+	return;
+};
+
+// Dispatch methods ------------------------
+
+/*
+	decoder_call
+	Dispatch method to call the decoder
+	:: decoder* d:: The decoder object 
+	:: const sym* syndrome :: The  syndrome passed to the decoder
+	Returns the correction suggested by the decoder
+*/
+void decoder_call(decoder* d, sym* syndrome)
+{
+	return d->call_decoder(d, syndrome);
+}
+
+/*
+	decoder_free
+	Destructor dispatch method for a decoder, frees the decoder and any associated parameters
+	:: decoder* d :: The decoder object to be freed
+	Returns nothing
+*/
+void decoder_free(decoder* d)
+{
+	d->free_decoder_params(d);	
 	free(d);
 	return;
 }
