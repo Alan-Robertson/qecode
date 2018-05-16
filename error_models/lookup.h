@@ -26,8 +26,8 @@ error_model* error_model_create_lookup(unsigned int n_qubits, double* lookup_tab
 	mp->lookup_table = (double*)calloc(sizeof(double), (1 << (2 * mp->n_qubits)));
 	memcpy(mp->lookup_table, lookup_table, 1 << (2 * mp->n_qubits));
 
-	m->model_params = mp;
-	m->model_call = error_model_call_lookup;
+	m->params = mp;
+	m->call = error_model_call_lookup;
 	m->param_free = error_model_free_lookup;
 	return m;
 }

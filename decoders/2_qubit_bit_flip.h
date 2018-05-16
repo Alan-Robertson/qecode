@@ -1,7 +1,5 @@
 
 
-
-
 //2 Qubit Bit Flip Decoder--------------------------------------------------------------------
 
 sym* decoder_2_qubit_bit_flip(const sym* syndrome, void* decoder_data)

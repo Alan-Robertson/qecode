@@ -3,6 +3,8 @@
 
 #include "sym.h"
 #include "sym_iter.h"
+#include "error_models/error_models.h"
+#include "decoders/decoders.h"
 #include "errors.h"
 #include <math.h>
 
@@ -19,8 +21,7 @@
 */
 double* characterise_code(const sym* code, 
 						const sym* logicals, 
-						double (*error_model)(const sym*, void*), 
-						void* model_data, 
+						error_model* noise, 
 						decoder_f decoder,
 						void* decoder_data)
 {
@@ -43,7 +44,7 @@ double* characterise_code(const sym* code,
 		sym* logical_state = logical_error(logicals, corrected);
 
 		// Store the probability
-		p_error_probabilities[sym_to_ll(logical_state)] += error_model(physical_error->state, model_data);
+		p_error_probabilities[sym_to_ll(logical_state)] += error_model_prob(noise, physical_error->state);
 
 		// Free our memory
 		sym_free(logical_state);

@@ -2,7 +2,7 @@
 #define TAILORED
 #include "sym.h"
 #include "sym_iter.h"
-#include "decoders.h"
+#include "decoders/decoders.h"
 #include "logical.h"
 #include "error_models/error_models.h"
 
@@ -21,8 +21,7 @@
 */
 sym** tailor_decoder(const sym* code, 
 				const sym* logicals, 
-				error_model_f error_model, 
-				void* model_data);
+				error_model* error_model);
 
 /* 
 	tailor_decoder_prob_only:
@@ -35,15 +34,22 @@ sym** tailor_decoder(const sym* code,
 */
 double tailor_decoder_prob_only(const sym* code, 
 				const sym* logicals, 
-				error_model_f error_model, 
-				void* model_data);
+				error_model* error_model);
 
 // FUNCTION DEFINITIONS ----------------------------------------------------------------------------------------
-
+/* 
+	tailor_decoder:
+	Finds the best possible tailored decoder for a given QECC and error model
+	:: const sym* code :: The error correcting code
+	:: const sym* logicals :: Logical operators
+	:: double (*error_model)(const sym*, void*) :: The error model
+	:: void* model_data :: The data associated with the error model
+	Returns an array of recovery operators where the binary representation of the syndrome gives the 
+	associated recovery
+*/
 sym** tailor_decoder(const sym* code, 
 				const sym* logicals, 
-				error_model_f error_model, 
-				void* model_data)
+				error_model* noise)
 {
 	// -------------------------------------
 	// Initialisation
@@ -71,8 +77,12 @@ sym** tailor_decoder(const sym* code,
 
 	// Initialise the probabilities and set them to 0 efficiently
 	double p_options[n_syndromes][n_logical_operations];
-	memset(&p_options, 0, sizeof(double) * n_syndromes * n_logical_operations);
-	
+
+	for (size_t i = 0; i < n_syndromes; i++)
+	{
+		memset(p_options[i], 0, sizeof(double) * n_logical_operations);
+	}
+
 	// Find the destabilisers
 	sym** destabilisers = destabilisers_generate(code, logicals);
 
@@ -109,9 +119,8 @@ sym** tailor_decoder(const sym* code,
 		// Determine the overall logical state
 		sym* logical_state = logical_error(logicals, corrected);
 
-		// Calculate the probability of this particular error occurring and store it
-		
-		p_options[sym_to_ll(syndrome)][sym_to_ll(logical_state)] += error_model(physical_error->state, model_data); 
+		// Calculate the probability of this particular error occurring and store it		
+		p_options[sym_to_ll(syndrome)][sym_to_ll(logical_state)] += error_model_prob(noise, physical_error->state);
 
 		// Free our memory in order to prevent leaks and fragmentation
 		sym_free(logical_state);
@@ -180,8 +189,7 @@ sym** tailor_decoder(const sym* code,
 
 double tailor_decoder_prob_only(const sym* code, 
 				const sym* logicals, 
-				error_model_f error_model, 
-				void* model_data)
+				error_model* noise)
 {
 	// -------------------------------------
 	// Initialisation
@@ -247,7 +255,7 @@ double tailor_decoder_prob_only(const sym* code,
 		sym* logical_state = logical_error(logicals, corrected);
 
 		// Calculate the probability of this particular error occurring and store it
-		p_options[sym_to_ll(syndrome)][sym_to_ll(logical_state)] += error_model(physical_error->state, model_data); 
+		p_options[sym_to_ll(syndrome)][sym_to_ll(logical_state)] +=  error_model_prob(noise, physical_error->state);
 
 		// Free our memory in order to prevent leaks and fragmentation
 		sym_free(logical_state);
@@ -311,8 +319,7 @@ double tailor_decoder_prob_only(const sym* code,
 
 double tailor_decoder_prob_only_ignore_failures(const sym* code, 
 				const sym* logicals, 
-				error_model_f error_model, 
-				void* model_data)
+				error_model* noise)
 {
 	// -------------------------------------
 	// Initialisation
@@ -383,7 +390,7 @@ double tailor_decoder_prob_only_ignore_failures(const sym* code,
 		sym* logical_state = logical_error(logicals, corrected);
 
 		// Calculate the probability of this particular error occurring and store it
-		p_options[sym_to_ll(syndrome)][sym_to_ll(logical_state)] += error_model(physical_error->state, model_data); 
+		p_options[sym_to_ll(syndrome)][sym_to_ll(logical_state)] +=  error_model_prob(noise, physical_error->state);
 
 		// Free our memory in order to prevent leaks and fragmentation
 		sym_free(logical_state);

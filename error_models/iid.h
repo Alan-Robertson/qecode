@@ -24,7 +24,7 @@ typedef struct {
 	:: const unsigned n_qubits :: Number of physical qubits
 	Returns a pointer to a new error model object on the heap
 */
-error_model* error_model_create_iid(const double p_error, const unsigned int n_qubits);
+error_model* error_model_create_iid(const unsigned int n_qubitsm, const double p_error);
 
 // Model Call
 double error_model_call_iid(const sym* error, void* v_model_params);
@@ -39,7 +39,7 @@ double error_model_call_iid(const sym* error, void* v_model_params);
 	:: const unsigned n_qubits :: Number of physical qubits
 	Returns a pointer to a new error model object on the heap
 */
-error_model* error_model_create_iid(const double p_error, const unsigned int n_qubits)
+error_model* error_model_create_iid(const unsigned int n_qubits, const double p_error)
 {	
 	error_model* m = error_model_create(sizeof(model_params_iid));
 	model_params_iid* mp = (model_params_iid*)malloc(sizeof(model_params_iid));
@@ -47,8 +47,8 @@ error_model* error_model_create_iid(const double p_error, const unsigned int n_q
 	mp->p_error = p_error;
 	mp->n_qubits = n_qubits;
 
-	m->model_call = error_model_call_iid;
-	m->model_params = mp;
+	m->call = error_model_call_iid;
+	m->params = mp;
 
 	return m;
 }

@@ -6,6 +6,7 @@
 #include "../sym.h"
 
 #include "../destabilisers.h"
+#include "../error_models/error_models.h"
 
 //----------------------------------------------------------------------------------------
 // The Decoder Base 'class'
@@ -17,11 +18,11 @@ typedef void (*decoder_param_free_f)(void*);
 
 typedef struct {
 	// The decoder parameters
-	void* decoder_params; // The parameters for that particular decoder
+	void* params; // The parameters for that particular decoder
 
 	// V table
-	decoder_call_f call_decoder; // Called to invoke the decoder on some syndrome
-	decoder_param_free_f free_decoder_params; // Called to free the decoder parameters object
+	decoder_call_f call; // Called to invoke the decoder on some syndrome
+	decoder_param_free_f param_free; // Called to free the decoder parameters object
 } decoder;
 
 // DECLARATIONS ----------------------------------------------------------------------------------------
@@ -29,8 +30,8 @@ typedef struct {
 /*
 	decoder_create
 	Base model constructor for decoders, no arguments,
-	Allocates memory for the error model and sets the default destructor
-	Returns a pointer to a new error model object on the heap
+	Allocates memory for the decoder and sets the default destructor
+	Returns a pointer to a new decoder object on the heap
 */
 decoder* decoder_create();
 
@@ -63,7 +64,6 @@ void decoder_free(decoder* d);
 
 // FUNCTION DEFINITIONS ----------------------------------------------------------------------------------------
 
-
 /*
 	decoder_create
 	Base model constructor for decoders, no arguments,
@@ -73,7 +73,7 @@ void decoder_free(decoder* d);
 decoder* decoder_create()
 {
 	decoder* d = (decoder*)malloc(sizeof(decoder));
-	d->
+	d->param_free = decoder_param_free_default;
 	return d;
 };
 
@@ -88,7 +88,7 @@ decoder* decoder_create()
 void decoder_param_free_default(void* v_decoder)
 {
 	decoder* d = (decoder*)v_decoder;
-	free(d->decoder_params);
+	free(d->params);
 	return;
 };
 
@@ -101,9 +101,9 @@ void decoder_param_free_default(void* v_decoder)
 	:: const sym* syndrome :: The  syndrome passed to the decoder
 	Returns the correction suggested by the decoder
 */
-void decoder_call(decoder* d, sym* syndrome)
+sym* decoder_call(decoder* d, sym* syndrome)
 {
-	return d->call_decoder(d, syndrome);
+	return d->call(d->params, syndrome);
 }
 
 /*
@@ -114,7 +114,7 @@ void decoder_call(decoder* d, sym* syndrome)
 */
 void decoder_free(decoder* d)
 {
-	d->free_decoder_params(d);	
+	d->param_free(d->params);	
 	free(d);
 	return;
 }

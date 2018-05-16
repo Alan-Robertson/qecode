@@ -2,67 +2,111 @@
 #define DECODER_DESTABILISER
 
 #include "decoders.h"
+#include "../destabilisers.h"
 
 // Destabiliser Decoder -------------------------------------------------------------------------------------
-typedef struct{
-	unsigned n_syndrome_bits;
+
+typedef struct {
+	unsigned n_destabilisers;
 	sym** destabilisers;
-} decoder_params_destabilisers_t;
+} decoder_params_destabiliser_t;
 
+// DECLARATIONS ----------------------------------------------------------------------------------------
+
+/*
+	decoder_create_destabiliser
+	Base model constructor for a destabiliser decoder
+	Allocates memory for the error model and sets the default destructor
+	Returns a pointer to a new error model object on the heap
+*/
 decoder* decoder_create_destabiliser();
-sym* decoder_call_destabiliser(void* v_decoder, const sym* syndrome);
-sym* decoder_free_destabiliser(void* v_decoder);
 
-decoder* decoder_create_destabiliser(sym** destabilisers, const unsigned n_syndrome_bits)
+/*
+	decoder_call_destabiliser
+	Determines the correction procedure given a syndrome and a set of destabilisers
+	:: decoder* d:: The decoder object 
+	:: const sym* syndrome :: The  syndrome passed to the decoder
+	Returns the correction suggested by the decoder
+*/
+sym* decoder_call_destabiliser(void* v_decoder, const sym* syndrome);
+
+/*
+	decoder_free_params_destabiliser
+	Destructor a destabiliser decoder
+	:: decoder* d :: The decoder object whose parameters are to be freed
+	Returns nothing
+*/
+void decoder_free_params_destabiliser(void* v_decoder);
+
+
+// FUNCTION DEFINITIONS ----------------------------------------------------------------------------------------
+/*
+	decoder_create_destabiliser
+	Base model constructor for a destabiliser decoder
+	Allocates memory for the error model and sets the default destructor
+	Returns a pointer to a new error model object on the heap
+*/
+decoder* decoder_create_destabiliser(const sym* code, const sym* logicals)
 {
 
 	decoder* d = decoder_create();
-	decoder_params_destabilisers_t* dp = (decoder_params_destabilisers_t*)malloc(sizeof(decoder_params_destabilisers_t));
+	decoder_params_destabiliser_t* dp = (decoder_params_destabiliser_t*)malloc(sizeof(decoder_params_destabiliser_t));
 
-	dp->n_syndrome_bits = n_syndrome_bits;
-	dp->destabilisers = (sym*)malloc(sizeof(sym*) * (1ull << n_syndrome_bits));
+	dp->destabilisers = destabilisers_generate(code, logicals);
+	dp->n_destabilisers = code->height;
 
-	for (unsigned long long i = 0; i < (1ull << (dp->n_syndrome_bits)); i++)
-	{
-		if (NULL != >destabilisers[i])
-		{
-			decoder_params->destabilisers[i] = sym_copy(destabilisers[i]);
-		}
-	}
+	d->params = dp;
+	
+	// Construct the vtable
+	d->call = decoder_call_destabiliser;
+	d->param_free = decoder_free_params_destabiliser;
+
 	return d;
 }
 
-sym* decoder_call_destabiliser(void* v_decoder, const sym* syndrome)
+/*
+	decoder_call_destabiliser
+	Determines the correction procedure given a syndrome and a set of destabilisers
+	:: void* v_params:: The pointer to the params object 
+	:: const sym* syndrome :: The  syndrome passed to the decoder
+	Returns the correction suggested by the decoder
+*/
+sym* decoder_call_destabiliser(void* v_params, const sym* syndrome)
 {
-	decoder_params_destabilisers_t* d = (decoder_params_destabiliser_t*)(((decoder*)v_decoder)->decoder_params);
+	decoder_params_destabiliser_t* params = (decoder_params_destabiliser_t*)(v_params);
 	
-	sym* correction = sym_create(1, d->destabilisers[0]->length);
+	sym* correction = sym_create(1, params->destabilisers[0]->length);
 
 	for (int i = 0; i < syndrome->height; i++)
 	{
 		if (sym_get(syndrome, i, 0)) 
 		{
-			sym_add_in_place(correction, d->destabilisers[i]);
+			sym_add_in_place(correction, params->destabilisers[i]);
 		}
 	}
 	return correction;
 }
 
-void decoder_free_params_destabiliser(void* v_decoder)
+/*
+	decoder_free_params_destabiliser
+	Destructor a destabiliser decoder
+	:: void* v_params :: The decoder params object to be freed
+	Returns nothing
+*/
+void decoder_free_params_destabiliser(void* v_params)
 {
-	decoder* d = v_decoder;
-	decoder_params_destabilisers_t* decoder_params = (decoder_params_destabilisers_t*)v_decoder->decoder_params;
 
-	for (unsigned long long i = 0; i < (1ull << (decoder_params->n_syndrome_bits)); i++)
+	decoder_params_destabiliser_t* params = (decoder_params_destabiliser_t*)v_params;
+
+	for (unsigned long long i = 0; i < params->n_destabilisers; i++)
 	{
-		if (NULL != decoder_params->destabilisers[i])
+		if (NULL != params->destabilisers[i])
 		{
-			sym_free(decoder_params->destabilisers[i]);
+			sym_free(params->destabilisers[i]);
 		}
 	}
-
-	free(decoder_params);
-
+	free(params->destabilisers);
+	free(params);
 	return;
 }
 

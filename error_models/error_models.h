@@ -67,14 +67,14 @@ typedef void* (*error_model_copy_f)(const void*);
 // Polymorphic error model
 typedef struct {
 	// Model parameters
-	void* model_params;
+	void* params;
 
 	// Number of bytes used by the parameters
 	unsigned n_bytes;
 
 	// V table
-	error_model_call_f model_call; // Called to calculate the error probability
-	error_model_copy_f model_copy; // Called to copy the error model
+	error_model_call_f call; // Called to calculate the error probability
+	error_model_copy_f copy; // Called to copy the error model
 	error_model_param_free_f param_free; // Called to free the model parameters
 } error_model;
 
@@ -124,24 +124,16 @@ error_model* error_model_copy_default(error_model* em);
 	:: error_model* m :: The error model object whose parameters are to be freed
 	Returns nothing
 */
-void error_model_param_free_default(void* model_params);
+void error_model_param_free_default(void* params);
 
 /*
-	error_model_prob
+	error_model_call
 	Dispatch method to call the error model's probability function
 	:: error_model* m :: The error model object 
 	:: const sym* error :: The error
 	Returns the probability with which this error occurs under the given error model
 */
-double error_model_prob(error_model* m, const sym* error);
-
-/*
-	error_model_param_free
-	Dispatch method for freeing the parameters of an error model
-	:: error_model* m :: The error model object whose parameters are to be freed
-	Returns nothing
-*/
-void error_model_param_free(error_model* m);
+double error_model_call(error_model* m, const sym* error);
 
 // FUNCTION DEFINITIONS ----------------------------------------------------------------------------------------
 
@@ -175,9 +167,9 @@ void error_model_free(error_model* m)
 {
 	if (NULL != m)
 	{
-		if (NULL != m->model_params)
+		if (NULL != m->params)
 		{
-			error_model_param_free(m);
+			m->param_free(m->params);
 		}
 		free(m);
 	}
@@ -193,9 +185,9 @@ void error_model_free(error_model* m)
 	:: error_model* m :: The error model object whose parameters are to be freed
 	Returns nothing
 */
-void error_model_param_free_default(void* model_params)
+void error_model_param_free_default(void* params)
 {
-	free(model_params);
+	free(params);
 	return;
 }
 
@@ -213,11 +205,11 @@ void* error_model_copy_default(void* v_em)
 
 	error_model* em_cpy = error_model_create(em->n_bytes);
 
-	em_cpy->model_params = (void*)malloc(em->n_bytes);
-	memcpy(em_cpy->model_params, em->model_params, em->n_bytes);
+	em_cpy->params = (void*)malloc(em->n_bytes);
+	memcpy(em_cpy->params, em->params, em->n_bytes);
 
-	em_cpy->model_call = em->model_call;
-	em_cpy->model_copy = em->model_copy;
+	em_cpy->call = em->call;
+	em_cpy->copy = em->copy;
 	em_cpy->param_free = em->param_free; 
 	return em;
 }
@@ -233,9 +225,9 @@ void* error_model_copy_default(void* v_em)
 	:: const sym* error :: The error
 	Returns the probability with which this error occurs under the given error model
 */
-double error_model_prob(error_model* m, const sym* error)
+double error_model_call(error_model* m, const sym* error)
 {
-	return m->model_call(error, m->model_params);
+	return m->call(error, m->params);
 }
 
 // Dispatch method for calling copy
@@ -247,20 +239,8 @@ double error_model_prob(error_model* m, const sym* error)
 */
 error_model* error_model_copy(error_model* m)
 {
-	return (error_model*)m->model_copy((void*)m);
+	return (error_model*)m->copy((void*)m);
 }
 
-// Dispatch method for calling parameter free
-/*
-	error_model_param_free
-	Dispatch method for the destructor
-	:: error_model* m :: The error model object whose parameters are to be freed
-	Returns nothing
-*/
-void error_model_param_free(error_model* m)
-{
-	m->param_free(m->model_params);
-	return;
-}
 
 #endif
