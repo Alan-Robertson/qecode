@@ -3,8 +3,8 @@
 
 #include "sym.h"
 #include "random_codes.h"
+#include "misc/progress_bar.h"
 #include "tailored.h"
-#include "progress_bar.h"
 
 // FUNCTION DECLARATIONS ----------------------------------------------------------------------------------------
 

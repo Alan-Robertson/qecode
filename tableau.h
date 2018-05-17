@@ -11,7 +11,7 @@
  * :: const sym** destabilisers :: The array of sym objects for the associated destabilisers
  * Returns a sym* object containing the tableau
  */
-sym* tableau_create(const sym* code, const sym* logicals, sym** destabilisers);
+sym* tableau_create(const sym* code, const sym* logicals);
 
 /*
  * tableau_extend: 
@@ -81,15 +81,10 @@ void tableau_phase(sym* tableau, const unsigned target);
  * :: const sym** destabilisers :: The array of sym objects for the associated destabilisers
  * Returns a sym* object containing the tableau
  */
-sym* tableau_create(const sym* code, const sym* logicals, sym** destabilisers)
+sym* tableau_create(const sym* code, const sym* logicals)
 {
-	// If the destabilisers haven't been generated, generate them
-	bool free_destabilisers = false;
-	if (NULL == destabilisers)
-	{
-		destabilisers = destabilisers_generate(code, logicals);
-		free_destabilisers = true;
-	}
+
+	destabilisers = destabilisers_generate(code, logicals);
 
 	// Could not find destabilisers
 	if (NULL == destabilisers)
@@ -110,12 +105,6 @@ sym* tableau_create(const sym* code, const sym* logicals, sym** destabilisers)
 
 	// Add the additional stabilisers and destabilisers
 	tableau_extend(tableau, logicals, code->height);
-
-	// If the destabilisers were generated within this function, free them
-	if (free_destabilisers)
-	{
-		destabilisers_free(destabilisers, code->height);
-	}
 
 	return tableau;
 }

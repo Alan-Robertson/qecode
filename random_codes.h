@@ -6,7 +6,7 @@
 #include <time.h>
 #include "sym.h"
 #include "logical.h"
-#include "rand_bytes.h"
+#include "misc/rand_bytes.h"
 
 // STRUCT OBJECTS ----------------------------------------------------------------------------------------
 

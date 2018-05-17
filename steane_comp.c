@@ -1,16 +1,16 @@
 #include "codes.h"
-#include "error_models.h"
-#include "destabilisers.h"
-#include "sym_iter.h"
-#include "tailored.h"
-#include "decoders.h"
-#include "dmatrix.h"
 #include "characterise.h"
-#include "circuit_search.h"
-#include "channel.h"
-#include "gates.h"
-#include "circuit.h"
-#include "encoding.h"
+
+#include "error_models/iid.h"
+#include "error_models/lookup.h"
+
+#include "decoders/tailored.h"
+
+#include "circuits/gates.h"
+#include "circuits/circuit.h"
+#include "circuits/circuit_search.h"
+#include "circuits/encoding.h"
+
 
 int main()
 {	
@@ -25,33 +25,28 @@ int main()
 	sym* code = code_steane();
 	sym* logicals = code_steane_logicals();
 
-	//for (unsigned i = 0; i < n_increments; i++)
-	//{
-		double error_rate = 0.01; // rate_min * pow(rate_delta, i); 
+	for (unsigned i = 0; i < n_increments; i++)
+	{
+		double error_rate = rate_min * pow(rate_delta, i); 
 	
-		bit_flip_model_data bf;
-		bf.n_qubits = n_qubits;
-		bf.p_error = error_rate;
+		error_model* em_iid = error_model_create_iid(n_qubits, p_error);
 
 		gate* cnot = gate_create(2,  
 			gate_cnot,
-			error_model_iid,
-			&bf,
-			&bf);
+			em_iid,
+			NULL);
 
 		gate* hadamard = gate_create(1,
 			gate_hadamard,
-			error_model_iid,
-			&bf,
-			&bf);
+			em_iid,
+			NULL);
 
 		gate* phase = gate_create(1,
 			gate_phase,
-			error_model_iid,
-			&bf,
-			&bf);
+			em_iid,
+			NULL);
 
-		/*random_code_return r = circuit_search_stabiliser(
+		random_code_return r = circuit_search_stabiliser(
 			n_qubits, 
 			n_logicals, 
 			distance, 
@@ -59,31 +54,30 @@ int main()
 			encoding_circuit,
 			cnot,
 			hadamard,
-			phase);*/
+			phase);
 
-		//sym* code = r.code; 
-		//sym* logicals = r.logicals;
+		sym* code = r.code; 
+		sym* logicals = r.logicals;
 
-		circuit* encode = encoding_circuit(code, logicals, NULL, cnot, hadamard, phase);
+		circuit* encode = encoding_circuit(code, logicals, cnot, hadamard, phase);
 
-		double* initial_error_rate = (double*)malloc(sizeof(double) * (1 << (code->length)));
-		memset(initial_error_rate, 0, (1 << (code->length)) * sizeof(double));
-		initial_error_rate[0] = 1; // Set the identity to 1
-			
-		double* error_rates = circuit_run(encode, initial_error_rate);
+		double* initial_error_probs = error_probabilities_identity(n_qubits);
+		double* final_error_probs = circuit_run(encode, initial_error_probs);	
 		
-		lookup_error_model_data md;
-		md.lookup_table = error_rates;
-		sym** decoder_data = tailor_decoder(code, logicals, error_model_lookup, &md);
+		// Build an error model using the output probabilities of the circuit
+		error_model* circuit_error = error_model_create_lookup(n_qubits, final_error_probs);
 
-		double* probabilities = characterise_code(code, logicals, error_model_lookup, &md, decoder_tailored, (void*)&decoder_data);
+		// Build the tailored decoder
+		decoder* tailored_decoder = decoder_create_tailored(code, logicals, circuit_error);
 
-		logical_rate[0] = probabilities[0];
+		// Characterise the code using the tailored decoder and the circuit error model
+		double* probabilities = characterise_code(code, logicals, circuit_error, tailored_decoder);
+		logical_rate[i] = probabilities[0];
 
 		// Free allocated objects 
 		free(initial_error_rate);
 		free(probabilities);		
-	//}
+	}
 
 	printf("--------------------------------------\n");
 	printf("Best Random of %d \n", n_codes_searched);

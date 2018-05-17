@@ -1,8 +1,7 @@
 #ifndef GATE_OPERATIONS
 #define GATE_OPERATIONS
 
-#include "sym.h"
-
+#include "../sym.h"
 
 // STRUCT OBJECTS ----------------------------------------------------------------------------------------
 

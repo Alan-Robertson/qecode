@@ -1,18 +1,15 @@
 #ifndef CIRCUIT_SEARCH
 #define CIRCUIT_SEARCH
 
-#include "sym.h"
-#include "random_codes.h"
-#include "tailored.h"
-#include "progress_bar.h"
-#include "codes.h"
-#include "error_models.h"
-#include "tailored.h"
-#include "decoders.h"
-#include "characterise.h"
+#include "../sym.h"
+#include "../random_codes.h"
+#include "../misc/progress_bar.h"
+#include "../codes.h"
+#include "../error_models/error_models.h"
+#include "../decoders/decoders.h"
 #include "gates.h"
 #include "circuit.h"
-#include "random_code_search.h"
+#include "../random_code_search.h"
 
 typedef circuit* (*stabiliser_circuit_f)(const sym* code, const sym* logicals, sym** destabilisers, gate* cnot, gate* hadamard, gate* phase);
 

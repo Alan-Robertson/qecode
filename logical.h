@@ -97,9 +97,14 @@ sym** logical_as_destabilisers(const sym* logicals)
 	{
 		logical_destabilisers[i] = sym_create(1, t->length);
 		sym_row_copy(logical_destabilisers[i], t, 0, i);
+		
+		// Get the syndrome for that row
 		sym* syndrome = sym_syndrome(t, logical_destabilisers[i]);
+
+		// Find the row that it anti-commutes with
 		for (int j = 0; j < syndrome->height; j++)
 		{
+			// If they anti-commute then set that as the destabiliser
 			if (sym_get(syndrome, j, 0))
 			{
 				sym_row_copy(logical_destabilisers[i], t, 0, j);

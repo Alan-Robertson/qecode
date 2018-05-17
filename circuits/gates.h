@@ -1,8 +1,8 @@
 #ifndef GATES
 #define GATES
-#include "sym.h" 
-#include "sym_iter.h"
-#include "error_models/error_models.h"
+#include "../sym.h" 
+#include "../sym_iter.h"
+#include "../error_models/error_models.h"
 #include "gate_operations.h"
 
 

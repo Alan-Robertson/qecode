@@ -1,6 +1,6 @@
 #ifndef CIRCUIT_STRUCT
 #define CIRCUIT_STRUCT
-#include "sym.h" 
+#include "../sym.h" 
 #include "gates.h"
 #include "error_probabilities.h"
 #include <stdarg.h>
