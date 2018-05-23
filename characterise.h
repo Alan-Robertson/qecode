@@ -25,7 +25,6 @@ double* characterise_code(const sym* code,
 						decoder* decoding_operation)
 {
 	double* p_error_probabilities = (double*)calloc(1ull << (logicals->length), sizeof(double));
-	double p_error_tot = 0;
 	// Iterate through errors and map back to the code-space
 	sym_iter* physical_error = sym_iter_create(code->length);
 	while (sym_iter_next(physical_error))
@@ -44,15 +43,13 @@ double* characterise_code(const sym* code,
 
 		// Store the probability
 		p_error_probabilities[sym_to_ll(logical_state)] += error_model_call(noise_model, physical_error->state);
-		p_error_tot += error_model_call(noise_model, physical_error->state);
-
+		
 		// Free our memory
 		sym_free(logical_state);
 		sym_free(corrected);
 		sym_free(recovery);
 		sym_free(syndrome);
 	}
-	printf("Tot: %e\n", p_error_tot);
 	sym_iter_free(physical_error);
 
 	return p_error_probabilities;

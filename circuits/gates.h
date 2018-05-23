@@ -43,7 +43,7 @@ double* gate_apply(const unsigned n_qubits,
 	Returns a heap pointer to a block of allocated memory containing the new probabilities
 */
 double* gate_noise(const unsigned n_qubits, 
-	const double* probabilities, 
+	double* probabilities, 
 	const gate* g,
 	const unsigned* target_qubits);
 
@@ -94,7 +94,7 @@ gate* gate_create(
 	return g;
 }
 
-gate* gate_create_independant(
+gate* gate_create_independent(
 	const unsigned n_qubits,
 	gate_operation_f operation,
 	error_model* em,
@@ -111,19 +111,26 @@ gate* gate_create_independant(
 	return g;
 }
 
+gate* gate_create_iid_noise(error_model* em)
+{
+	return gate_create(1, NULL, em, NULL);
+}
+
 
 double* gate_apply(const unsigned n_qubits,
 	double* probabilities,
 	const gate* g,
 	const unsigned* target_qubits)
-{
-	//probabilities = gate_operator(n_qubits, probabilities, g, target_qubits);
-	probabilities = gate_noise(n_qubits, probabilities, g, target_qubits);
-	return probabilities;
+{	
+	double* gate_operator_probabilities = gate_operator(n_qubits, probabilities, g, target_qubits);
+	double* gate_noise_probabilities = gate_noise(n_qubits, gate_operator_probabilities, g, target_qubits);
+
+	free(gate_operator_probabilities);
+	return gate_noise_probabilities;
 }
 
 /* 
-    gate_apply_noisy:
+    gate_noise:
 	Applies a noise object to an existing noise model
 	:: const unsigned n_qubits :: Number of qubits in the gate
 	:: const double* initial_probabilities :: The current probabilities for each noise operator
@@ -131,14 +138,13 @@ double* gate_apply(const unsigned n_qubits,
 	Returns a heap pointer to a block of allocated memory containing the new probabilities
 */
 double* gate_noise(const unsigned n_qubits, 
-	const double* initial_probabilities, 
+	double* initial_probabilities, 
 	const gate* g,
 	const unsigned* target_qubits)
 {
 	// Allocate memory for the new output probabilities
-	double* p_error_probabilities = (double*)malloc(sizeof(double) * 1ull << (n_qubits * 2));
-	memset(p_error_probabilities, 0, (1ull << (2 * n_qubits)) * sizeof(double));
-
+	double* p_error_probabilities = (double*)calloc(sizeof(double),  1ull << (n_qubits * 2));
+	
 	// Noiseless gate, no operation
 	if (NULL == g->gate_error_model)
 	{
@@ -152,22 +158,25 @@ double* gate_noise(const unsigned n_qubits,
 	{
 		// Determine the error rate associated with each possible error
 		double p_error = error_model_call(g->gate_error_model, gate_error->state);
-		
+
 		// If the error rate is non zero, apply the error
-		if (p_error > 0)
+		if (p_error > 0.0)
 		{
 			// Loop over all possible states
 			sym_iter* initial_state = sym_iter_create(n_qubits * 2);
 			while(sym_iter_next(initial_state))
 			{
-				// Determine the state after the error has been applied
-				sym* physical_error = sym_partial_add(initial_state->state, gate_error->state, target_qubits);
+				if (initial_probabilities[sym_to_ll(initial_state->state)] > 0)
+				{
+					// Determine the state after the error has been applied
+					sym* physical_error = sym_partial_add(initial_state->state, gate_error->state, target_qubits);
 
-				// Cumulatively determine the new probability of each state after the gate has been applied
-				p_error_probabilities[sym_to_ll(physical_error)] += initial_probabilities[sym_to_ll(initial_state->state)] * p_error; 
-
-				// Free allocated memory
-				sym_free(physical_error);
+					// Cumulatively determine the new probability of each state after the gate has been applied
+					p_error_probabilities[sym_to_ll(physical_error)] += initial_probabilities[sym_to_ll(initial_state->state)] * p_error; 
+				
+					// Free allocated memory
+					sym_free(physical_error);
+				}
 			}
 			sym_iter_free(initial_state);
 		}
@@ -191,14 +200,15 @@ double* gate_operator(const unsigned n_qubits,
 	const gate* applied_gate,
 	const unsigned* target_qubits)
 {
+	// Allocate memory for the new output
+	double* p_state_probabilities = (double*)calloc(1ull << (n_qubits * 2), sizeof(double));
+
 	// Identity gate, no operation
 	if (NULL == applied_gate->operation)
 	{
-		return initial_probabilities;
+		memcpy(p_state_probabilities, initial_probabilities, sizeof(double) * 1ull << (n_qubits * 2));
+		return p_state_probabilities;
 	}
-
-	// Allocate memory for the new output
-	double* p_state_probabilities = (double*)calloc(1ull << (n_qubits * 2), sizeof(double));
 
 	// Loop over all possible states
 	sym_iter* initial_state = sym_iter_create(n_qubits * 2);

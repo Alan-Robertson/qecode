@@ -230,7 +230,6 @@ sym** tailor_recovery_operators(const sym* code,
 	// Determine the anti-commutation relations between the logical operators
 	decoder* logical_destabilisers = decoder_create_logical_destabiliser(logicals);
 
-	double p_rec = 0;
 	// Setup the decoder	
 	for (size_t i = 0; i < n_syndromes; i++)
 	{
@@ -258,7 +257,6 @@ sym** tailor_recovery_operators(const sym* code,
 				}
 			}
 		}
-		p_rec += p_correction;
 		// Find the logical syndrome
 		sym* logical_syndrome = ll_to_sym_t(r_operator, 1, logicals->length);
 
@@ -270,7 +268,6 @@ sym** tailor_recovery_operators(const sym* code,
 		sym_free(logical_recovery);
 		sym_free(logical_syndrome);
 	}
-	printf("%e\n", p_rec);
 	
 	// ------------------------------------------
 	// Cleanup

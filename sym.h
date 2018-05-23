@@ -625,7 +625,7 @@ sym* sym_syndrome(const sym* code, const sym* error)
 		printf("Null pointer exception or matrices of incompatible sizes\n");
 		return NULL;
 	}
-
+	
 	// Also the number of qubits
 	const int half_length = code->length / 2;
 
@@ -636,11 +636,10 @@ sym* sym_syndrome(const sym* code, const sym* error)
 		{
 			for (int j = 0; j < syndrome->height; j++)
 			{
-				ELEMENT_XOR(syndrome, j, 0, ELEMENT_GET(code, j, i % code->length) & ELEMENT_GET(error, 0, i % code->length));
+				ELEMENT_XOR(syndrome, j, 0, ELEMENT_GET(code, j, (i + code->length / 2) % code->length) & ELEMENT_GET(error, 0, i % code->length));
 			}
 		}
 	}
-
 	return syndrome;
 }
 

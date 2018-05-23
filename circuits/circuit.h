@@ -3,7 +3,6 @@
 #include "../sym.h" 
 #include "gates.h"
 #include "error_probabilities.h"
-#include <stdarg.h>
 
 // STRUCT OBJECTS ----------------------------------------------------------------------------------------
 
@@ -158,14 +157,14 @@ void circuit_add_gate(circuit* c, gate* g, ...)
 }
 
 /* 
-    circuit_run:
+    circuit_run_noiseless:
 	Applies a circuit to an existing set of error probabilities
 	:: double* initial_error_rates :: The error rates before the circuit is applied
 	:: circuit* c :: The circuit the gate is being added to
 	:: const unsigned n_qubits :: The number of qubits
 	Returns a heap pointer to the new set of error rates
 */
-double* circuit_run(circuit* c, double* initial_error_rates)
+double* circuit_run_noiseless(circuit* c, double* initial_error_rates)
 {
 	double* error_rate = error_probabilities_copy(c->n_qubits, initial_error_rates);
 	unsigned long n_bytes = 1 << (c->n_qubits * 2);
@@ -175,6 +174,56 @@ double* circuit_run(circuit* c, double* initial_error_rates)
 		double* tmp_error_rate = gate_apply(c->n_qubits, error_rate, ce->gate_element, ce->target_qubits);
 		memcpy(error_rate, tmp_error_rate, n_bytes);
 		free(tmp_error_rate);
+		ce = ce->next;
+	}
+
+	return error_rate;
+}
+
+
+/* 
+    circuit_run:
+	Applies a circuit to an existing set of error probabilities
+	:: double* initial_error_rates :: The error rates before the circuit is applied
+	:: circuit* c :: The circuit the gate is being added to
+	:: error_model* noise :: The noise to be applied
+	Returns a heap pointer to the new set of error rates
+*/
+double* circuit_run(circuit* c, double* initial_error_rates, gate* noise)
+{
+
+	if (NULL == noise)
+	{
+		return circuit_run_noiseless(c, initial_error_rates);
+	}
+
+	// Noise should be IID
+	if (noise->n_qubits != 1)
+	{
+		printf("Noise should be IID!\n");
+		return NULL;
+	}
+
+	double* error_rate = error_probabilities_copy(c->n_qubits, initial_error_rates);
+	unsigned long n_bytes = (1ull << (c->n_qubits * 2)) * sizeof(double);
+
+	circuit_element* ce = c->start;
+
+	while (NULL != ce)
+	{
+
+		// Gate operation
+		double* tmp_error_rate = gate_apply(c->n_qubits, error_rate, ce->gate_element, ce->target_qubits);
+		memcpy(error_rate, tmp_error_rate, n_bytes);
+		free(tmp_error_rate);
+	
+		// Environmental Noise operations
+		for (unsigned i = 0; i < c->n_qubits; i++)
+		{
+			double* tmp_error_rate = gate_apply(c->n_qubits, error_rate, noise, &i);
+			memcpy(error_rate, tmp_error_rate, n_bytes);
+			free(tmp_error_rate);
+		}		
 		ce = ce->next;
 	}
 

@@ -7,6 +7,8 @@
 
 void encoding_rank_deficient(sym* tableau, circuit* encode, gate* cnot, gate* hadamard);
 
+circuit* encoding_circuit(const sym* code, const sym* logicals, gate* cnot, gate* hadamard, gate* phase);
+
 circuit* encoding_circuit(const sym* code, const sym* logicals, gate* cnot, gate* hadamard, gate* phase)
 {
 	circuit* encode = circuit_create(code->length / 2);
