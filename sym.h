@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdint.h>
 
 // MACROS -------------------------------------------------------------------------------------------
 
@@ -266,7 +267,7 @@ unsigned sym_weight_type_partial(const sym* s, const char type, unsigned start, 
  *	:: const sym* s :: Pointer to the object to be weighed
  *	Returns the weight as an unsigned integer
  */
-unsigned int sym_weight(const sym* s);
+uint32_t sym_weight(const sym* s);
 
 /*
  *	sym_weight_X:
@@ -274,7 +275,7 @@ unsigned int sym_weight(const sym* s);
  *	:: const sym* s :: Pointer to the object to be weighed
  *	Returns the weight as an unsigned integer
  */
-unsigned int sym_weight_X(const sym* s);
+uint32_t sym_weight_X(const sym* s);
 
 /*
  *	sym_weight_Y:
@@ -282,7 +283,7 @@ unsigned int sym_weight_X(const sym* s);
  *	:: const sym* s :: Pointer to the object to be weighed
  *	Returns the weight as an unsigned integer
  */
-unsigned int sym_weight_Y(const sym* s);
+uint32_t sym_weight_Y(const sym* s);
 
 /*
  *	sym_weight_Z:
@@ -290,7 +291,7 @@ unsigned int sym_weight_Y(const sym* s);
  *	:: const sym* s :: Pointer to the object to be weighed
  *	Returns the weight as an unsigned integer
  */
-unsigned int sym_weight_Z(const sym* s);
+uint32_t sym_weight_Z(const sym* s);
 
 /*
  * sym_row_copy
@@ -380,9 +381,9 @@ sym* sym_create(const unsigned height, const unsigned length)
 sym* sym_create_valued(const unsigned height, const unsigned length, const unsigned* values)
 {
 	sym* s = sym_create(height, length);
-	for (int i = 0; i < height; i++)
+	for (int32_t i = 0; i < height; i++)
 	{
-		for (int j = 0; j < length; j++)
+		for (int32_t j = 0; j < length; j++)
 		{
 			s->matrix[BYTE_FROM_MATRIX(s, i, j)] ^= (!!((BYTE)values[length * i + j])) << BIT_FROM_BYTE(s, i, j);
 		}
@@ -584,7 +585,7 @@ sym* sym_multiply(const sym* a, const sym* b)
 	{
 		for (size_t j = 0; j < b->length; j++) 
 		{
-			for (int k = 0; k < a->length; k++)
+			for (int32_t k = 0; k < a->length; k++)
 			{
 				temp_byte ^= (ELEMENT_GET(a, i, k) & ELEMENT_GET(b, k, j));
 			}
@@ -627,14 +628,14 @@ sym* sym_syndrome(const sym* code, const sym* error)
 	}
 	
 	// Also the number of qubits
-	const int half_length = code->length / 2;
+	const int32_t half_length = code->length / 2;
 
 	sym* syndrome = sym_create(code->height, 1);
-	for (int i = 0; i < error->length; i++)
+	for (int32_t i = 0; i < error->length; i++)
 	{
 		if (ELEMENT_GET(error, 0, i)) // If there is no error on this qubit, skip it
 		{
-			for (int j = 0; j < syndrome->height; j++)
+			for (int32_t j = 0; j < syndrome->height; j++)
 			{
 				ELEMENT_XOR(syndrome, j, 0, ELEMENT_GET(code, j, (i + code->length / 2) % code->length) & ELEMENT_GET(error, 0, i % code->length));
 			}
@@ -858,7 +859,7 @@ unsigned sym_weight_type_partial(const sym* s, const char type, unsigned start, 
  *	:: const sym* s :: Pointer to the object to be weighed
  *	Returns the weight as an unsigned integer
  */
-unsigned int sym_weight(const sym* s)
+uint32_t sym_weight(const sym* s)
 {
 	return sym_weight_type_partial(s, '\0', 0, s->length);
 }
@@ -869,7 +870,7 @@ unsigned int sym_weight(const sym* s)
  *	:: const sym* s :: Pointer to the object to be weighed
  *	Returns the weight as an unsigned integer
  */
-unsigned int sym_weight_X(const sym* s)
+uint32_t sym_weight_X(const sym* s)
 {
 	return sym_weight_type_partial(s, 'X', 0, s->length);
 }
@@ -880,7 +881,7 @@ unsigned int sym_weight_X(const sym* s)
  *	:: const sym* s :: Pointer to the object to be weighed
  *	Returns the weight as an unsigned integer
  */
-unsigned int sym_weight_Y(const sym* s)
+uint32_t sym_weight_Y(const sym* s)
 {
 	return sym_weight_type_partial(s, 'Y', 0, s->length);
 }
@@ -891,7 +892,7 @@ unsigned int sym_weight_Y(const sym* s)
  *	:: const sym* s :: Pointer to the object to be weighed
  *	Returns the weight as an unsigned integer
  */
-unsigned int sym_weight_Z(const sym* s)
+uint32_t sym_weight_Z(const sym* s)
 {
 	return sym_weight_type_partial(s, 'Z', 0, s->length);
 }
@@ -957,7 +958,7 @@ sym* ll_to_sym(unsigned long long ll, const unsigned height, const unsigned leng
 
 	sym* s = sym_create(height, length);
 	ll <<= (((s->length * s->height) % 8) ? 8 - ((s->length * s->height) % 8) : 0);
-	for (int i = s->mem_size - 1; i >= 0; i--)
+	for (int32_t i = s->mem_size - 1; i >= 0; i--)
 	{
 		s->matrix[i] = ll & 0xFF;
 		ll >>= 8;

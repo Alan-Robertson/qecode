@@ -1,4 +1,4 @@
-#include "codes.h"
+#include "codes/codes.h"
 #include "characterise.h"
 
 #include "tailored.h"
@@ -12,6 +12,8 @@
 #include "error_models/lookup.h"
 #include "circuits/error_probabilities.h"
 
+#include "codes/low_weight.h"
+
 int main()
 {
 
@@ -21,7 +23,13 @@ int main()
 	double p_environmental_error = 0.001;
 
 	// Pick a code
-	sym* code = code_five_qubit();
+	sym* code = code_steane();
+	sym** generators = lowest_weight_rep(code);
+
+	return 0;
+}
+
+/*
 	sym* logicals = code_five_qubit_logicals();
 
 	// Build our circuit with noise included:
@@ -74,4 +82,4 @@ int main()
 	sym_free(logicals);
 
 	return 0;
-}
+}*/
