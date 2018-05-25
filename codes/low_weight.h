@@ -24,13 +24,30 @@ sym* lowest_weight_rep(const sym* code);
 sym** low_weight_find_all_generators(const sym* code);
 
 /*
+ *	low_weight_sort_generators:
+ *	Sort a list of generators by Pauli weight
+ *  :: sym** generators :: Pointer to an array of generators
+ *  :: const unsigned n_generators :: The number of generators in the array
+ *	The sort operation is performed in place, nothing is returned
+ */
+void low_weight_sort_generators(sym** generators, const unsigned n_generators);
+
+/*
  *	low_weight_find_code_from_generators:
  *	Finds a code from a list of generators
  *	:: const sym* code :: Pointer to the stabiliser code
- *  :: const sym** generators :: Pointer to an array of generators
+ *  :: sym** generators :: Pointer to an array of generators
  *	Returns a new stabiliser code built from the generators with the same size and rank as the original code, it may also in fact be just the original code
  */
-sym* low_weight_find_code_from_generators(const sym* code, const sym** generators)
+sym* low_weight_find_code_from_generators(const sym* code, sym** generators);
+
+/*
+ *	low_weight_code_rank:
+ *	Determines the rank of the stabiliser code
+ *	:: const sym* code :: Pointer to the stabiliser code
+ *	Returns the rank of the code
+ */
+uint32_t low_weight_code_rank(const sym* code);
 
 // FUNCTION DEFINITIONS ----------------------------------------------------------------------------------------
 /*
@@ -42,7 +59,7 @@ sym* low_weight_find_code_from_generators(const sym* code, const sym** generator
 sym* lowest_weight_rep(const sym* code)
 {
 	// Get an array of all the generators
-	sym** all_generators = low_weight_find_all_generators(code);
+	sym** generators = low_weight_find_all_generators(code);
 
 	// Sort the generator array
 	unsigned n_generators = (1ull << code->height) - 1; 
@@ -50,6 +67,14 @@ sym* lowest_weight_rep(const sym* code)
 
 	// Find a code using the sorted generators
 	sym* lowest_weight_representation = low_weight_find_code_from_generators(code, generators);
+
+
+	// Free the generators
+	for (uint32_t i = 0; i < n_generators; i++)
+	{
+		sym_free(generators[i]);
+	}
+	free(generators);
 
 	// Return our new low weight code
 	return lowest_weight_representation;
@@ -98,7 +123,13 @@ sym** low_weight_find_all_generators(const sym* code)
 	return generators;
 }
 
-// Weight comparison function
+/*
+ *	low_weight_sym_weight_compare:
+ *	Compares the Pauli weights of two Pauli strings
+ *  :: const void* generator_a :: Pointer to a pointer to the first pauli string
+ *  :: const void* generator_b :: Pointer to a pointer to the second pauli string
+ *	Returns the weight of the first string minus the weight of the second string
+ */
 int32_t low_weight_sym_weight_compare(const void* generator_a, const void* generator_b)
 {
 	int32_t weight_a = sym_weight(*(sym**)generator_a);
@@ -115,7 +146,7 @@ int32_t low_weight_sym_weight_compare(const void* generator_a, const void* gener
  */
 void low_weight_sort_generators(sym** generators, const unsigned n_generators)
 {
-	qsort(generators, n_generators, sizeof(sym*), sym_weight_compare);
+	qsort(generators, n_generators, sizeof(sym*), low_weight_sym_weight_compare);
 
 	// Sort the generators using heapsort
 	//heapsort(generators, n_generators, sizeof(sym*), sym_weight_compare);
@@ -126,21 +157,21 @@ void low_weight_sort_generators(sym** generators, const unsigned n_generators)
  *	low_weight_find_code_from_generators:
  *	Finds a code from a list of generators
  *	:: const sym* code :: Pointer to the stabiliser code
- *  :: const sym** generators :: Pointer to an array of generators
+ *  :: sym** generators :: Pointer to an array of generators
  *	Returns a new stabiliser code built from the generators with the same size and rank as the original code, it may also in fact be just the original code
  */
-sym* low_weight_find_code_from_generators(const sym* code, const sym** generators)
+sym* low_weight_find_code_from_generators(const sym* code, sym** generators)
 {
 	sym_iter* siter = sym_iter_create_range(code->length, code->length + 1, code->length + 1);
 	sym* code_candidate = sym_create(code->height, code->length);
 
 	uint32_t rank_found = 0;
-	while (sym_iter_next(siter) && rank_found != n_codewords)
+	while (sym_iter_next(siter) && rank_found != code->height)
 	{
 		// Build a new candidate code
 		uint32_t stabilisers_picked = 0;
 		long long bitmask = sym_iter_value(siter);
-		for (uint64_t i = 0; i < n_codewords + 1)
+		for (uint64_t i = 0; i < code->height + 1; i++)
 		{
 			if ( (1 << i) & bitmask )
 			{
@@ -157,7 +188,12 @@ sym* low_weight_find_code_from_generators(const sym* code, const sym** generator
 	return code_candidate;
 }
 
-
+/*
+ *	low_weight_code_rank:
+ *	Determines the rank of the stabiliser code
+ *	:: const sym* code :: Pointer to the stabiliser code
+ *	Returns the rank of the code
+ */
 uint32_t low_weight_code_rank(const sym* code)
 {
 	sym* code_cpy = sym_copy(code);
@@ -203,7 +239,7 @@ uint32_t low_weight_code_rank(const sym* code)
 		{
 			if (i != j && 1 == sym_get(code_cpy, i, j + code_cpy->length / 2))
 			{
-				tableau_cnot(code_cpyu, j, i);
+				tableau_cnot(code_cpy, j, i);
 			}
 		}
 	}
@@ -220,11 +256,11 @@ uint32_t low_weight_code_rank(const sym* code)
 	// CNOT S_X to Identity via Gaussian elimination
 	for (size_t i = 0 ; i < code_cpy->height; i++)
 	{
+		bool pivot_found = false;
 		// Ensure that [i,i] is 1
-		if ( 0 == sym_get(code_cpy, i + , i) )
+		if ( 0 == sym_get(code_cpy, i, i))
 		{
-			bool pivot_found = false;
-			for (size_t j = i; j < code_cpyu->length / 2 && !pivot_found; j++)
+			for (size_t j = i; j < code_cpy->length / 2 && !pivot_found; j++)
 			{
 				if (1 == sym_get(code_cpy, i , j)) 
 				{

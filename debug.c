@@ -24,7 +24,7 @@ int main()
 
 	// Pick a code
 	sym* code = code_steane();
-	sym** generators = lowest_weight_rep(code);
+	sym* low_weight = lowest_weight_rep(code);
 
 	return 0;
 }

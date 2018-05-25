@@ -84,7 +84,7 @@ void tableau_phase(sym* tableau, const unsigned target);
 sym* tableau_create(const sym* code, const sym* logicals)
 {
 
-	destabilisers = destabilisers_generate(code, logicals);
+	sym** destabilisers = destabilisers_generate(code, logicals);
 
 	// Could not find destabilisers
 	if (NULL == destabilisers)
