@@ -242,7 +242,7 @@ void encoding_rank_deficient(sym* tableau, circuit* encode, gate* cnot, gate* ha
 	
 
 	// Hadamard on k to map the identity over to X
-	for (size_t i = max_rank; i < tableau->height / 2; i++)
+	for (size_t i = max_rank; i < tableau->length / 2; i++)
 	{
 		circuit_add_gate(encode, hadamard, i);
 		tableau_hadamard(tableau, i);

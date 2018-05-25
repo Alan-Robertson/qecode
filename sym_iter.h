@@ -8,9 +8,9 @@
 // STRUCT OBJECTS ----------------------------------------------------------------------------------------
 
 /*
-	sym:
+	sym_iter:
 	The symplectic matrix iterator
-	:: sym* state :: Number of rows in the matrix
+	:: sym* state :: Current state of the iterator
 	:: unsigned max_weight :: Maximum hamming weight for the iterator
 	:: unsigned curr_weight :: Current hamming weight for the iterator
 	:: long long counter :: Counter position at the current hamming weight
@@ -25,6 +25,7 @@ typedef struct {
 	long long counter; // Current counter state
 	long long max_counter; 
 } sym_iter; 
+
 
 // FUNCTION DECLARATIONS ----------------------------------------------------------------------------------------
 /* 
@@ -256,6 +257,19 @@ unsigned long long sym_iter_max_counter(unsigned length, unsigned current_weight
     }
     return result;
 }
+
+
+/*
+	sym_iter_value:
+	Returns the long long representation of a symplectic matrix object
+	:: sym_iter* siter :: Pointer to the iterator whose current value is to be determined
+	Returns a long long value
+*/
+long long sym_iter_value(sym_iter* siter)
+{	
+	return sym_iter_ll_from_state(siter);
+}
+
 
 /*
 	sym_iter_free:
