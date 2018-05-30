@@ -17,16 +17,27 @@
 int main()
 {
 
-	unsigned n_qubits = 5;
+	sym_iter* siter = sym_iter_create_range(8, 1, 2);
+	while (sym_iter_next(siter))
+	{
+		sym_print(siter->state);
+	}
+
+	return 0;
+
+	/*unsigned n_qubits = 5;
 	unsigned n_logical_qubits = 1;
 	double p_gate_error = 0.01;
 	double p_environmental_error = 0.001;
 
 	// Pick a code
-	sym* code = code_steane();
+	sym* code = code_five_qubit();
 	sym* low_weight = lowest_weight_rep(code);
+	
 
-	return 0;
+	sym_free(low_weight);
+	sym_free(code);
+	return 0;*/
 }
 
 /*

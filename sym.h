@@ -200,6 +200,34 @@ unsigned sym_row_column_commutes(
 	const unsigned row_a, 
 	const unsigned column_b);
 
+/* 
+ * sym_transpose:
+ * Performs a transpose operation on a symplectic matrix object
+ * :: sym* s :: A symplectic matrix to be transposed
+ * Returns an address on the heap pointing to the transposed matrix
+ */
+sym* sym_transpose(const sym* s); 
+
+/* 
+ * sym_row_xor:
+ * XORs two rows together of the same symplectic matrix
+ * :: sym* s :: A symplectic matrix 
+ * :: const unsigned control :: The row to be xored into another 
+ * :: const unsigned target :: The row that will be xored into
+ * Operation occurs in place
+ */
+void sym_row_xor(sym* s, const unsigned control, const unsigned target);
+
+/* 
+ * sym_column_swap:
+ * Swaps two columns of a symplectic matrix
+ * :: sym* s :: A symplectic matrix 
+ * :: const unsigned col_ :: The first column to be swapped
+ * :: const unsigned col_b :: The second column to be swapped
+ * Operation occurs in place
+ */
+void sym_column_swap(sym* code, const unsigned col_a, const unsigned col_b);
+
 /*
  * sym_is_not_I
  * Checks whether the value of a gate on qubit i in a sym object is not the identity
@@ -338,6 +366,14 @@ sym* ll_to_sym_t(unsigned long long ll, const unsigned height, const unsigned le
 	No return, prints to stdout
 */
 void sym_print(const sym* s);
+
+/*
+	sym_clear:
+	Clears the matrix of a symplectic matrix object
+	:: sym* s :: Pointer to the symplectic matrix to be cleared
+	No return
+*/
+void sym_clear(sym* s);
 
 /*
 	sym_free:
@@ -720,11 +756,11 @@ unsigned sym_row_column_commutes(
 }
 
 /* 
-sym_transpose:
-Performs a transpose operation on a symplectic matrix object
-:: sym* s :: A symplectic matrix to be transposed
-Returns an address on the heap pointing to the transposed matrix
-*/
+ * sym_transpose:
+ * Performs a transpose operation on a symplectic matrix object
+ * :: sym* s :: A symplectic matrix to be transposed
+ * Returns an address on the heap pointing to the transposed matrix
+ */
 sym* sym_transpose(const sym* s)
 {
 	sym* t = sym_create(s->length, s->height);
@@ -737,6 +773,52 @@ sym* sym_transpose(const sym* s)
 	}
 	return t;
 }
+
+/* 
+ * sym_row_xor:
+ * XORs two rows together of the same symplectic matrix
+ * :: sym* s :: A symplectic matrix 
+ * :: const unsigned control :: The row to be xored into another 
+ * :: const unsigned target :: The row that will be xored into
+ * Operation occurs in place
+ */
+void sym_row_xor(sym* s, const unsigned control, const unsigned target)
+{
+	for (uint32_t i = 0; i < s->length; i++)
+	{
+		sym_xor(s, target, i, sym_get(s, control, i));
+	}
+	return;
+}
+
+/* 
+ * sym_column_swap:
+ * Swaps two columns of a symplectic matrix
+ * :: sym* s :: A symplectic matrix 
+ * :: const unsigned col_ :: The first column to be swapped
+ * :: const unsigned col_b :: The second column to be swapped
+ * Operation occurs in place
+ */
+void sym_column_swap(sym* code, const unsigned col_a, const unsigned col_b)
+{
+	// Check that the columns are distinct
+	if (col_a == col_b)
+	{
+		return;
+	}
+
+	// XOR swap the two bits
+	for (uint32_t i = 0; i < code->height; i++)
+	{
+		sym_xor(code, i, col_a, sym_get(code, i, col_b));
+		sym_xor(code, i, col_b, sym_get(code, i, col_a));
+		sym_xor(code, i, col_a, sym_get(code, i, col_b));
+	}
+
+	return;
+}
+
+
 
 /*
  * sym_is_not_I
@@ -981,6 +1063,20 @@ sym* ll_to_sym_t(unsigned long long ll, const unsigned height, const unsigned le
 	sym_free(s);
 	return t;
 }
+
+
+/*
+	sym_clear:
+	Clears the matrix of a symplectic matrix object
+	:: sym* s :: Pointer to the symplectic matrix to be cleared
+	No return
+*/
+void sym_clear(sym* s)
+{
+	memset(s->matrix, 0, s->mem_size);
+	return;
+}
+
 
 /*
 	sym_free:

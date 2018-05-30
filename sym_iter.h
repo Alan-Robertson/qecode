@@ -142,7 +142,7 @@ sym_iter* sym_iter_create_range(const unsigned length, const unsigned min_weight
 	siter->max_counter = sym_iter_max_counter(length, min_weight); // Current maximum counter
 
 	siter->max_weight = max_weight;
-
+	
 	return siter;
 }
 
@@ -154,6 +154,8 @@ sym_iter* sym_iter_create_range(const unsigned length, const unsigned min_weight
 */
 bool sym_iter_next(sym_iter* siter)
 {
+	printf("[Curr Weight: %u  Counter: %lld  Max Counter: %lld State: %lld] ::", siter->curr_weight, siter->counter, siter->max_counter, *(long long*)siter->state->matrix);
+
 	if (siter->counter < siter->max_counter)
 	{
 		// Cast from iterator to long long
