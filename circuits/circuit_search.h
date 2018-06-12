@@ -2,16 +2,23 @@
 #define CIRCUIT_SEARCH
 
 #include "../sym.h"
-#include "../random_codes.h"
-#include "../misc/progress_bar.h"
-#include "../codes.h"
-#include "../error_models/error_models.h"
-#include "../decoders/decoders.h"
+
 #include "gates.h"
 #include "circuit.h"
-#include "../random_code_search.h"
 
-typedef circuit* (*stabiliser_circuit_f)(const sym* code, const sym* logicals, sym** destabilisers, gate* cnot, gate* hadamard, gate* phase);
+#include "../misc/progress_bar.h"
+
+#include "../codes/codes.h"
+#include "../codes/random_codes.h"
+#include "../codes/random_code_search.h"
+
+#include "../error_models/error_models.h"
+#include "../error_models/lookup.h"
+
+#include "../decoders/decoders.h"
+
+
+typedef circuit* (*stabiliser_circuit_f)(const sym* code, const sym* logicals, gate* cnot, gate* hadamard, gate* phase);
 
 random_code_return circuit_search_stabiliser(
 	const unsigned n, 
@@ -21,7 +28,8 @@ random_code_return circuit_search_stabiliser(
 	stabiliser_circuit_f stabiliser_circuit_builder,
 	gate* cnot,
 	gate* hadamard,
-	gate* phase)
+	gate* phase,
+	gate* noise)
 {
 	double p_best = 0;
 	sym* code_best = NULL, * logicals_best = NULL;
@@ -40,7 +48,7 @@ random_code_return circuit_search_stabiliser(
 			code = rand_code.code;
 			logicals = rand_code.logicals;
 
-			encode = stabiliser_circuit_builder(code, logicals, NULL, cnot, hadamard, phase);
+			encode = stabiliser_circuit_builder(code, logicals, cnot, hadamard, phase);
 
 			if (encode == NULL)
 			{
@@ -54,13 +62,15 @@ random_code_return circuit_search_stabiliser(
 		memset(initial_error_rate, 0, (1 << (code->length)) * sizeof(double));
 		initial_error_rate[0] = 1; // Set the identity to 1
 
-		double* error_rates = circuit_run(encode, initial_error_rate);
+		double* error_rates = circuit_run(encode, initial_error_rate, noise);
 		free(initial_error_rate);
 		
-		lookup_error_model_data md;
-		md.lookup_table = error_rates;
-		double p_test = tailor_decoder_prob_only(code, logicals, error_model_lookup, &md); 
+		error_model* md = error_model_create_lookup(n, error_rates);
 		free(error_rates);
+		
+		double p_test = tailored_prob(code, logicals, md); 
+
+		error_model_free(md);
 
 		if (p_best < p_test)
 		{

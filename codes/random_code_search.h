@@ -1,10 +1,10 @@
 #ifndef RANDOM_CODE_SEARCH
 #define RANDOM_CODE_SEARCH
 
-#include "sym.h"
+#include "../sym.h"
 #include "random_codes.h"
-#include "misc/progress_bar.h"
-#include "tailored.h"
+#include "../misc/progress_bar.h"
+#include "../tailored.h"
 
 // FUNCTION DECLARATIONS ----------------------------------------------------------------------------------------
 
@@ -21,8 +21,7 @@ random_code_return random_code_search_best_of_n_codes(
 	const unsigned n, 
 	const unsigned k, 
 	const unsigned r, 
-	double (*error_model)(const sym*, void*),
-	void* model_data,
+	error_model* noise,
 	const unsigned n_codes)
 {
 	double p_best = 0;
@@ -34,7 +33,7 @@ random_code_return random_code_search_best_of_n_codes(
 		sym* code = rand_code.code;
 		sym* logicals = rand_code.logicals;
 
-		double p_test = tailor_decoder_prob_only(code, logicals, error_model, model_data); 
+		double p_test = tailored_prob(code, logicals, noise); 
 
 		if (p_best < p_test)
 		{
@@ -57,13 +56,11 @@ random_code_return random_code_search_best_of_n_codes(
 	random_code_return best_random_code = {code_best, logicals_best};
 	return best_random_code;
 }
-
-double* random_code_search_stat_n_codes(
+/*double* random_code_search_stat_n_codes(
 	const unsigned n, 
 	const unsigned k, 
 	const unsigned r, 
-	double (*error_model)(const sym*, void*),
-	void* model_data,
+	error_model* noise,
 	const unsigned n_codes)
 {
 	double* code_stat = (double*)malloc(sizeof(double) * n_codes);
@@ -144,6 +141,6 @@ struct random_search_results random_code_search_best_of_n_codes_with_stats(
 	printf("\n");
 	struct random_search_results res = {code_stat, p_best, code_best, logicals_best};
 	return res;
-}
+}*/
 
 #endif

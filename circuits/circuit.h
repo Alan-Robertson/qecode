@@ -114,6 +114,7 @@ circuit* circuit_create(const unsigned n_qubits)
 	c->n_gates = 0;
 	c->start = NULL;
 	c->end = NULL;
+	return c;
 }
 
 /* 

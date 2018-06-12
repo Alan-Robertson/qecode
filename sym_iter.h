@@ -118,6 +118,7 @@ void sym_iter_free(sym_iter* siter);
 sym_iter* sym_iter_create(const unsigned length)
 {
 	sym_iter* siter = sym_iter_create_range(length, 0, length);
+	return siter;
 }
 
 /* 

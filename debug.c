@@ -16,7 +16,25 @@
 
 int main()
 {
-	int i = 0;
+
+
+	unsigned n_qubits = 7;
+	unsigned n_logical_qubits = 1;
+	double p_gate_error = 0.01;
+	double p_environmental_error = 0.001;
+
+	// Pick a code
+	sym* code = code_steane();
+	
+	sym* low_weight = lowest_weight_rep(code);
+	
+
+	sym_free(low_weight);
+	sym_free(code);
+	return 0;
+}
+
+/*	int i = 0;
 	sym_iter* siter = sym_iter_create(26);
 	while (sym_iter_next(siter))
 	{
@@ -25,22 +43,7 @@ int main()
 	}
 
 	printf("%d\n", i);
-	return 0;
-
-	/*unsigned n_qubits = 5;
-	unsigned n_logical_qubits = 1;
-	double p_gate_error = 0.01;
-	double p_environmental_error = 0.001;
-
-	// Pick a code
-	sym* code = code_five_qubit();
-	sym* low_weight = lowest_weight_rep(code);
-	
-
-	sym_free(low_weight);
-	sym_free(code);
 	return 0;*/
-}
 
 /*
 	sym* logicals = code_five_qubit_logicals();

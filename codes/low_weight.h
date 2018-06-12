@@ -179,7 +179,7 @@ sym* low_weight_find_code_from_generators(const sym* code, sym** generators, con
 				stabilisers_picked++;
 			}
 		}
-		printf("%lld ", bitmask);
+		//printf("%lld ", bitmask);
 		
 		
 		// Check the rank

@@ -4,9 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "sym.h"
-#include "logical.h"
-#include "misc/rand_bytes.h"
+#include "../sym.h"
+#include "../logical.h"
+#include "../misc/rand_bytes.h"
 
 // STRUCT OBJECTS ----------------------------------------------------------------------------------------
 
