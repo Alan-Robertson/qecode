@@ -154,7 +154,7 @@ sym_iter* sym_iter_create_range(const unsigned length, const unsigned min_weight
 */
 bool sym_iter_next(sym_iter* siter)
 {
-	printf("[Curr Weight: %u  Counter: %lld  Max Counter: %lld State: %lld] ::", siter->curr_weight, siter->counter, siter->max_counter, *(long long*)siter->state->matrix);
+	//printf("[Curr Weight: %u  Counter: %lld  Max Counter: %lld State: %lld] ::", siter->curr_weight, siter->counter, siter->max_counter, *(long long*)siter->state->matrix);
 
 	if (siter->counter < siter->max_counter)
 	{

@@ -16,13 +16,15 @@
 
 int main()
 {
-
-	sym_iter* siter = sym_iter_create_range(8, 1, 2);
+	int i = 0;
+	sym_iter* siter = sym_iter_create(26);
 	while (sym_iter_next(siter))
 	{
-		sym_print(siter->state);
+		//sym_print(siter->state);
+		i++;
 	}
 
+	printf("%d\n", i);
 	return 0;
 
 	/*unsigned n_qubits = 5;

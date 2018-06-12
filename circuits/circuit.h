@@ -64,6 +64,26 @@ void circuit_add_non_varg(circuit* c, gate* g, unsigned* target_qubits);
 void circuit_add_gate(circuit* c, gate* g, ...);
 
 /* 
+    circuit_add_non_varg_start:
+	Adds a gate to an existing circuit, places this gate at the start of the circuit 
+	:: circuit* c :: The circuit the gate is being added to
+	:: gate* g :: The gate being added
+	:: unsigned* target_qubits :: The qubits the gate is to be applied to
+	Does not return anything
+*/
+void circuit_add_non_varg_start(circuit* c, gate* g, unsigned* target_qubits);
+/* 
+    circuit_add_start:
+	Adds a gate to an existing circuit uses vargs for ease of readability
+	Places this gate at the start of the circuit
+	:: circuit* c :: The circuit the gate is being added to
+	:: gate* g :: The gate being added
+	:: ... :: Variadic target qubit indicies
+	Does not return anything
+*/
+void circuit_add_gate_start(circuit* c, gate* g, ...);
+
+/* 
     circuit_run:
 	Applies a circuit to an existing set of error probabilities
 	:: double* initial_error_rates :: The error rates before the circuit is applied
@@ -97,36 +117,6 @@ circuit* circuit_create(const unsigned n_qubits)
 }
 
 /* 
-    circuit_add_non_varg:
-	Adds a gate to an existing circuit
-	:: circuit* c :: The circuit the gate is being added to
-	:: gate* g :: The gate being added
-	:: unsigned* target_qubits :: The qubits the gate is to be applied to
-	Does not return anything
-*/
-void circuit_add_non_varg(circuit* c, gate* g, unsigned* target_qubits)
-{
-	circuit_element* ce = (circuit_element*)malloc(sizeof(circuit_element));
-	ce->gate_element = g;
-	ce->target_qubits = (unsigned*)malloc(sizeof(unsigned) * g->n_qubits);
-	memcpy(ce->target_qubits, target_qubits, g->n_qubits * sizeof(unsigned));
-	ce->next = NULL;
-	
-	if (NULL != c->start)
-	{
-		c->end->next = ce;
-		c->end = ce;
-	}
-	else
-	{
-		c->start = ce;
-		c->end = ce;
-	}
-	c->n_gates++;
-	return;
-}
-
-/* 
     circuit_add_gate:
 	Adds a gate to an existing circuit uses vargs for ease of readability
 	:: circuit* c :: The circuit the gate is being added to
@@ -155,6 +145,90 @@ void circuit_add_gate(circuit* c, gate* g, ...)
 	free(target_qubits);
 	return;
 }
+
+/* 
+    circuit_add_non_varg:
+	Adds a gate to an existing circuit, places this gate at the end of the circuit
+	:: circuit* c :: The circuit the gate is being added to
+	:: gate* g :: The gate being added
+	:: unsigned* target_qubits :: The qubits the gate is to be applied to
+	Does not return anything
+*/
+void circuit_add_non_varg(circuit* c, gate* g, unsigned* target_qubits)
+{
+	circuit_element* ce = (circuit_element*)malloc(sizeof(circuit_element));
+	ce->gate_element = g;
+	ce->target_qubits = (unsigned*)malloc(sizeof(unsigned) * g->n_qubits);
+	memcpy(ce->target_qubits, target_qubits, g->n_qubits * sizeof(unsigned));
+	ce->next = NULL;
+	
+	if (NULL != c->start)
+	{
+		c->end->next = ce;
+		c->end = ce;
+	}
+	else
+	{
+		c->start = ce;
+		c->end = ce;
+	}
+	c->n_gates++;
+	return;
+}
+
+/* 
+    circuit_add_start:
+	Adds a gate to an existing circuit uses vargs for ease of readability
+	Places this gate at the start of the circuit
+	:: circuit* c :: The circuit the gate is being added to
+	:: gate* g :: The gate being added
+	:: ... :: Variadic target qubit indicies
+	Does not return anything
+*/
+void circuit_add_gate_start(circuit* c, gate* g, ...)
+{
+	// Create the va_list
+	va_list args;
+	va_start(args, g);
+
+	// Allocate memory for the target qubit array
+	unsigned* target_qubits = (unsigned*)malloc(sizeof(unsigned) * g->n_qubits);
+
+	// For each qubit that we are expecting, take the next variadic argument and copy it to the array
+	for (unsigned i = 0; i < g->n_qubits; i++)
+	{
+		target_qubits[i] = va_arg(args, unsigned);
+	}
+	
+	// Add the new gate using the regular function
+	circuit_add_non_varg_start(c, g, target_qubits);
+
+	free(target_qubits);
+	return;
+}
+
+/* 
+    circuit_add_non_varg_start:
+	Adds a gate to an existing circuit, places this gate at the start of the circuit 
+	:: circuit* c :: The circuit the gate is being added to
+	:: gate* g :: The gate being added
+	:: unsigned* target_qubits :: The qubits the gate is to be applied to
+	Does not return anything
+*/
+void circuit_add_non_varg_start(circuit* c, gate* g, unsigned* target_qubits)
+{
+	circuit_element* ce = (circuit_element*)malloc(sizeof(circuit_element));
+	ce->gate_element = g;
+	ce->target_qubits = (unsigned*)malloc(sizeof(unsigned) * g->n_qubits);
+	memcpy(ce->target_qubits, target_qubits, g->n_qubits * sizeof(unsigned));
+	
+	// Add to the start of the list
+	ce->next = c->start;
+	c->start = ce;
+	c->n_gates++;
+	return;
+}
+
 
 /* 
     circuit_run_noiseless:
