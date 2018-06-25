@@ -3,6 +3,7 @@
 
 #include "../sym.h"
 #include "circuit.h"
+#include "../decoders/decoders.h"
 
 
 circuit* recovery_circuit(const sym* code, const decoder* decoders, const gate* cnot, const gate* hadamard, const gate* phase)
@@ -15,46 +16,40 @@ circuit* recovery_circuit(const sym* code, const decoder* decoders, const gate* 
 	return recovery;
 }
 
-void syndrome_measurement_circuit(circuit* recovery, const sym* code, const gate* cnot, const gate* hadamard, const gate* phase)
+decoder** syndrome_measurement_circuit(circuit* recovery, const sym* code, const gate* cnot, const gate* hadamard, const gate* phase)
 {
 	size_t start_ancilla = code->length / 2;
 
-	int I = 0;
-	int X = 1;
-	int Z = 2;
-	int Y = 3;
-
-	// Pauli X checks
+	// Pauli Z checks
 	for (size_t i = 0; i < code->length / 2; i++)
 	{
 		for (size_t j = 0; j < code->height; j++)
 		{
-			if (sym_is_X(code, j, i))
+			if (sym_is_Z(code, j, i))
 			{
 				circuit_add_gate(recovery, cnot, i, j + start_ancilla);
 			}
 		}
 	}
 
-	// Pauli Z checks
+	// Pauli X checks
 	for (size_t i = 0; i < code->length / 2; i++)
 	{
 		bool found = false;
 		for (size_t j = 0; j < code->height; j++)
 		{
-			if (sym_is_Z(code, j, i))
+			if (sym_is_X(code, j, i))
 			{
 				if (false == found)
 				{
 					circuit_add_gate(recovery, hadamard, i);
 				}
 
-
 				circuit_add_gate(recovery, cnot, i, j + start_ancilla);
 			}
 		}
 
-		// Qubit has been mapped to the Z basis, map it back
+		// Qubit has been mapped to the X basis, map it back
 		if (found)
 		{
 			circuit_add_gate(recovery, hadamard, i);
@@ -67,7 +62,7 @@ void syndrome_measurement_circuit(circuit* recovery, const sym* code, const gate
 		bool found = false;
 		for (size_t j = 0; j < code->height; j++)
 		{
-			if (sym_is_Z(code, j, i))
+			if (sym_is_Y(code, j, i))
 			{
 				if (false == found)
 				{
@@ -80,7 +75,7 @@ void syndrome_measurement_circuit(circuit* recovery, const sym* code, const gate
 			}
 		}
 
-		// Qubit has been mapped to the Z basis, map it back
+		// Qubit has been mapped to the Y basis, map it back
 		if (found)
 		{
 			circuit_add_gate(recovery, hadamard, i);

@@ -6,21 +6,23 @@
 
 typedef struct {
 	sym* code;
-	decoder* ;
+	decoder* recovery_operations;
 } gate_data_recovery_t;
 
+// This should eventually be swapped out with reading the syndrome qubits
 sym* gate_recovery(const sym* initial_state, void* gate_data, const unsigned* target_qubit)
 {
-    sym* final_state = sym_copy(initial_state);
+    gate_data_recovery_t* recovery_data = (gate_data_recovery_t*)gate_data;
 
-    // Call the decoder on the measurement output of the ancilla qubits 
-    // Should really develop a new MC gate for this.
-    decoder_call();
+    // Call the decoder on the measurement output of the ancilla qubits
+    sym* syndrome = sym_syndrome(recovery_data->code, initial_state);
 
+    sym* recovery = decoder_call(recovery_data->decoder, syndrome);
 
-    BYTE tmp = sym_get(final_state, 0, target_qubit[0]);
-    sym_set(final_state, 0, target_qubit[0], sym_get(final_state, 0, target_qubit[0] + final_state->length / 2));
-    sym_set(final_state, 0, target_qubit[0] + final_state->length/2, tmp);
+    sym* final_state = sym_add(initial_state, recovery);
+    
+    sym_free(syndrome);
+    sym_free(recovery);
     return final_state;
 }
 
