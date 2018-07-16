@@ -2,7 +2,7 @@
 #define GATE_OPERATIONS
 
 #include "../sym.h"
-#include "gate_operations.h"
+#include "clifford_generators.h"
 
 typedef struct {
 	sym* code;
