@@ -73,8 +73,7 @@ void gate_free(gate* g);
     gate_create:
 	Creates a new gate object
 	:: const unsigned n_qubits :: Number of qubits in the gate
-	:: const error_model_f error_model :: The error model to be applied when this gate is used
-	:: void* error_model_data :: Data for the error model
+	:: const error_model em :: The error model to be applied when this gate is used
 	Returns a heap pointer to the new gate
 */
 gate* gate_create(
@@ -94,6 +93,14 @@ gate* gate_create(
 	return g;
 }
 
+/* 
+    gate_create_independent:
+	Creates a new gate object, copies the data rather than references it
+	:: const unsigned n_qubits :: Number of qubits in the gate
+	:: const error_model* em :: The error model to be applied when this gate is used
+	:: void* operation_data :: Data for the operation
+	Returns a heap pointer to the new gate
+*/
 gate* gate_create_independent(
 	const unsigned n_qubits,
 	gate_operation_f operation,

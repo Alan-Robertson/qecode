@@ -72,7 +72,7 @@ typedef struct {
 	// Number of bytes used by the parameters
 	unsigned n_bytes;
 
-	// V table
+	// "V table"
 	error_model_call_f call; // Called to calculate the error probability
 	error_model_copy_f copy; // Called to copy the error model
 	error_model_param_free_f param_free; // Called to free the model parameters
