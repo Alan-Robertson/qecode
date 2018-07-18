@@ -1,6 +1,5 @@
 #include "error_models/iid.h"
 #include "gates/clifford_generators.h"
-#include "gates/gate_iid.h"
 #include "circuits/circuit.h"
 
 #include "characterise.h"
