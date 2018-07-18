@@ -1,7 +1,7 @@
 #ifndef CIRCUIT_STRUCT
 #define CIRCUIT_STRUCT
 #include "../sym.h" 
-#include "gates.h"
+#include "../gates/gates.h"
 #include "error_probabilities.h"
 
 // STRUCT OBJECTS ----------------------------------------------------------------------------------------
@@ -88,10 +88,21 @@ void circuit_add_gate_start(circuit* c, gate* g, ...);
 	Applies a circuit to an existing set of error probabilities
 	:: double* initial_error_rates :: The error rates before the circuit is applied
 	:: circuit* c :: The circuit the gate is being added to
-	:: const unsigned n_qubits :: The number of qubits
+	:: error_model* noise :: The noise to be applied
 	Returns a heap pointer to the new set of error rates
 */
-double* circuit_run(circuit* c, double* initial_error_rates);
+double* circuit_run(circuit* c, double* initial_error_rates, gate* noise);
+
+
+/* 
+    circuit_run_noiseless:
+	Applies a circuit to an existing set of error probabilities
+	:: double* initial_error_rates :: The error rates before the circuit is applied
+	:: circuit* c :: The circuit the gate is being added to
+	Returns a heap pointer to the new set of error rates
+*/
+double* circuit_run_noiseless(circuit* c, double* initial_error_rates);
+
 
 /*
 	circuit_free:
@@ -242,13 +253,26 @@ void circuit_add_non_varg_start(circuit* c, gate* g, unsigned* target_qubits)
 double* circuit_run_noiseless(circuit* c, double* initial_error_rates)
 {
 	double* error_rate = error_probabilities_copy(c->n_qubits, initial_error_rates);
-	unsigned long n_bytes = 1 << (c->n_qubits * 2);
+	unsigned long n_bytes = sizeof(double) * (1 << (c->n_qubits * 2));
 	circuit_element* ce = c->start;
+	printf("%lu\n", n_bytes);
 	while(ce != NULL)
 	{
 		double* tmp_error_rate = gate_apply(c->n_qubits, error_rate, ce->gate_element, ce->target_qubits);
+		printf("###\n");
+		for (int i = 0; i < 4; i++)
+		{
+			printf("%f\n", tmp_error_rate[i]);
+		}
+		printf("###\n");
 		memcpy(error_rate, tmp_error_rate, n_bytes);
 		free(tmp_error_rate);
+		printf("###\n");
+		for (int i = 0; i < 4; i++)
+		{
+			printf("%f\n", error_rate[i]);
+		}
+		printf("###\n");
 		ce = ce->next;
 	}
 
@@ -292,13 +316,13 @@ double* circuit_run(circuit* c, double* initial_error_rates, gate* noise)
 		memcpy(error_rate, tmp_error_rate, n_bytes);
 		free(tmp_error_rate);
 	
-		// Environmental Noise operations
+		/*// Environmental Noise operations
 		for (unsigned i = 0; i < c->n_qubits; i++)
 		{
 			double* tmp_error_rate = gate_apply(c->n_qubits, error_rate, noise, &i);
 			memcpy(error_rate, tmp_error_rate, n_bytes);
 			free(tmp_error_rate);
-		}		
+		}*/		
 		ce = ce->next;
 	}
 

@@ -26,7 +26,7 @@ double* characterise_code(const sym* code,
 {
 	double* p_error_probabilities = (double*)calloc(1ull << (logicals->length), sizeof(double));
 	// Iterate through errors and map back to the code-space
-	sym_iter* physical_error = sym_iter_create(code->length);
+	sym_iter* physical_error = sym_iter_create_length(code->length);
 	while (sym_iter_next(physical_error))
 	{
 		// Calculate the syndrome
@@ -55,7 +55,7 @@ double* characterise_code(const sym* code,
 	return p_error_probabilities;
 }
 
-void characterise_save(const double* probabilities, const size_t length, const char* filename)
+void characterise_save(const double* probabilities, const size_t n_qubits, const char* filename)
 {	
 	FILE *f;
 	f = fopen(filename, "w");
@@ -65,7 +65,7 @@ void characterise_save(const double* probabilities, const size_t length, const c
 		return;
 	}
 	double s = 0;
-	sym_iter* physical_error = sym_iter_create(length);	
+	sym_iter* physical_error = sym_iter_create(n_qubits);	
 	while (sym_iter_next(physical_error))
 	{
 		char* error_string = error_sym_to_str(physical_error->state);
@@ -78,10 +78,10 @@ void characterise_save(const double* probabilities, const size_t length, const c
 	return;
 }
 
-void characterise_print(const double* probabilities, const size_t length)
+void characterise_print(const double* probabilities, const size_t n_qubits)
 {	
 	double s = 0;
-	sym_iter* physical_error = sym_iter_create(length);	
+	sym_iter* physical_error = sym_iter_create(n_qubits);	
 	while (sym_iter_next(physical_error))
 	{
 		char* error_string = error_sym_to_str(physical_error->state);

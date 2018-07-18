@@ -115,7 +115,19 @@ void sym_iter_free(sym_iter* siter);
 	:: const unsigned length :: Length of the iterator in bits (2 * qubits)
 	Returns a heap pointer to the new iterator
 */
-sym_iter* sym_iter_create(const unsigned length)
+sym_iter* sym_iter_create(const unsigned n_qubits)
+{
+	sym_iter* siter = sym_iter_create_range(2 * n_qubits, 0, 2 * n_qubits);
+	return siter;
+}
+
+/* 
+    sym_iter_create:
+	Creates a new symplectic matrix object
+	:: const unsigned length :: Length of the iterator in bits (2 * qubits)
+	Returns a heap pointer to the new iterator
+*/
+sym_iter* sym_iter_create_length(const unsigned length)
 {
 	sym_iter* siter = sym_iter_create_range(length, 0, length);
 	return siter;
