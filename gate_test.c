@@ -6,7 +6,7 @@
 
 int main()
 {	
-	unsigned n_qubits = 1;
+	unsigned n_qubits = 2;
 
 	double p_gate_error = 0; // Gates themselves are noiseless
 	double p_error = 0.05;
@@ -38,7 +38,7 @@ int main()
 	circuit* test_circuit = circuit_create(n_qubits);
 
 	circuit_add_gate(test_circuit, noise, 0);
-	//circuit_add_gate(test_circuit, cnot, 0, 1);
+	//circuit_add_gate(test_circuit, cnot, 1, 0);
 
 	// Run the circuit
 	double* initial_error_probs = error_probabilities_identity(n_qubits);

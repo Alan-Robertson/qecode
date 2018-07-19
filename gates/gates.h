@@ -183,7 +183,7 @@ double* gate_noise(const unsigned n_qubits,
 	// Allocate memory for the new output
 	double* p_state_probabilities = (double*)calloc(1ull << (n_qubits * 2), sizeof(double));
 
-	// Identity gate, no operation
+	// Identity gate, no operation_output
 	if (NULL == applied_gate->operation)
 	{
 		memcpy(p_state_probabilities, initial_probabilities, sizeof(double) * 1ull << (n_qubits * 2));
@@ -194,19 +194,20 @@ double* gate_noise(const unsigned n_qubits,
 	sym_iter* initial_state = sym_iter_create(n_qubits);
 	while(sym_iter_next(initial_state))
 	{
-		// Determine the state after the error has been applied 
-		gate_result* operation_output = gate_iid(initial_state->state, applied_gate, target_qubits);
-
 		// Save this value as we may be needing it quite a bit
 		double initial_prob = initial_probabilities[sym_to_ll(initial_state->state)];
 
 		if (initial_prob > 0.0)
 		{
+			// Determine the state after the error has been applied 
+			gate_result* operation_output = gate_iid(initial_state->state, applied_gate, target_qubits);
+
 			for (unsigned i = 0; i < operation_output->n_results; i++)
 			{
 				// Cumulatively determine the new probability of each state after the gate has been applied
 				p_state_probabilities[sym_to_ll(operation_output->state_results[i])] += operation_output->prob_results[i] * initial_prob; 
 			}
+
 			// Free allocated memory
 			gate_result_free(operation_output);
 		}
@@ -251,14 +252,14 @@ double* gate_operator(const unsigned n_qubits,
 	sym_iter* initial_state = sym_iter_create(n_qubits);
 	while(sym_iter_next(initial_state))
 	{
-		// Determine the state after the error has been applied 
-		gate_result* operation_output = gate_operation(applied_gate, initial_state->state, target_qubits);
-
 		// Save this value as we may be needing it quite a bit
 		double initial_prob = initial_probabilities[sym_to_ll(initial_state->state)];
 
 		if (initial_prob > 0.0)
 		{
+			// Determine the state after the error has been applied 
+			gate_result* operation_output = gate_operation(applied_gate, initial_state->state, target_qubits);
+
 			for (unsigned i = 0; i < operation_output->n_results; i++)
 			{
 				// Cumulatively determine the new probability of each state after the gate has been applied

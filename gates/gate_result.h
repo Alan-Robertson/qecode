@@ -46,7 +46,10 @@ void gate_result_free(gate_result* gr)
 {
 	for (uint32_t i = 0; i < gr->n_results; i++)
 	{
-		sym_free(gr->state_results[i]);
+		if (gr->state_results[i] != NULL)
+		{
+			sym_free(gr->state_results[i]);	
+		}
 	}
 	free(gr->state_results);
 	free(gr->prob_results);
