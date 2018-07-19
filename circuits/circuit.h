@@ -255,24 +255,14 @@ double* circuit_run_noiseless(circuit* c, double* initial_error_rates)
 	double* error_rate = error_probabilities_copy(c->n_qubits, initial_error_rates);
 	unsigned long n_bytes = sizeof(double) * (1 << (c->n_qubits * 2));
 	circuit_element* ce = c->start;
-	printf("%lu\n", n_bytes);
+
 	while(ce != NULL)
 	{
 		double* tmp_error_rate = gate_apply(c->n_qubits, error_rate, ce->gate_element, ce->target_qubits);
-		printf("###\n");
-		for (int i = 0; i < 4; i++)
-		{
-			printf("%f\n", tmp_error_rate[i]);
-		}
-		printf("###\n");
+
 		memcpy(error_rate, tmp_error_rate, n_bytes);
 		free(tmp_error_rate);
-		printf("###\n");
-		for (int i = 0; i < 4; i++)
-		{
-			printf("%f\n", error_rate[i]);
-		}
-		printf("###\n");
+
 		ce = ce->next;
 	}
 
@@ -316,13 +306,13 @@ double* circuit_run(circuit* c, double* initial_error_rates, gate* noise)
 		memcpy(error_rate, tmp_error_rate, n_bytes);
 		free(tmp_error_rate);
 	
-		/*// Environmental Noise operations
+		// Environmental Noise operations
 		for (unsigned i = 0; i < c->n_qubits; i++)
 		{
 			double* tmp_error_rate = gate_apply(c->n_qubits, error_rate, noise, &i);
 			memcpy(error_rate, tmp_error_rate, n_bytes);
 			free(tmp_error_rate);
-		}*/		
+		}	
 		ce = ce->next;
 	}
 

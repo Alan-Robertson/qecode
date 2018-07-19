@@ -191,7 +191,7 @@ double* gate_noise(const unsigned n_qubits,
 	}
 
 	// Loop over all possible states
-	sym_iter* initial_state = sym_iter_create(n_qubits);
+	sym_iter* initial_state = sym_iter_create_n_qubits(n_qubits);
 	while(sym_iter_next(initial_state))
 	{
 		// Save this value as we may be needing it quite a bit
@@ -249,7 +249,7 @@ double* gate_operator(const unsigned n_qubits,
 	}
 
 	// Loop over all possible states
-	sym_iter* initial_state = sym_iter_create(n_qubits);
+	sym_iter* initial_state = sym_iter_create_n_qubits(n_qubits);
 	while(sym_iter_next(initial_state))
 	{
 		// Save this value as we may be needing it quite a bit
@@ -293,7 +293,7 @@ gate_result* gate_iid(const sym* initial_state, const void* gate_data, const uns
 	gate_result* gr = gate_result_create(1 << (g->n_qubits * 2));
 
 	uint32_t count = 0;
-	sym_iter* gate_error = sym_iter_create(g->n_qubits);
+	sym_iter* gate_error = sym_iter_create_n_qubits(g->n_qubits);
 	while (sym_iter_next(gate_error))
 	{
 		gr->state_results[count] = sym_partial_add(initial_state, gate_error->state, target_qubits);

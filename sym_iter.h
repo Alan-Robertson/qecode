@@ -37,6 +37,14 @@ typedef struct {
 sym_iter* sym_iter_create(const unsigned length);
 
 /* 
+    sym_iter_create_n_qubits:
+	Creates a new symplectic matrix object
+	:: const unsigned n_qubits :: Number of qubits to iterate over
+	Returns a heap pointer to the new iterator
+*/
+sym_iter* sym_iter_create_n_qubits(const unsigned length);
+
+/* 
     sym_iter_create_range:
 	Creates a new symplectic matrix object
 	:: const unsigned length :: Length of the iterator in bits (2 * qubits)
@@ -45,7 +53,6 @@ sym_iter* sym_iter_create(const unsigned length);
 	Returns a heap pointer to the new iterator
 */
 sym_iter* sym_iter_create_range(const unsigned length, const unsigned min_weight, const unsigned max_weight);
-
 
 /*
 	sym_iter_next:
@@ -109,17 +116,6 @@ void sym_iter_free(sym_iter* siter);
 
 
 // FUNCTION DEFINITIONS ----------------------------------------------------------------------------------------
-/* 
-    sym_iter_create:
-	Creates a new symplectic matrix object
-	:: const unsigned length :: Length of the iterator in bits (2 * qubits)
-	Returns a heap pointer to the new iterator
-*/
-sym_iter* sym_iter_create(const unsigned n_qubits)
-{
-	sym_iter* siter = sym_iter_create_range(2 * n_qubits, 0, 2 * n_qubits);
-	return siter;
-}
 
 /* 
     sym_iter_create:
@@ -127,9 +123,21 @@ sym_iter* sym_iter_create(const unsigned n_qubits)
 	:: const unsigned length :: Length of the iterator in bits (2 * qubits)
 	Returns a heap pointer to the new iterator
 */
-sym_iter* sym_iter_create_length(const unsigned length)
+sym_iter* sym_iter_create(const unsigned length)
 {
 	sym_iter* siter = sym_iter_create_range(length, 0, length);
+	return siter;
+}
+
+/* 
+    sym_iter_create_n_qubits:
+	Creates a new symplectic matrix object
+	:: const unsigned length :: Length of the iterator in bits (2 * qubits)
+	Returns a heap pointer to the new iterator
+*/
+sym_iter* sym_iter_create_n_qubits(const unsigned n_qubits)
+{
+	sym_iter* siter = sym_iter_create_range(2 * n_qubits, 0, 2 * n_qubits);
 	return siter;
 }
 
@@ -167,14 +175,12 @@ sym_iter* sym_iter_create_range(const unsigned length, const unsigned min_weight
 */
 bool sym_iter_next(sym_iter* siter)
 {
-	//printf("[Curr Weight: %u  Counter: %lld  Max Counter: %lld State: %lld] ::", siter->curr_weight, siter->counter, siter->max_counter, *(long long*)siter->state->matrix);
-
 	if (siter->counter < siter->max_counter)
 	{
 		// Cast from iterator to long long
 		long long val = sym_iter_ll_from_state(siter);
 
-		// Bill Gosper Hamming Weight generator
+		// Bill-Gosper Hamming Weight generator
 		long long c = val & -val;
 		long long r = val + c;
 		
