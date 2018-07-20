@@ -1,16 +1,17 @@
-#ifndef GATE_OPERATIONS
-#define GATE_OPERATIONS
+#ifndef GATE_RECOVERY
+#define GATE_RECOVERY
 
 #include "../sym.h"
-#include "clifford_generators.h"
+#include "../decoders/decoders.h"
+#include "gate_result.h"
 
 typedef struct {
-	sym* code;
+    uint32_t n_syndrome_bits;
 	decoder* recovery_operations;
 } gate_data_recovery_t;
 
 // This should eventually be swapped out with reading the syndrome qubits
-sym* gate_recovery(const sym* initial_state, void* gate_data, const unsigned* target_qubit)
+sym* gate_recovery(const sym* initial_state, void* gate_data, const unsigned* target_qubits)
 {
     gate_data_recovery_t* recovery_data = (gate_data_recovery_t*)gate_data;
 
@@ -25,6 +26,5 @@ sym* gate_recovery(const sym* initial_state, void* gate_data, const unsigned* ta
     sym_free(recovery);
     return final_state;
 }
-
 
 #endif
