@@ -6,6 +6,9 @@
 
 // STRUCT OBJECTS ----------------------------------------------------------------------------------------
 
+// Circuit run struct
+typedef double* (*circuit_run_f)(void*, double*, gate*);
+
 /*
 	circuit_element:
 	An individual element in the circuit list
@@ -29,10 +32,12 @@ struct circuit_element
 */
 typedef struct
 {
-	unsigned n_qubits;
-	unsigned n_gates;
-	circuit_element* start;
-	circuit_element* end;
+	unsigned n_qubits; // Number of qubits in the circuit
+	unsigned n_gates; // Number of gates in the circuit
+	circuit_element* start; // The starting gate of the circuit
+	circuit_element* end; // The final gate of the circuit
+	circuit_run_f circuit_operation; // The function that runs the circuit
+	void* circuit_data; // Any other data that the circuit might require
 } circuit;
 
 // FUNCTION DECLARATIONS ----------------------------------------------------------------------------------------
@@ -72,6 +77,7 @@ void circuit_add_gate(circuit* c, gate* g, ...);
 	Does not return anything
 */
 void circuit_add_non_varg_start(circuit* c, gate* g, unsigned* target_qubits);
+
 /* 
     circuit_add_start:
 	Adds a gate to an existing circuit uses vargs for ease of readability
@@ -83,16 +89,18 @@ void circuit_add_non_varg_start(circuit* c, gate* g, unsigned* target_qubits);
 */
 void circuit_add_gate_start(circuit* c, gate* g, ...);
 
+
+double* circuit_run(void* c, double* initial_error_rates, gate* noise);
+
 /* 
-    circuit_run:
+    circuit_run_default:
 	Applies a circuit to an existing set of error probabilities
 	:: double* initial_error_rates :: The error rates before the circuit is applied
 	:: circuit* c :: The circuit the gate is being added to
 	:: error_model* noise :: The noise to be applied
 	Returns a heap pointer to the new set of error rates
 */
-double* circuit_run(circuit* c, double* initial_error_rates, gate* noise);
-
+double* circuit_run_default(circuit* c, double* initial_error_rates, gate* noise);
 
 /* 
     circuit_run_noiseless:
@@ -121,11 +129,17 @@ void circuit_free(circuit* c);
 circuit* circuit_create(const unsigned n_qubits)
 {
 	circuit* c = (circuit*)malloc(sizeof(circuit));
+	c->circuit_operation = circuit_run_default;
 	c->n_qubits = n_qubits;
 	c->n_gates = 0;
 	c->start = NULL;
 	c->end = NULL;
 	return c;
+}
+
+double* circuit_run(void* c, double* initial_error_rates, gate* noise)
+{
+	return c->circuit_operation((circuit*)c, initial_error_rates, noise);
 }
 
 /* 
@@ -271,14 +285,14 @@ double* circuit_run_noiseless(circuit* c, double* initial_error_rates)
 
 
 /* 
-    circuit_run:
+    circuit_run_default:
 	Applies a circuit to an existing set of error probabilities
 	:: double* initial_error_rates :: The error rates before the circuit is applied
 	:: circuit* c :: The circuit the gate is being added to
 	:: error_model* noise :: The noise to be applied
 	Returns a heap pointer to the new set of error rates
 */
-double* circuit_run(circuit* c, double* initial_error_rates, gate* noise)
+double* circuit_run_default(circuit* c, double* initial_error_rates, gate* noise)
 {
 
 	if (NULL == noise)

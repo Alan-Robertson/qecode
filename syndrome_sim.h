@@ -1,22 +1,51 @@
-#ifndef CIRCUIT_RECOVERY
-#define CIRCUIT_RECOVERY
-
-#include "../sym.h"
-#include "circuit.h"
-#include "../decoders/decoders.h"
 
 
-circuit* recovery_circuit(const sym* code, const decoder* decoders, const gate* cnot, const gate* hadamard, const gate* phase)
+typedef struct {
+	uint32_t n_syndrome_bits;
+	sym** syndrome_states;
+	sym* syndrome;
+} circuit_recovery_data;
+
+
+circuit* circuit_syndrome_measurement_create(const unsigned int n_qubits, const sym* code, const gate* cnot, const gate* hadamard, const gate* phase)
 {
-	// Qubits 0 -> length / 2 are the regular qubits, the others are ancillas
-	circuit* recovery = circuit_create(code->length / 2 + code->height);
+	circuit* recovery = circuit_create(n_qubits);
+	recovery->circuit_operation = circuit_syndrome_measurement_run;
+	syndrome_measurement_circuit(circuit* recovery, code, cnot, hadamard, phase);
 
-	syndrome_measurement_circuit(recovery, code, cnot, hadamard);
+	circuit_recovery_data* rd = (circuit_recovery_data*)malloc(sizeof(circuit_recovery_data));
+	rd->n_syndrome_bits = code->height;
+	recovery->circuit_data = rd;
 
 	return recovery;
 }
 
-decoder** syndrome_measurement_circuit(circuit* recovery, const sym* code, const gate* cnot, const gate* hadamard, const gate* phase)
+double* circuit_syndrome_measurement_run(circuit* recovery, double* initial_error_rates, gate* noise)
+{
+	uint32_t n_errors = (1 << (recovery->n_qubits * 2));
+	circuit_recovery_data* rd = (circuit_recovery_data*)recovery->circuit_data;
+
+	rd->syndrome_states = (circuit_recovery_data**)malloc(sizeof(circuit_recovery_data*) * n_errors);
+
+	sym* base_state = sym_create(1, rd->n_syndrome_bits);
+
+	for (uint32_t i = 0; i < n_errors; i++)
+	{
+
+	}
+
+
+
+
+
+	for (uint32_t i = 0; i < n_errors; i++)
+	{
+		sym_free(rd->syndrome_states[i]);	
+	}
+
+}
+
+void syndrome_measurement_circuit(circuit* recovery, const sym* code, const gate* cnot, const gate* hadamard, const gate* phase)
 {
 	size_t start_ancilla = code->length / 2;
 
@@ -87,10 +116,3 @@ decoder** syndrome_measurement_circuit(circuit* recovery, const sym* code, const
 
 	return;
 }
-
-
-
-void recovery_operation_circuit();
-
-
-#endif
