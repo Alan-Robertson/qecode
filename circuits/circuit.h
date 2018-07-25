@@ -16,12 +16,12 @@ typedef double* (*circuit_run_f)(void*, double*, gate*);
 	:: unsigned* target_qubits :: The qubits this gate is to be applied to
 	:: struct circuit_element* next :: The next circuit element
 */
-struct circuit_element
+typedef struct
 {
 	gate* gate_element;
 	unsigned* target_qubits;
 	struct circuit_element* next;
-};
+}  circuit_element;
 
 /*
 	circuit:
