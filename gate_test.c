@@ -42,8 +42,10 @@ int main()
 	circuit_add_gate(test_circuit, cnot, 0, 1);
 	circuit_add_gate(test_circuit, hadamard, 0);
 	circuit_add_gate(test_circuit, phase, 0);
+	circuit_add_gate(test_circuit, noise, 0);
 
 	// Print the circuit
+	qcircuit_print(test_circuit);
 
 	// Run the circuit
 	//double* initial_error_probs = error_probabilities_identity(n_qubits);
@@ -56,8 +58,8 @@ int main()
 	error_model_free(em_gate);
 	error_model_free(em_noise);
 
-	error_probabilities_free(initial_error_probs);
-	error_probabilities_free(final_error_probs);
+	//error_probabilities_free(initial_error_probs);
+	//error_probabilities_free(final_error_probs);
 	
 	circuit_free(test_circuit);
 

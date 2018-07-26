@@ -1,5 +1,4 @@
 
-
 typedef struct {
 	uint32_t n_syndrome_bits;
 	sym** syndrome_states;
@@ -33,9 +32,6 @@ double* circuit_syndrome_measurement_run(circuit* recovery, double* initial_erro
 	{
 
 	}
-
-
-
 
 
 	for (uint32_t i = 0; i < n_errors; i++)
@@ -98,8 +94,6 @@ void syndrome_measurement_circuit(circuit* recovery, const sym* code, const gate
 					circuit_add_gate(recovery, phase, i);
 					circuit_add_gate(recovery, hadamard, i);
 				}
-
-
 				circuit_add_gate(recovery, cnot, i, j + start_ancilla);
 			}
 		}
@@ -113,6 +107,5 @@ void syndrome_measurement_circuit(circuit* recovery, const sym* code, const gate
 			circuit_add_gate(recovery, phase, i);
 		}
 	}
-
 	return;
 }

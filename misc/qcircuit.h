@@ -17,14 +17,14 @@ char* str_increase(char* original, char const* added);
 
 void qcircuit_print(circuit* c)
 {
-	char const* header = "\\Qcircuit @C=1em @R=.7em {";
-	char const* space = "&";
+	char const* header = "\\Qcircuit @C=1em @R=.7em {\n";
+	char const* space = " & ";
 	char const* gate = "\\gate{";
 	char const* tail = "}";
 	char const* wire = "\\qw";
 	char const* cnot_targ = "\\targ";
 	char const* cnot_ctrl = "\\ctrl{";
-	char const* end_wire = "\\\\\n";
+	char const* end_wire = " \\\\\n";
 
 	uint32_t symbol_table_length = 0;
 	char const* unspecified_unitary = "U_{";
@@ -51,7 +51,7 @@ void qcircuit_print(circuit* c)
 		if (ce->gate_element->operation == gate_cnot)
 		{
 			char cnot_target_diff[MAX_CHARS_NUM];
-			sprintf(cnot_target_diff, "%d\n", ce->target_qubits[CNOT_CONTROL_VALUE] - ce->target_qubits[CNOT_TARGET_VALUE]);
+			sprintf(cnot_target_diff, "%d", ce->target_qubits[CNOT_TARGET_VALUE] - ce->target_qubits[CNOT_CONTROL_VALUE]);
 			qubits[ce->target_qubits[CNOT_CONTROL_VALUE]] = str_increase(qubits[ce->target_qubits[CNOT_CONTROL_VALUE]], cnot_ctrl);
 			qubits[ce->target_qubits[CNOT_CONTROL_VALUE]] = str_increase(qubits[ce->target_qubits[CNOT_CONTROL_VALUE]], cnot_target_diff);
 			qubits[ce->target_qubits[CNOT_CONTROL_VALUE]] = str_increase(qubits[ce->target_qubits[CNOT_CONTROL_VALUE]], tail);
@@ -64,7 +64,7 @@ void qcircuit_print(circuit* c)
 			qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]] = str_increase(qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]], "H");
 			qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]] = str_increase(qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]], tail);
 		}
-		else if (ce->gate_element->operation == gate_cphase)
+		else if (ce->gate_element->operation == gate_phase)
 		{
 			qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]] = str_increase(qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]], gate);
 			qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]] = str_increase(qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]], "P");
@@ -94,7 +94,7 @@ void qcircuit_print(circuit* c)
 			for (int i = 0; i < ce->gate_element->n_qubits; i++)
 			{
 				char symbol_number[MAX_CHARS_NUM];
-				sprintf(symbol_number, "%d\n",  symbol_index + 1);
+				sprintf(symbol_number, "%d",  symbol_index + 1);
 				qubits[ce->target_qubits[i]] = str_increase(qubits[ce->target_qubits[i]], gate);
 				qubits[ce->target_qubits[i]] = str_increase(qubits[ce->target_qubits[i]], unspecified_unitary);
 				qubits[ce->target_qubits[i]] = str_increase(qubits[ce->target_qubits[i]], symbol_number);
@@ -123,6 +123,7 @@ void qcircuit_print(circuit* c)
 			}
 		}
 		
+		// Get the next gate for the circuit
 		ce = ce->next;
 	}
 
@@ -147,9 +148,9 @@ void qcircuit_print(circuit* c)
 }
 
 // Increases the length of a malloced string
-char* str_increase(char* original, const char const* added)
+char* str_increase(char* original, char const* added)
 {
-	original = realloc(original, strnlen(original) + strnlen(added) + 2);
+	original = (char*)realloc(original, strlen(original) + strlen(added) + 2);
 	strcat(original, added);
 	return original;
 }

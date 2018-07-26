@@ -538,7 +538,6 @@ sym* sym_partial_add(const sym* a, const sym* b, const unsigned* target_bits)
 	return added;
 }
 
-
 /*
 	sym_add_in_place:
 	Adds two symplectic matrices of the same size in place; the object 'a' will inherit the changes
@@ -565,7 +564,6 @@ void sym_add_in_place(const sym* a, const sym* b)
 	} 
 	return;
 }
-
 
 /*
 	sym_copy:
@@ -814,11 +812,8 @@ void sym_column_swap(sym* code, const unsigned col_a, const unsigned col_b)
 		sym_xor(code, i, col_b, sym_get(code, i, col_a));
 		sym_xor(code, i, col_a, sym_get(code, i, col_b));
 	}
-
 	return;
 }
-
-
 
 /*
  * sym_is_not_I
