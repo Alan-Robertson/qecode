@@ -28,7 +28,7 @@ decoder* decoder_create_destabiliser();
 	:: const sym* syndrome :: The  syndrome passed to the decoder
 	Returns the correction suggested by the decoder
 */
-sym* decoder_call_destabiliser(void* v_decoder, const sym* syndrome);
+sym* decoder_call_destabiliser(decoder* v_decoder, const sym* syndrome);
 
 /*
 	decoder_free_params_destabiliser

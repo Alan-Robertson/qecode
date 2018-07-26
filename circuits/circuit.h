@@ -6,8 +6,9 @@
 
 // STRUCT OBJECTS ----------------------------------------------------------------------------------------
 
+struct circuit;
 // Circuit run struct
-typedef double* (*circuit_run_f)(void*, double*, gate*);
+typedef double* (*circuit_run_f)(struct circuit*, double*, gate*);
 
 /*
 	circuit_element:
@@ -16,12 +17,13 @@ typedef double* (*circuit_run_f)(void*, double*, gate*);
 	:: unsigned* target_qubits :: The qubits this gate is to be applied to
 	:: struct circuit_element* next :: The next circuit element
 */
-typedef struct
+struct circuit_element
 {
 	gate* gate_element;
 	unsigned* target_qubits;
 	struct circuit_element* next;
-}  circuit_element;
+};
+typedef struct circuit_element circuit_element;
 
 /*
 	circuit:
@@ -30,7 +32,7 @@ typedef struct
 	:: struct circuit_element* start :: The first element in the list
 	:: struct circuit_element* end :: The last element in the list
 */
-typedef struct
+typedef struct circuit
 {
 	unsigned n_qubits; // Number of qubits in the circuit
 	unsigned n_gates; // Number of gates in the circuit
@@ -137,9 +139,9 @@ circuit* circuit_create(const unsigned n_qubits)
 	return c;
 }
 
-double* circuit_run(void* c, double* initial_error_rates, gate* noise)
+double* circuit_run(circuit* c, double* initial_error_rates, gate* noise)
 {
-	return c->circuit_operation((circuit*)c, initial_error_rates, noise);
+	return c->circuit_operation(c, initial_error_rates, noise);
 }
 
 /* 

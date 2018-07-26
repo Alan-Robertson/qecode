@@ -11,12 +11,14 @@
 //----------------------------------------------------------------------------------------
 // The Decoder Base 'class'
 //----------------------------------------------------------------------------------------
+struct decoder;
+
 
 typedef sym* (*decoder_call_f)(void*, const sym*);
 
 typedef void (*decoder_param_free_f)(void*);
 
-typedef struct {
+typedef struct decoder {
 	// The decoder parameters
 	void* params; // The parameters for that particular decoder
 
@@ -43,7 +45,7 @@ decoder* decoder_create();
 	:: decoder* d :: The decoder object whose parameters are to be freed
 	Returns nothing
 */
-void decoder_param_free_default(void* v_decoder);
+void decoder_param_free_default(void* v_params);
 
 /*
 	decoder_call
@@ -85,10 +87,9 @@ decoder* decoder_create()
 	:: decoder* d :: The decoder object whose parameters are to be freed
 	Returns nothing
 */
-void decoder_param_free_default(void* v_decoder)
+void decoder_param_free_default(void* v_params)
 {
-	decoder* d = (decoder*)v_decoder;
-	free(d->params);
+	free(v_params);
 	return;
 };
 

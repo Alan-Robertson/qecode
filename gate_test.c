@@ -1,8 +1,9 @@
 #include "error_models/iid.h"
 #include "gates/clifford_generators.h"
 #include "circuits/circuit.h"
+#include "misc/qcircuit.h"
 
-#include "characterise.h"
+//#include "characterise.h"
 
 int main()
 {	
@@ -42,11 +43,13 @@ int main()
 	circuit_add_gate(test_circuit, hadamard, 0);
 	circuit_add_gate(test_circuit, phase, 0);
 
-	// Run the circuit
-	double* initial_error_probs = error_probabilities_identity(n_qubits);
-	double* final_error_probs = circuit_run_noiseless(test_circuit, initial_error_probs);
+	// Print the circuit
 
-	characterise_print(final_error_probs, n_qubits);
+	// Run the circuit
+	//double* initial_error_probs = error_probabilities_identity(n_qubits);
+	//double* final_error_probs = circuit_run_noiseless(test_circuit, initial_error_probs);
+
+	//characterise_print(final_error_probs, n_qubits);
 
 	// Cleanup
 	error_model_free(em_cnot);
