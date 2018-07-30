@@ -2,6 +2,7 @@
 #include "gates/clifford_generators.h"
 #include "circuits/circuit.h"
 #include "misc/qcircuit.h"
+#include "syndrome_measurement.h"
 #include "characterise.h"
 
 int main()

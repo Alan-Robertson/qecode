@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdarg.h>
 
 // MACROS -------------------------------------------------------------------------------------------
 
@@ -46,6 +47,7 @@ typedef struct
 {
 	unsigned height;
 	unsigned length;
+	unsigned n_qubits;
 	BYTE* matrix;
 	size_t mem_size;
 } sym;
@@ -333,6 +335,29 @@ uint32_t sym_weight_Z(const sym* s);
 void sym_row_copy(sym* s, const sym* t, const unsigned s_row, const unsigned t_row);
 
 /*
+	sym_sym_to_sym_non_varg:
+	Copies a state between two sym objects with differing numbers of qubits
+	:: sym* target :: Target to be copied to
+	:: sym const* control :: The sym object to be copied from
+	:: uint32_t* target_qubits :: The list of qubits to be copied to
+	:: uint32_t* control_qubits :: The list of qubits to be copied from
+	The operation is performed in place, returns nothing
+*/
+void sym_sym_to_sym_non_varg(sym* target, sym const* control, uint32_t* target_qubits, uint32_t* control_qubits);
+
+/*
+	sym_sym_to_sym_non_varg:
+	Copies a state between two sym objects with differing numbers of qubits
+	Can also be used to relabel qubits
+	:: sym* target :: Target to be copied to
+	:: sym const* control :: The sym object to be copied from
+	:: uint32_t* target_qubits :: The list of qubits to be copied to
+	:: uint32_t* control_qubits :: The list of qubits to be copied from
+	The operation is performed in place, returns nothing
+*/
+void sym_sym_to_sym(sym* target, sym const* control, ...);
+
+/*
 	sym_to_ll:
 	Provides a long long representation of a sym object, useful for indexing
 	:: const sym* s :: Pointer to the sym object to be represented
@@ -398,6 +423,7 @@ sym* sym_create(const unsigned height, const unsigned length)
 	// Store the height and length
 	s->height = height;
 	s->length = length;
+	s->n_qubits = length / 2;
 	// Calculate the number of bytes required for the symplectic matrix representation
 	// Storing this is faster than recalculating
 	s->mem_size = MATRIX_BYTES(s);
@@ -526,12 +552,12 @@ sym* sym_partial_add(const sym* a, const sym* b, const unsigned* target_bits)
 	for (size_t i = 0; i < added->height; i++)
 	{
 		// For each element within b, add it to the corresponding qubit in a
-		for (size_t j = 0; j < b->length/2; j++)
+		for (size_t j = 0; j < b->n_qubits; j++)
 		{
 			// Add the X components
 			sym_set(added, i, target_bits[j], sym_get(added, i, target_bits[j]) ^ sym_get(b, i, j));
 			// Add the Z components
-			sym_set(added, i, target_bits[j] + a->length/2, sym_get(added, i, target_bits[j] + a->length/2) ^ sym_get(b, i, j + b->length/2));
+			sym_set(added, i, target_bits[j] + a->n_qubits, sym_get(added, i, target_bits[j] + a->n_qubits) ^ sym_get(b, i, j + b->n_qubits));
 		}
 	}
 
@@ -662,7 +688,7 @@ sym* sym_syndrome(const sym* code, const sym* error)
 	}
 	
 	// Also the number of qubits
-	const int32_t half_length = code->length / 2;
+	const int32_t half_length = code->n_qubits;
 
 	sym* syndrome = sym_create(code->height, 1);
 	for (int32_t i = 0; i < error->length; i++)
@@ -671,7 +697,7 @@ sym* sym_syndrome(const sym* code, const sym* error)
 		{
 			for (int32_t j = 0; j < syndrome->height; j++)
 			{
-				ELEMENT_XOR(syndrome, j, 0, ELEMENT_GET(code, j, (i + code->length / 2) % code->length) & ELEMENT_GET(error, 0, i % code->length));
+				ELEMENT_XOR(syndrome, j, 0, ELEMENT_GET(code, j, (i + code->n_qubits) % code->length) & ELEMENT_GET(error, 0, i % code->length));
 			}
 		}
 	}
@@ -709,7 +735,7 @@ unsigned sym_row_commutes(
 
 	for (size_t i = 0; i < a->length; i++)
 	{
-		commutes += sym_get(a, row_a, i) * sym_get(b, row_b, (i + a->length / 2) % a->length);
+		commutes += sym_get(a, row_a, i) * sym_get(b, row_b, (i + a->n_qubits) % a->length);
 	}
 	return commutes % 2;
 }
@@ -748,7 +774,7 @@ unsigned sym_row_column_commutes(
 
 	for (size_t i = 0; i < a->length; i++)
 	{
-		commutes += sym_get(a, row_a, i) * sym_get(b, (i + a->length / 2) % a->length, column_b);
+		commutes += sym_get(a, row_a, i) * sym_get(b, (i + a->n_qubits) % a->length, column_b);
 	}
 	return commutes % 2;
 }
@@ -825,7 +851,7 @@ void sym_column_swap(sym* code, const unsigned col_a, const unsigned col_b)
  */
 BYTE sym_is_not_I(const sym* s, const unsigned i, const unsigned j)
 {
-	return ((ELEMENT_GET(s, i, j)) || ELEMENT_GET(s, i, j + s->length / 2));	
+	return ((ELEMENT_GET(s, i, j)) || ELEMENT_GET(s, i, j + s->n_qubits));	
 }
 
 /*
@@ -838,7 +864,7 @@ BYTE sym_is_not_I(const sym* s, const unsigned i, const unsigned j)
  */
 BYTE sym_is_I(const sym* s, const unsigned i, const unsigned j)
 {
-	return (!(ELEMENT_GET(s, i, j)) && !(ELEMENT_GET(s, i, j + s->length / 2)));	
+	return (!(ELEMENT_GET(s, i, j)) && !(ELEMENT_GET(s, i, j + s->n_qubits)));	
 }
 
 /*
@@ -851,7 +877,7 @@ BYTE sym_is_I(const sym* s, const unsigned i, const unsigned j)
  */
 BYTE sym_is_X(const sym* s, const unsigned i, const unsigned j)
 {
-	return (ELEMENT_GET(s, i, j) && !(ELEMENT_GET(s, i, j + s->length / 2)));	
+	return (ELEMENT_GET(s, i, j) && !(ELEMENT_GET(s, i, j + s->n_qubits)));	
 }
 
 /*
@@ -864,7 +890,7 @@ BYTE sym_is_X(const sym* s, const unsigned i, const unsigned j)
  */
 BYTE sym_is_Y(const sym* s, const unsigned i, const unsigned j)
 {
-	return (ELEMENT_GET(s, i, j) && ELEMENT_GET(s, i, j + s->length / 2));	
+	return (ELEMENT_GET(s, i, j) && ELEMENT_GET(s, i, j + s->n_qubits));	
 }
 
 /*
@@ -877,7 +903,7 @@ BYTE sym_is_Y(const sym* s, const unsigned i, const unsigned j)
  */
 BYTE sym_is_Z(const sym* s, const unsigned i, const unsigned j)
 {
-	return (!(ELEMENT_GET(s, i, j)) && ELEMENT_GET(s, i, j + s->length / 2));	
+	return (!(ELEMENT_GET(s, i, j)) && ELEMENT_GET(s, i, j + s->n_qubits));	
 }
 
 /*
@@ -993,6 +1019,96 @@ void sym_row_copy(sym* s, const sym* t, const unsigned s_row, const unsigned t_r
 }
 
 /*
+	sym_sym_to_sym_non_varg:
+	Copies a state between two sym objects with differing numbers of qubits
+	:: sym* target :: Target to be copied to
+	:: sym const* control :: The sym object to be copied from
+	:: uint32_t* target_qubits :: The list of qubits to be copied to
+	:: uint32_t* control_qubits :: The list of qubits to be copied from
+	The operation is performed in place, returns nothing
+*/
+void sym_sym_to_sym_non_varg(sym* target, sym const* control, uint32_t* target_qubits, uint32_t* control_qubits)
+{
+	// The number of target qubits is the lesser of the number of control or target qubits
+	uint32_t n_target_qubits = target->length < control->length ? target->length : control->length;
+
+	for (int i = 0; i < n_target_qubits; i++)
+	{
+		for (int j = 0; j < target->height; j++)
+		{
+			sym_set(target, j, target_qubits[i], sym_get(control, j, control_qubits[i])); // Copy X elements
+			sym_set(target, j, target_qubits[i] + target->n_qubits, sym_get(control, j, control_qubits[i] + control->n_qubits)); // Copy Z elements
+		}
+	}
+	return;
+}
+
+
+/*
+	sym_sym_to_sym_non_varg:
+	Copies a state between two sym objects with differing numbers of qubits
+	Can also be used to relabel qubits
+	:: sym* target :: Target to be copied to
+	:: sym const* control :: The sym object to be copied from
+	:: uint32_t* target_qubits :: The list of qubits to be copied to
+	:: uint32_t* control_qubits :: The list of qubits to be copied from
+	The operation is performed in place, returns nothing
+*/
+void sym_sym_to_sym(sym* target, sym const* control, ...)
+{
+	// Create the va_list
+	va_list args;
+	va_start(args, g);
+	// Allocate memory for the target qubit array
+	unsigned* target_qubits = (unsigned*)malloc(sizeof(unsigned) * target->n_qubits);
+	unsigned* control_qubits = (unsigned*)malloc(sizeof(unsigned) * control->n_qubits);
+
+	// For each qubit that we are expecting, take the next variadic argument and copy it to the array
+	for (unsigned i = 0; i < target->n_qubits; i++)
+	{
+		target_qubits[i] = va_arg(args, uint32_t);
+	}
+
+	for (unsigned i = 0; i < control->n_qubits; i++)
+	{
+		control_qubits[i] = va_arg(args, uint32_t);
+	}
+	
+	// Add the new gate using the regular function
+	circuit_add_non_varg(target, control, target_qubits, control_qubits);
+
+	free(target_qubits);
+	free(control_qubits);
+	return;
+}
+
+/*
+	sym_resize:
+	Copies a state between two sym objects with differing numbers of qubits
+	:: sym* target :: Target to be copied to
+	:: sym const* control :: The sym object to be copied from
+	:: uint32_t* target_qubits :: The list of qubits to be copied to
+	:: uint32_t* control_qubits :: The list of qubits to be copied from
+	Returns nothing
+*/
+sym* sym_resize(sym const* s, uint32_t n_qubits)
+{
+	sym* resized = sym_create(s->height, n_qubits * 2);
+	uint32_t n_to_copy = s->length < n_qubits? s->length : n_qubits;
+
+	for (int i = 0; i < n_to_copy; i++)
+	{
+		for (int j = 0; j < s->height; j++)
+		{
+			sym_set(resized, j, i, sym_get(s, j, i)); // Copy X elements
+			sym_set(resized, j, i + resized->n_qubits, sym_get(s, j, i + s->n_qubits)); // Copy Z elements
+		}
+	}
+
+	return resized;
+}
+
+/*
 	sym_to_ll:
 	Provides a long long representation of a sym object, useful for indexing
 	:: const sym* s :: Pointer to the sym object to be represented
@@ -1101,7 +1217,7 @@ void sym_print(const sym* s)
 		{
 			printf("%d", (int)sym_get(s, i, j));
 			if (s->length != 1 && s->height != 1 && j != s->length - 1) {
-				if (j == (s->length / 2) - 1)
+				if (j == (s->n_qubits) - 1)
 				{
 					printf("|");
 				} 
