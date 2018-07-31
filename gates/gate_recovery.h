@@ -10,7 +10,6 @@ typedef struct {
 	decoder* recovery_operations;
 } gate_data_recovery_t;
 
-// This should eventually be swapped out with reading the syndrome qubits
 sym* gate_recovery(const sym* initial_state, void* gate_data, const unsigned* target_qubits)
 {
     gate_data_recovery_t* recovery_data = (gate_data_recovery_t*)gate_data;
