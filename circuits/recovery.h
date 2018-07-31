@@ -14,8 +14,8 @@ typedef struct {
 
 circuit* recovery_circuit(const sym* code, const decoder* decoders, const gate* cnot, const gate* hadamard, const gate* phase)
 {
-	// Qubits 0 -> length / 2 are the regular qubits, the others are ancillas
-	circuit* recovery = circuit_create(code->length / 2 + code->height);
+	// Qubits 0 -> n_qubits are the regular qubits, the others are ancillas
+	circuit* recovery = circuit_create(code->n_qubits + code->height);
 
 	syndrome_measurement_circuit(recovery, code, cnot, hadamard);
 
@@ -71,12 +71,12 @@ void syndrome_measurement_circuit(circuit* recovery, const sym* code, const gate
 			if (sym_is_Y(code, j, i))
 			{
 				if (false == found)
-				{
+				{ // Map Y to Z then cnot to pass the error along
+					circuit_add_gate(recovery, phase, i);
+					circuit_add_gate(recovery, phase, i);
 					circuit_add_gate(recovery, phase, i);
 					circuit_add_gate(recovery, hadamard, i);
 				}
-
-
 				circuit_add_gate(recovery, cnot, i, j + start_ancilla);
 			}
 		}
@@ -85,8 +85,6 @@ void syndrome_measurement_circuit(circuit* recovery, const sym* code, const gate
 		if (found)
 		{
 			circuit_add_gate(recovery, hadamard, i);
-			circuit_add_gate(recovery, phase, i);
-			circuit_add_gate(recovery, phase, i);
 			circuit_add_gate(recovery, phase, i);
 		}
 	}

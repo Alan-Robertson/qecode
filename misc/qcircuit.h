@@ -45,7 +45,7 @@ void qcircuit_print(circuit* c)
 	char const* cnot_targ = "\\targ";
 	char const* cnot_ctrl = "\\ctrl{";
 	char const* end_wire = " \\";
-	char const* newline = "\n"
+	char const* newline = "\n";
 
 	// For building arbitrary unknown gates
 	uint32_t symbol_table_length = 0;

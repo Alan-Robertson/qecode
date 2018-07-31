@@ -2,7 +2,7 @@
 #include "gates/clifford_generators.h"
 #include "circuits/circuit.h"
 #include "misc/qcircuit.h"
-#include "syndrome_measurement.h"
+//#include "circuits/syndrome_measurement.h"
 #include "characterise.h"
 
 int main()
@@ -39,10 +39,12 @@ int main()
 	circuit* test_circuit = circuit_create(n_qubits);
 
 	circuit_add_gate(test_circuit, noise, 0);
-	circuit_add_gate(test_circuit, cnot, 0, 1);
 	circuit_add_gate(test_circuit, hadamard, 0);
-	circuit_add_gate(test_circuit, phase, 0);
-	circuit_add_gate(test_circuit, noise, 1);
+	circuit_add_gate(test_circuit, cnot, 0, 2);
+	circuit_add_gate(test_circuit, hadamard, 0);
+	circuit_add_gate(test_circuit, noise, 2);
+	circuit_add_gate(test_circuit, cnot, 1, 2);
+
 
 	// Print the circuit
 	qcircuit_print(test_circuit);

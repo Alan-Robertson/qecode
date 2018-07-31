@@ -467,6 +467,32 @@ BYTE sym_get(const sym* s, const unsigned height, const unsigned length)
 }
 
 /* 
+	sym_get_X:
+	Returns the value of a given qubit in the X block
+	:: const sym* s :: Pointer to the matrix in question
+	:: const unsigned height :: Height of the element in question
+	:: const unsigned qubit_index :: The qubit being queried
+	Returns a BYTE type with the required value
+*/
+BYTE sym_get_X(const sym* s, const unsigned height, const unsigned qubit_index)
+{
+	return sym_get(s, height, qubit_index);
+}
+
+/* 
+	sym_get_Z:
+	Returns the value of a given qubit in the Z block
+	:: const sym* s :: Pointer to the matrix in question
+	:: const unsigned height :: Height of the element in question
+	:: const unsigned qubit_index :: The qubit being queried
+	Returns a BYTE type with the required value
+*/
+BYTE sym_get_Z(const sym* s, const unsigned height, const unsigned qubit_index)
+{
+	return sym_get(s, height, qubit_index + s->n_qubits);
+}
+
+/* 
 	sym_set:
 	Saves the specified value to that position in the matrix
 	:: sym* s :: Pointer to the matrix in question
@@ -478,6 +504,36 @@ BYTE sym_get(const sym* s, const unsigned height, const unsigned length)
 void sym_set(sym* s, const unsigned height, const unsigned length, const BYTE value)
 {
 	ELEMENT_SET(s, height, length, value);
+	return;
+}
+
+/* 
+	sym_set_X:
+	Saves the specified value to that position in the matrix
+	:: sym* s :: Pointer to the matrix in question
+	:: const unsigned height :: Height of the element in question
+	:: const unsigned length :: Length of the element in question
+	:: const BYTE value :: The value to be stored
+	No return type
+*/
+void sym_set_X(sym* s, const unsigned height, const unsigned qubit_index, const BYTE value)
+{
+	sym_set(s, height, qubit_index, value);
+	return;
+}
+
+/* 
+	sym_set_Z:
+	Saves the specified value to that position in the matrix
+	:: sym* s :: Pointer to the matrix in question
+	:: const unsigned height :: Height of the element in question
+	:: const unsigned length :: Length of the element in question
+	:: const BYTE value :: The value to be stored
+	No return type
+*/
+void sym_set_Z(sym* s, const unsigned height, const unsigned qubit_index, const BYTE value)
+{
+	ELEMENT_SET(s, height, qubit_index + s->n_qubits, value);
 	return;
 }
 
@@ -1058,7 +1114,7 @@ void sym_sym_to_sym(sym* target, sym const* control, ...)
 {
 	// Create the va_list
 	va_list args;
-	va_start(args, g);
+	va_start(args, control);
 	// Allocate memory for the target qubit array
 	unsigned* target_qubits = (unsigned*)malloc(sizeof(unsigned) * target->n_qubits);
 	unsigned* control_qubits = (unsigned*)malloc(sizeof(unsigned) * control->n_qubits);
@@ -1075,7 +1131,7 @@ void sym_sym_to_sym(sym* target, sym const* control, ...)
 	}
 	
 	// Add the new gate using the regular function
-	circuit_add_non_varg(target, control, target_qubits, control_qubits);
+	sym_sym_to_sym_non_varg(target, control, target_qubits, control_qubits);
 
 	free(target_qubits);
 	free(control_qubits);
