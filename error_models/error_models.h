@@ -49,7 +49,8 @@
 		//If you need to view the error in a string format use the error_sym_to_str() function
 
 		return <double: probability of the error occurring>
-	}*/
+	}
+*/
 
 //----------------------------------------------------------------------------------------
 // The Error Model Base 'class'

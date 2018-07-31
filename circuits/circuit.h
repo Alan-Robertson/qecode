@@ -13,6 +13,8 @@ struct circuit;
 
 // Circuit run struct
 typedef double* (*circuit_run_f)(struct circuit*, double*, gate*);
+// Circuit free struct
+typedef void (*circuit_param_free_f)(void*);
 
 /*
     circuit_element:
@@ -23,19 +25,19 @@ typedef double* (*circuit_run_f)(struct circuit*, double*, gate*);
 */
 struct circuit_element
 {
-    gate* gate_element;
-    unsigned* target_qubits;
-    struct circuit_element* next;
+    gate* gate_element; // The gate object to be applied
+    unsigned* target_qubits; // An array containing the target qubits
+    struct circuit_element* next; // The next gate to be applied
 };
 typedef struct circuit_element circuit_element;
 
 /*
-    circuit:
-    A list of circuit elements
-    :: unsigned n_gates :: The number of gates being applied
-    :: struct circuit_element* start :: The first element in the list
-    :: struct circuit_element* end :: The last element in the list
-*/
+ *  circuit:
+ *  A list of circuit elements
+ *  :: unsigned n_gates :: The number of gates being applied
+ *  :: struct circuit_element* start :: The first element in the list
+ *  :: struct circuit_element* end :: The last element in the list
+ */
 typedef struct circuit
 {
     unsigned n_qubits; // Number of qubits in the circuit
@@ -43,6 +45,7 @@ typedef struct circuit
     circuit_element* start; // The starting gate of the circuit
     circuit_element* end; // The final gate of the circuit
     circuit_run_f circuit_operation; // The function that runs the circuit
+    circuit_param_free_f circuit_param_free; // The function to free the circuit
     void* circuit_data; // Any other data that the circuit might require
 } circuit;
 
@@ -51,55 +54,70 @@ typedef struct circuit
 // ----------------------------------------------------------------------------------------
 
 /* 
-    circuit_create:
-    Creates a new circuit object
-    Returns a heap pointer to the new circuit
-*/
+ *  circuit_create:
+ *  Creates a new circuit object
+ *  Returns a heap pointer to the new circuit
+ */
 circuit* circuit_create(unsigned n_qubits);
 
 /* 
-    circuit_add_non_varg:
-    Adds a gate to an existing circuit
-    :: circuit* c :: The circuit the gate is being added to
-    :: gate* g :: The gate being added
-    :: unsigned* target_qubits :: The qubits the gate is to be applied to
-    Does not return anything
-*/
+ *  circuit_add_non_varg:
+ *  Adds a gate to an existing circuit
+ *  :: circuit* c :: The circuit the gate is being added to
+ *  :: gate* g :: The gate being added
+ *  :: unsigned* target_qubits :: The qubits the gate is to be applied to
+ *  Does not return anything
+ */
 void circuit_add_non_varg(circuit* c, gate* g, unsigned* target_qubits);
 
 /* 
-    circuit_add:
-    Adds a gate to an existing circuit uses vargs for ease of readability
-    :: circuit* c :: The circuit the gate is being added to
-    :: gate* g :: The gate being added
-    :: ... :: Variadic target qubits
-    Does not return anything
-*/
+ *  circuit_add:
+ *  Adds a gate to an existing circuit uses vargs for ease of readability
+ *  :: circuit* c :: The circuit the gate is being added to
+ *  :: gate* g :: The gate being added
+ *  :: ... :: Variadic target qubits
+ *  Does not return anything
+ */
 void circuit_add_gate(circuit* c, gate* g, ...);
 
 /* 
-    circuit_add_non_varg_start:
-    Adds a gate to an existing circuit, places this gate at the start of the circuit 
-    :: circuit* c :: The circuit the gate is being added to
-    :: gate* g :: The gate being added
-    :: unsigned* target_qubits :: The qubits the gate is to be applied to
-    Does not return anything
-*/
+ *  circuit_add_non_varg_start:
+ *  Adds a gate to an existing circuit, places this gate at the start of the circuit 
+ *  :: circuit* c :: The circuit the gate is being added to
+ *  :: gate* g :: The gate being added
+ *  :: unsigned* target_qubits :: The qubits the gate is to be applied to
+ *  Does not return anything
+ */
 void circuit_add_non_varg_start(circuit* c, gate* g, unsigned* target_qubits);
 
 /* 
-    circuit_add_start:
-    Adds a gate to an existing circuit uses vargs for ease of readability
-    Places this gate at the start of the circuit
-    :: circuit* c :: The circuit the gate is being added to
-    :: gate* g :: The gate being added
-    :: ... :: Variadic target qubit indicies
-    Does not return anything
-*/
+ *  circuit_add_start:
+ *  Adds a gate to an existing circuit uses vargs for ease of readability
+ *  Places this gate at the start of the circuit
+ *  :: circuit* c :: The circuit the gate is being added to
+ *  :: gate* g :: The gate being added
+ *  :: ... :: Variadic target qubit indicies
+ *  Does not return anything
+ */
 void circuit_add_gate_start(circuit* c, gate* g, ...);
 
+/*
+ * circuit_run
+ * Dispatch method to call the run operation of the circuit
+ * :: circuit* c :: The circuit to be run
+ * :: double* initial_error_rates :: The initial error rates passed to the circuit
+ * :: gate* noise :: The noise model to be applied at each point on the circuit
+ * Returns a new error rate object
+ */
+double* circuit_run(circuit* c, double* initial_error_rates, gate* noise);
 
-double* circuit_run(void* c, double* initial_error_rates, gate* noise);
+/*
+ * circuit_param_free
+ * Dispatch method to call free function on the circuit parameters
+ * :: circuit* c :: The circuit whose parameters are to be freed
+ *  Returns nothing
+ */
+void circuit_param_free(circuit* c);
 
 /* 
     circuit_run_default:
@@ -127,7 +145,7 @@ double* circuit_run_noiseless(circuit* c, double* initial_error_rates);
     :: circuit* c :: Pointer to the circuit to be freed
     No return
 */
-void circuit_free(circuit* c);
+void circuit_free_default(circuit* c);
 
 // ----------------------------------------------------------------------------------------
 // FUNCTION DEFINITIONS 
@@ -142,6 +160,7 @@ circuit* circuit_create(const unsigned n_qubits)
 {
     circuit* c = (circuit*)malloc(sizeof(circuit));
     c->circuit_operation = circuit_run_default;
+    c->circuit_param_free = circuit_param_free_default;
     c->n_qubits = n_qubits;
     c->n_gates = 0;
     c->start = NULL;
@@ -361,6 +380,7 @@ void circuit_free(circuit* c)
         free(ce);
         ce = ce_next;
     }
+    circuit_param_free(c);
     free(c);
 }
 

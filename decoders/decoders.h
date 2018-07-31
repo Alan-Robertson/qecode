@@ -13,7 +13,6 @@
 //----------------------------------------------------------------------------------------
 struct decoder;
 
-
 typedef sym* (*decoder_call_f)(void*, const sym*);
 
 typedef void (*decoder_param_free_f)(void*);

@@ -6,8 +6,8 @@
 #include "characterise.h"
 
 int main()
-{	
-	unsigned n_qubits = 2;
+{
+	unsigned n_qubits = 3;
 
 	double p_gate_error = 0; // Gates themselves are noiseless
 	double p_error = 0.01;
@@ -16,17 +16,17 @@ int main()
 	error_model* em_cnot = error_model_create_iid(2, p_gate_error);
 	error_model* em_gate = error_model_create_iid(1, p_gate_error);
 
-	gate* cnot = gate_create(2,  
+	gate* cnot = gate_create(2,
 		gate_cnot,
 		em_cnot,
 		NULL);
 
-	gate* hadamard = gate_create(1,  
+	gate* hadamard = gate_create(1,
 		gate_hadamard,
 		em_gate,
 		NULL);
 
-	gate* phase = gate_create(1,  
+	gate* phase = gate_create(1,
 		gate_phase,
 		em_gate,
 		NULL);
@@ -39,12 +39,11 @@ int main()
 	circuit* test_circuit = circuit_create(n_qubits);
 
 	circuit_add_gate(test_circuit, noise, 0);
+	circuit_add_gate(test_circuit, noise, 2);
 	circuit_add_gate(test_circuit, hadamard, 0);
 	circuit_add_gate(test_circuit, cnot, 0, 2);
 	circuit_add_gate(test_circuit, hadamard, 0);
-	circuit_add_gate(test_circuit, noise, 2);
 	circuit_add_gate(test_circuit, cnot, 1, 2);
-
 
 	// Print the circuit
 	qcircuit_print(test_circuit);

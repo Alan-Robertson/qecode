@@ -279,6 +279,7 @@ BYTE sym_is_Y(const sym* s, const unsigned i, const unsigned j);
  * Returns a single byte containing either 1 if it is Z, or 0 if it is not Z 
  */
 BYTE sym_is_Z(const sym* s, const unsigned i, const unsigned j);
+
 /*
 	sym_weight_type_partial:
 	Returns the weight of a symplectic matrix object with specified bounds, this function is wrapped by the 
