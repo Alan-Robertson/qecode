@@ -8,21 +8,22 @@
 // STRUCT OBJECTS 
 // ----------------------------------------------------------------------------------------
 
-// Foward declaration of the circuit object
+// Forward declaration of the circuit object
 struct circuit;
 
 // Circuit run struct
 typedef double* (*circuit_run_f)(struct circuit*, double*, gate*);
+
 // Circuit free struct
 typedef void (*circuit_param_free_f)(void*);
 
 /*
-    circuit_element:
-    An individual element in the circuit list
-    :: gate* gate_element :: The gate being applied
-    :: unsigned* target_qubits :: The qubits this gate is to be applied to
-    :: struct circuit_element* next :: The next circuit element
-*/
+ *   circuit_element:
+ *   An individual element in the circuit list
+ *   :: gate* gate_element :: The gate being applied
+ *   :: unsigned* target_qubits :: The qubits this gate is to be applied to
+ *   :: struct circuit_element* next :: The next circuit element
+ */
 struct circuit_element
 {
     gate* gate_element; // The gate object to be applied
@@ -53,7 +54,7 @@ typedef struct circuit
 // FUNCTION DECLARATIONS
 // ----------------------------------------------------------------------------------------
 
-/* 
+/*
  *  circuit_create:
  *  Creates a new circuit object
  *  Returns a heap pointer to the new circuit
@@ -152,10 +153,10 @@ void circuit_free_default(circuit* c);
 // ----------------------------------------------------------------------------------------
 
 /* 
-    circuit_create:
-    Creates a new circuit object
-    Returns a heap pointer to the new circuit
-*/
+ *   circuit_create:
+ *   Creates a new circuit object
+ *   Returns a heap pointer to the new circuit
+ */
 circuit* circuit_create(const unsigned n_qubits)
 {
     circuit* c = (circuit*)malloc(sizeof(circuit));
@@ -322,7 +323,7 @@ double* circuit_run_noiseless(circuit* c, double* initial_error_rates)
  *  :: circuit* c :: The circuit the gate is being added to
  *  :: error_model* noise :: The noise to be applied
  *  Returns a heap pointer to the new set of error rates
-*/
+ */
 double* circuit_run_default(circuit* c, double* initial_error_rates, gate* noise)
 {
 
@@ -363,6 +364,23 @@ double* circuit_run_default(circuit* c, double* initial_error_rates, gate* noise
 
     return error_rate;
 }
+
+
+/*
+ *  circuit_param_free_default:
+ *  Frees the parameters associated with a quantum circuit object
+ *  :: void* c :: Pointer to the circuit params to be freed
+ *  No return
+ */
+void circuit_param_free_default(void* params)
+{
+    if (params != NULL)
+    {
+        free(params);
+    }
+    return;
+}
+
 
 /*
  *  circuit_free:

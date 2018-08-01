@@ -1,6 +1,10 @@
 #ifndef QCIRCUIT
 #define QCIRCUIT
 
+// ----------------------------------------------------------------------------------------
+// DIRECTIVES
+// ----------------------------------------------------------------------------------------
+
 #define DEFAULT_STRING_SIZE 1
 #define CNOT_CONTROL_VALUE 0
 #define CNOT_TARGET_VALUE 1
@@ -9,6 +13,10 @@
 
 #include "../gates/clifford_generators.h"
 #include "../circuits/circuit.h"
+
+// ----------------------------------------------------------------------------------------
+// FUNCTION DECLARATIONS 
+// ----------------------------------------------------------------------------------------
 
 /*
  * qcircuit_print
@@ -27,6 +35,9 @@ void qcircuit_print(circuit* c);
  */
 char* str_increase(char* original, char const* added);
 
+// ----------------------------------------------------------------------------------------
+// FUNCTION DEFINITIONS
+// ----------------------------------------------------------------------------------------
 
 /*
  * qcircuit_print

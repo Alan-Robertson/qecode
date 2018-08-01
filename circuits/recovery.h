@@ -17,20 +17,37 @@ typedef struct {
 
 
 circuit* circuit_recovery_create(
+	uint32_t n_code_qubits;
+	uint32_t n_ancilla_qubits;
 	decoder* d;
 	gate* pauli_X;
 	gate* pauli_Y;
 	gate* pauli_Z;
+	gate* measure_Z;
 	)
 {
+	circuit* syndrome_measurement = circuit_create(code->n_qubits + code->height);
+	syndrome_measurement->circuit_run = circuit_recovery_run;
+	syndrome_measurement->circuit_param_free = 
+	
 
 }
+
 
 double* circuit_recovery_run(
 	circuit* recovery, 
 	double* initial_error_rates, 
 	gate* noise)
 {
+
+	// Measure
+
+	// Decode
+
+	// Correct
+
+
+
 	// Strip off the ancilla qubits
 	double* final_error_rates = error_probabilities_zeros(smd->n_code_qubits);
 

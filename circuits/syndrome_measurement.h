@@ -8,7 +8,7 @@
 typedef struct {
 	uint32_t n_code_qubits;
 	uint32_t n_ancilla_qubits;
-} circuit_syndrome_measurement_data;
+} circuit_syndrome_measurement_data_t;
 
 circuit* syndrome_measurement_circuit_create(
 	const sym* code,
@@ -19,6 +19,12 @@ circuit* syndrome_measurement_circuit_create(
 {
 	// Qubits 0 -> n_qubits are the regular qubits, the others are ancillas
 	circuit* syndrome_measurement = circuit_create(code->n_qubits + code->height);
+	circuit_syndrome_measurement_data_t* circuit_data = (circuit_syndrome_measurement_data_t*)malloc(sizeof(circuit_syndrome_measurement_data));
+	
+	circuit_data->n_code_qubits = code->n_qubits;
+	circuit_data->n_ancilla_qubits = code->height;
+
+	syndrome_measurement->circuit_data = circuit_data;
 
 	circuit_syndrome_measurement_construct(syndrome_measurement, code, cnot, hadamard, phase);
 
