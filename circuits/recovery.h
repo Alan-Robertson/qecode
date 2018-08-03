@@ -13,24 +13,33 @@ typedef struct {
 	gate* pauli_X;
 	gate* pauli_Y;
 	gate* pauli_Z;
-} circuit_recovery_data;
+	gate* measure_Z;
+} circuit_recovery_data_t;
 
 
 circuit* circuit_recovery_create(
-	uint32_t n_code_qubits;
-	uint32_t n_ancilla_qubits;
-	decoder* d;
-	gate* pauli_X;
-	gate* pauli_Y;
-	gate* pauli_Z;
-	gate* measure_Z;
-	)
+	uint32_t n_code_qubits,
+	uint32_t n_ancilla_qubits,
+	decoder* d,
+	gate* pauli_X,
+	gate* pauli_Y,
+	gate* pauli_Z,
+	gate* measure_Z)
 {
-	circuit* syndrome_measurement = circuit_create(code->n_qubits + code->height);
-	syndrome_measurement->circuit_run = circuit_recovery_run;
-	syndrome_measurement->circuit_param_free = 
-	
+	circuit* recovery = circuit_create(code->n_qubits + code->height);
+	recovery->circuit_run = circuit_recovery_run;
+	recovery->circuit_param_free = circuit_recovery_param_free;
+		
+	// Measure the ancilla qubits to get the syndromes
+	uint32_t* measurement_targets = (uint32_t*)malloc(sizeof(uint32_t) * n_ancilla_qubits);
+	for (int i = 0; i < n_ancilla_qubits; i++)
+	{
+		measurement_targets[i] = n_code_qubits + i;
+	}
+	circuit_add_gate_non_varg(recovery, measure_Z, measurement_targets);
+	free(measurement_targets);
 
+	// Use the decoder to determine the 
 }
 
 
@@ -40,12 +49,25 @@ double* circuit_recovery_run(
 	gate* noise)
 {
 
+	circuit_recovery_data_t rd = (*circuit_recovery_data_t)c->circuit_data;
+
+	sym_iter* siter = sym_iter_create_n_qubits()
 	// Measure
+	
 
 	// Decode
+	sym* correction = 
 
 	// Correct
 
+	for (uint32_t = 0; i < rd->n_qubits; i++)
+	{
+		if () // Apply an X
+
+		if () // Apply a Y
+
+		if () // Apply a Z 
+	}
 
 
 	// Strip off the ancilla qubits

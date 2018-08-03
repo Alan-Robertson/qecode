@@ -222,7 +222,7 @@ double* gate_noise(const unsigned n_qubits,
 // Wrapper
 gate_result* gate_operation(const gate* g, sym* initial_state, const unsigned* target_qubits)
 {
-	return g->operation(initial_state, g, target_qubits);
+	return g->operation(initial_state, g->operation_data, target_qubits);
 }
 
 /* 

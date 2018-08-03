@@ -1,31 +1,76 @@
 #ifndef CIRCUIT_SYNDROME_MEASUREMENT
 #define CIRCUIT_SYNDROME_MEASUREMENT
 
+// ----------------------------------------------------------------------------------------
+// DIRECTIVES
+// ----------------------------------------------------------------------------------------
+
 #include "../sym.h"
 #include "circuit.h"
 #include "error_probabilities.h"
+
+// ----------------------------------------------------------------------------------------
+// STRUCTS
+// ----------------------------------------------------------------------------------------
 
 typedef struct {
 	uint32_t n_code_qubits;
 	uint32_t n_ancilla_qubits;
 } circuit_syndrome_measurement_data_t;
 
+// ----------------------------------------------------------------------------------------
+// FUNCTION DECLARATIONS 
+// ----------------------------------------------------------------------------------------
+
 circuit* syndrome_measurement_circuit_create(
 	const sym* code,
-	const decoder* decoders,
+	const gate* cnot,
+	const gate* hadamard,
+	const gate* phase);
+
+void syndrome_measurement_circuit_construct(
+	circuit* syndrome_measurement,
+	const sym* code,
+	const gate* cnot,
+	const gate* hadamard,
+	const gate* phase);
+
+/*
+ * circuit_syndrome_measurement_run
+ * 
+ * :: circuit* recovery ::
+ * :: double* initial_error_rates ::
+ * :: gate* noise :: 
+ * 
+ */
+double* circuit_syndrome_measurement_run(
+	circuit* recovery, 
+	double* initial_error_rates, 
+	gate* noise);
+
+// ----------------------------------------------------------------------------------------
+// FUNCTION DEFINITIONS
+// ----------------------------------------------------------------------------------------
+
+circuit* syndrome_measurement_circuit_create(
+	const sym* code,
 	const gate* cnot,
 	const gate* hadamard,
 	const gate* phase)
 {
 	// Qubits 0 -> n_qubits are the regular qubits, the others are ancillas
 	circuit* syndrome_measurement = circuit_create(code->n_qubits + code->height);
+
+	// Override the operation that runs the circuit
+	c->circuit_operation = circuit_syndrome_measurement_run;
+
+	// Setup the circuit data
 	circuit_syndrome_measurement_data_t* circuit_data = (circuit_syndrome_measurement_data_t*)malloc(sizeof(circuit_syndrome_measurement_data));
-	
 	circuit_data->n_code_qubits = code->n_qubits;
 	circuit_data->n_ancilla_qubits = code->height;
-
 	syndrome_measurement->circuit_data = circuit_data;
 
+	// Construct the gates for the circuit
 	circuit_syndrome_measurement_construct(syndrome_measurement, code, cnot, hadamard, phase);
 
 	return syndrome_measurement;
@@ -47,6 +92,7 @@ void syndrome_measurement_circuit_construct(
 		{
 			if (sym_is_Z(code, j, i))
 			{
+				// Cnot in the Z basis
 				circuit_add_gate(syndrome_measurement, cnot, i, j + start_ancilla);
 			}
 		}
@@ -68,7 +114,7 @@ void syndrome_measurement_circuit_construct(
 			}
 		}
 
-		// Qubit has been mapped to the X basis, map it back
+		// Cnot in the X basis
 		if (found)
 		{
 			circuit_add_gate(syndrome_measurement, hadamard, i);
@@ -90,6 +136,7 @@ void syndrome_measurement_circuit_construct(
 					circuit_add_gate(syndrome_measurement, phase, i);
 					circuit_add_gate(syndrome_measurement, hadamard, i);
 				}
+				// Cnot in the Y basis
 				circuit_add_gate(syndrome_measurement, cnot, i, j + start_ancilla);
 			}
 		}
@@ -102,25 +149,6 @@ void syndrome_measurement_circuit_construct(
 		}
 	}
 	return;
-}
-
-
-circuit* circuit_syndrome_measurement_create(
-	const sym* code, 
-	const gate* cnot, 
-	const gate* hadamard, 
-	const gate* phase)
-{
-	circuit* recovery = circuit_create(code->n_qubits + code->height);
-	recovery->circuit_operation = circuit_syndrome_measurement_run;
-	syndrome_measurement_circuit(circuit* recovery, code, cnot, hadamard, phase);
-
-	circuit_recovery_data* rd = (circuit_recovery_data*)malloc(sizeof(circuit_recovery_data));
-	rd->n_ancilla_qubits = code->height;
-	rd->n_code_qubits = code->n_qubits;
-	recovery->circuit_data = rd;
-
-	return recovery;
 }
 
 
