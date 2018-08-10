@@ -27,7 +27,8 @@ circuit* create_unitary(circuit* c)
 	circuit_element* citer = c->start;
 	while (NULL != citer)
 	{
-		circuit_add_non_varg_start(unitary, citer->gate, citer->target_qubits);
+		circuit_add_non_varg_start(unitary, citer->gate_operation, citer->target_qubits);
+		citer = citer->next;
 	}
 
 	// Return the new gate

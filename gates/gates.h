@@ -8,7 +8,7 @@
 // STRUCT OBJECTS ----------------------------------------------------------------------------------------
 
 //  Gate operation function pointer
-//typedef sym* (*gate_operation_f)(const sym*, void*, const unsigned* target_qubits);
+// typedef sym* (*gate_operation_f)(const sym*, void*, const unsigned* target_qubits);
 typedef gate_result* (*gate_operation_f)(const sym*, const void*, const unsigned* target_qubits);
 
 /*
@@ -81,7 +81,7 @@ double* gate_operator(const unsigned n_qubits,
 	const unsigned* target_qubits);
 
 
-gate_result* gate_operation(const gate* g, sym* initial_state, unsigned* target_qubits);
+gate_result* gate_operation(const gate* g, sym* initial_state, const unsigned* target_qubits);
 
 /* 
     gate_free:
@@ -197,7 +197,7 @@ double* gate_noise(const unsigned n_qubits,
 		// Save this value as we may be needing it quite a bit
 		double initial_prob = initial_probabilities[sym_to_ll(initial_state->state)];
 
-		if (initial_prob > 0.0)
+		if (initial_prob > 0)
 		{
 			// Determine the state after the error has been applied 
 			gate_result* operation_output = gate_iid(initial_state->state, applied_gate, target_qubits);
@@ -222,7 +222,7 @@ double* gate_noise(const unsigned n_qubits,
 // Wrapper
 gate_result* gate_operation(const gate* g, sym* initial_state, const unsigned* target_qubits)
 {
-	return g->operation(initial_state, g->operation_data, target_qubits);
+	return g->operation(initial_state, g, target_qubits);
 }
 
 /* 
@@ -255,7 +255,7 @@ double* gate_operator(const unsigned n_qubits,
 		// Save this value as we may be needing it quite a bit
 		double initial_prob = initial_probabilities[sym_to_ll(initial_state->state)];
 
-		if (initial_prob > 0.0)
+		if (initial_prob > 0)
 		{
 			// Determine the state after the error has been applied 
 			gate_result* operation_output = gate_operation(applied_gate, initial_state->state, target_qubits);

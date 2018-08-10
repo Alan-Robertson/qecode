@@ -20,13 +20,13 @@ typedef void (*circuit_param_free_f)(void*);
 /*
  *   circuit_element:
  *   An individual element in the circuit list
- *   :: gate* gate_element :: The gate being applied
+ *   :: gate* gate_operation :: The gate being applied
  *   :: unsigned* target_qubits :: The qubits this gate is to be applied to
  *   :: struct circuit_element* next :: The next circuit element
  */
 struct circuit_element
 {
-    gate* gate_element; // The gate object to be applied
+    gate* gate_operation; // The gate object to be applied
     unsigned* target_qubits; // An array containing the target qubits
     struct circuit_element* next; // The next gate to be applied
 };
@@ -130,6 +130,14 @@ void circuit_param_free(circuit* c);
 */
 double* circuit_run_default(circuit* c, double* initial_error_rates, gate* noise);
 
+/*
+ *  circuit_param_free_default:
+ *  Frees the parameters associated with a quantum circuit object
+ *  :: void* c :: Pointer to the circuit params to be freed
+ *  No return
+ */
+void circuit_param_free_default(void* params);
+
 /* 
     circuit_run_noiseless:
     Applies a circuit to an existing set of error probabilities
@@ -174,6 +182,17 @@ double* circuit_run(circuit* c, double* initial_error_rates, gate* noise)
     return c->circuit_operation(c, initial_error_rates, noise);
 }
 
+/*
+ * circuit_param_free
+ * Dispatch method to call free function on the circuit parameters
+ * :: circuit* c :: The circuit whose parameters are to be freed
+ *  Returns nothing
+ */
+void circuit_param_free(circuit* c)
+{
+    c->circuit_param_free(c->circuit_data);
+}
+
 /* 
     circuit_add_gate:
     Adds a gate to an existing circuit uses vargs for ease of readability
@@ -215,7 +234,7 @@ void circuit_add_gate(circuit* c, gate* g, ...)
 void circuit_add_non_varg(circuit* c, gate* g, unsigned* target_qubits)
 {
     circuit_element* ce = (circuit_element*)malloc(sizeof(circuit_element));
-    ce->gate_element = g;
+    ce->gate_operation = g;
     ce->target_qubits = (unsigned*)malloc(sizeof(unsigned) * g->n_qubits);
     memcpy(ce->target_qubits, target_qubits, g->n_qubits * sizeof(unsigned));
     ce->next = NULL;
@@ -276,7 +295,7 @@ void circuit_add_gate_start(circuit* c, gate* g, ...)
 void circuit_add_non_varg_start(circuit* c, gate* g, unsigned* target_qubits)
 {
     circuit_element* ce = (circuit_element*)malloc(sizeof(circuit_element));
-    ce->gate_element = g;
+    ce->gate_operation = g;
     ce->target_qubits = (unsigned*)malloc(sizeof(unsigned) * g->n_qubits);
     memcpy(ce->target_qubits, target_qubits, g->n_qubits * sizeof(unsigned));
     
@@ -299,13 +318,13 @@ void circuit_add_non_varg_start(circuit* c, gate* g, unsigned* target_qubits)
 double* circuit_run_noiseless(circuit* c, double* initial_error_rates)
 {
     double* error_rate = error_probabilities_copy(c->n_qubits, initial_error_rates);
+
     unsigned long n_bytes = sizeof(double) * (1 << (c->n_qubits * 2));
     circuit_element* ce = c->start;
 
     while(ce != NULL)
     {
-        double* tmp_error_rate = gate_apply(c->n_qubits, error_rate, ce->gate_element, ce->target_qubits);
-
+        double* tmp_error_rate = gate_apply(c->n_qubits, error_rate, ce->gate_operation, ce->target_qubits);
         memcpy(error_rate, tmp_error_rate, n_bytes);
         free(tmp_error_rate);
 
@@ -346,19 +365,24 @@ double* circuit_run_default(circuit* c, double* initial_error_rates, gate* noise
 
     while (NULL != ce)
     {
-
         // Gate operation
-        double* tmp_error_rate = gate_apply(c->n_qubits, error_rate, ce->gate_element, ce->target_qubits);
+        double* tmp_error_rate = gate_apply(c->n_qubits, error_rate, ce->gate_operation, ce->target_qubits);
         memcpy(error_rate, tmp_error_rate, n_bytes);
         free(tmp_error_rate);
     
         // Environmental Noise operations
         for (unsigned i = 0; i < c->n_qubits; i++)
         {
-            double* tmp_error_rate = gate_apply(c->n_qubits, error_rate, noise, &i);
-            memcpy(error_rate, tmp_error_rate, n_bytes);
-            free(tmp_error_rate);
-        }   
+            for (uint32_t j = 0; j < ce->gate_operation->n_qubits; j++)
+            {
+                if (i != ce->target_qubits[j])
+                {
+                    double* tmp_error_rate = gate_apply(c->n_qubits, error_rate, noise, &i);
+                    memcpy(error_rate, tmp_error_rate, n_bytes);
+                    free(tmp_error_rate);
+                }
+            }
+        } 
         ce = ce->next;
     }
 

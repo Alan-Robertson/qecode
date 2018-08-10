@@ -24,16 +24,16 @@ typedef struct {
 
 circuit* syndrome_measurement_circuit_create(
 	const sym* code,
-	const gate* cnot,
-	const gate* hadamard,
-	const gate* phase);
+	gate* cnot,
+	gate* hadamard,
+	gate* phase);
 
 void syndrome_measurement_circuit_construct(
 	circuit* syndrome_measurement,
 	const sym* code,
-	const gate* cnot,
-	const gate* hadamard,
-	const gate* phase);
+	gate* cnot,
+	gate* hadamard,
+	gate* phase);
 
 /*
  * circuit_syndrome_measurement_run
@@ -54,24 +54,24 @@ double* circuit_syndrome_measurement_run(
 
 circuit* syndrome_measurement_circuit_create(
 	const sym* code,
-	const gate* cnot,
-	const gate* hadamard,
-	const gate* phase)
+	gate* cnot,
+	gate* hadamard,
+	gate* phase)
 {
 	// Qubits 0 -> n_qubits are the regular qubits, the others are ancillas
 	circuit* syndrome_measurement = circuit_create(code->n_qubits + code->height);
 
 	// Override the operation that runs the circuit
-	c->circuit_operation = circuit_syndrome_measurement_run;
+	syndrome_measurement->circuit_operation = circuit_syndrome_measurement_run;
 
 	// Setup the circuit data
-	circuit_syndrome_measurement_data_t* circuit_data = (circuit_syndrome_measurement_data_t*)malloc(sizeof(circuit_syndrome_measurement_data));
+	circuit_syndrome_measurement_data_t* circuit_data = (circuit_syndrome_measurement_data_t*)malloc(sizeof(circuit_syndrome_measurement_data_t));
 	circuit_data->n_code_qubits = code->n_qubits;
 	circuit_data->n_ancilla_qubits = code->height;
 	syndrome_measurement->circuit_data = circuit_data;
 
 	// Construct the gates for the circuit
-	circuit_syndrome_measurement_construct(syndrome_measurement, code, cnot, hadamard, phase);
+	syndrome_measurement_circuit_construct(syndrome_measurement, code, cnot, hadamard, phase);
 
 	return syndrome_measurement;
 }
@@ -79,9 +79,9 @@ circuit* syndrome_measurement_circuit_create(
 void syndrome_measurement_circuit_construct(
 	circuit* syndrome_measurement,
 	const sym* code,
-	const gate* cnot,
-	const gate* hadamard,
-	const gate* phase)
+	gate* cnot,
+	gate* hadamard,
+	gate* phase)
 {
 	size_t start_ancilla = code->n_qubits;
 
@@ -109,6 +109,7 @@ void syndrome_measurement_circuit_construct(
 				if (false == found)
 				{
 					circuit_add_gate(syndrome_measurement, hadamard, i);
+					found = true;
 				}
 				circuit_add_gate(syndrome_measurement, cnot, i, j + start_ancilla);
 			}
@@ -135,6 +136,7 @@ void syndrome_measurement_circuit_construct(
 					circuit_add_gate(syndrome_measurement, phase, i);
 					circuit_add_gate(syndrome_measurement, phase, i);
 					circuit_add_gate(syndrome_measurement, hadamard, i);
+					found = true;
 				}
 				// Cnot in the Y basis
 				circuit_add_gate(syndrome_measurement, cnot, i, j + start_ancilla);
@@ -166,10 +168,10 @@ double* circuit_syndrome_measurement_run(
 	gate* noise)
 {
 	// Unpack the syndrome measurement data
-	circuit_syndrome_measurement* smd = (circuit_syndrome_measurement*)recovery->circuit_data;
+	circuit_syndrome_measurement_data_t* smd = (circuit_syndrome_measurement_data_t*)recovery->circuit_data;
 
 	// Setup the larger state space
-	double* expanded_error_probs = error_probabilities_zeros(smd->n_sancilla_qubits + smd->n_code_qubits);
+	double* expanded_error_probs = error_probabilities_zeros(smd->n_ancilla_qubits + smd->n_code_qubits);
 
 	// Copy the errors from the initial buffer to our larger buffer
 	sym_iter* cpy_iter = sym_iter_create_n_qubits(smd->n_code_qubits);
@@ -179,7 +181,7 @@ double* circuit_syndrome_measurement_run(
 		if (initial_error_rates[sym_iter_ll_from_state(cpy_iter)] > 0)
 		{
 			// Copy the state to the target buffer
-			for (uint32_t i = 0; i < n_code_qubits; i++)
+			for (uint32_t i = 0; i < smd->n_code_qubits; i++)
 			{ // All other values in the target buffer should be zero
 				sym_set(target_buffer->state, 0, i, sym_get(cpy_iter->state, 0, i)); // X elements
  				sym_set(target_buffer->state, 0, i + target_buffer->state->n_qubits, sym_get(cpy_iter->state, 0, i + cpy_iter->state->n_qubits)); // Z elements
@@ -194,6 +196,9 @@ double* circuit_syndrome_measurement_run(
 
 	// Iterate over the gates in the circuit
 	double* output_error_rates = circuit_run_default(recovery, expanded_error_probs, noise);
+
+	// Cleanup anything that needs to be de-allocated
+	error_probabilities_free(expanded_error_probs);
 
 	return output_error_rates;
 }

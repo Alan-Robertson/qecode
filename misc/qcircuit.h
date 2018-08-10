@@ -55,7 +55,7 @@ void qcircuit_print(circuit* c)
 	char const* wire = "\\qw";
 	char const* cnot_targ = "\\targ";
 	char const* cnot_ctrl = "\\ctrl{";
-	char const* end_wire = " \\";
+	char const* end_wire = " \\\\";
 	char const* newline = "\n";
 
 	// For building arbitrary unknown gates
@@ -83,7 +83,7 @@ void qcircuit_print(circuit* c)
 		}
 
 		// Check the gate being applied
-		if (ce->gate_element->operation == gate_cnot)
+		if (ce->gate_operation->operation == gate_cnot)
 		{ // Cnot gate found
 			char cnot_target_diff[MAX_CHARS_NUM];
 			sprintf(cnot_target_diff, "%d", ce->target_qubits[CNOT_TARGET_VALUE] - ce->target_qubits[CNOT_CONTROL_VALUE]);
@@ -92,13 +92,13 @@ void qcircuit_print(circuit* c)
 			qubits[ce->target_qubits[CNOT_CONTROL_VALUE]] = str_increase(qubits[ce->target_qubits[CNOT_CONTROL_VALUE]], tail);
 			qubits[ce->target_qubits[CNOT_TARGET_VALUE]] = str_increase(qubits[ce->target_qubits[CNOT_TARGET_VALUE]], cnot_targ);
 		} 
-		else if (ce->gate_element->operation == gate_hadamard)
+		else if (ce->gate_operation->operation == gate_hadamard)
 		{ // Hadamard gate found
 			qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]] = str_increase(qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]], gate);
 			qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]] = str_increase(qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]], "H");
 			qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]] = str_increase(qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]], tail);
 		}
-		else if (ce->gate_element->operation == gate_phase)
+		else if (ce->gate_operation->operation == gate_phase)
 		{ // Phase gate found
 			qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]] = str_increase(qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]], gate);
 			qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]] = str_increase(qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]], "P");
@@ -114,7 +114,7 @@ void qcircuit_print(circuit* c)
 				// Check if we've seen this function pointer before, if we haven't we're going to add it to the symbol table
 				// If we have then we already know what this gate has been called before
 				// This breaks if you valgrind or do anything else to change how memory is allocated and called
-				if (symbol_table[i] == ce->gate_element->operation) 
+				if (symbol_table[i] == ce->gate_operation->operation) 
 				{
 					existing_symbol = 1;
 					symbol_index = i;
@@ -122,13 +122,13 @@ void qcircuit_print(circuit* c)
 			}
 			if (!existing_symbol) // Yeah, this isn't efficient at all, but it's scalable and shouldn't come up too often
 			{ // Gate hasn't been seen, increase the size of the symbol table and add it
-				symbol_table[symbol_table_length] = ce->gate_element->operation;
+				symbol_table[symbol_table_length] = ce->gate_operation->operation;
 				symbol_table_length++;
 				symbol_table = (gate_operation_f*)realloc(symbol_table, symbol_table_length + 1);
 			}
 			
 			// Add the relevant gate
-			for (int i = 0; i < ce->gate_element->n_qubits; i++)
+			for (int i = 0; i < ce->gate_operation->n_qubits; i++)
 			{ // Add a 'unitary' with the associated symbol.
 				char symbol_number[MAX_CHARS_NUM];
 				sprintf(symbol_number, "%d",  symbol_index + 1); // So that we can count the gates from 1 rather than 0
@@ -145,7 +145,7 @@ void qcircuit_print(circuit* c)
 		{
 			// Check if an operation has already been applied to the qubit
 			uint8_t no_operation = 1;
-			for (uint32_t j = 0; j < ce->gate_element->n_qubits && no_operation; j++)
+			for (uint32_t j = 0; j < ce->gate_operation->n_qubits && no_operation; j++)
 			{ // If one of the target qubits is listed here then an operation has been performed
 				if (i == ce->target_qubits[j])
 				{ 
@@ -183,6 +183,7 @@ void qcircuit_print(circuit* c)
 		free(qubits[i]);
 	}
 	printf("%s", tail);
+	printf("%s", newline);
 
 	// Free the last allocated memory
 	free(qubits);

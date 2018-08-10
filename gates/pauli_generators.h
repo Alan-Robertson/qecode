@@ -1,5 +1,5 @@
-#ifndef GATE_CLIFFORD_GENERATORS
-#define GATE_CLIFFORD_GENERATORS
+#ifndef GATE_PAULI_GENERATORS
+#define GATE_PAULI_GENERATORS
 
 // ----------------------------------------------------------------------------------------
 // DIRECTIVES
@@ -104,3 +104,5 @@ gate_result* gate_pauli_Y(const sym* initial_state, const void* gate_data, const
 
     return gate_result_create_single(1, final_state);;
 }
+
+#endif

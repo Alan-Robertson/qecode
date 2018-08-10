@@ -71,7 +71,7 @@ typedef struct {
 	:: const unsigned n_syndrome_bits :: The number of syndrome bits that will be communicated to the decoder
 	Returns a pointer to a new error model object on the heap
 */
-decoder* decoder_create_tailored(const sym* code, const sym* logicals, 	error_model* noise)
+decoder* decoder_create_tailored(const sym* code, const sym* logicals, error_model* noise)
 {
 	decoder* d = decoder_create();
 	decoder_params_tailored_t* dp = (decoder_params_tailored_t*)malloc(sizeof(decoder_params_tailored_t));

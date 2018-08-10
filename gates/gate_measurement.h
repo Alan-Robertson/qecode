@@ -6,8 +6,9 @@
 // ----------------------------------------------------------------------------------------
 
 #include "../sym.h"
+#include "gates.h"
 #include "gate_result.h"
-#include "gate.h"
+
 
 // ----------------------------------------------------------------------------------------
 // Structs
@@ -29,7 +30,7 @@ typedef struct {
  * :: const unsigned* target_qubits ::  An array of qubits that this gate acts on
  * Returns a new sym object containing the measurement outcomes
  */
-sym* gate_measure_X(const sym* initial_state, void* gate_data, const unsigned* target_qubits);
+gate_result* gate_measure_X(const sym* initial_state, const void* gate_data, const unsigned* target_qubits);
 
 /*
  * gate_measure_Y
@@ -39,7 +40,7 @@ sym* gate_measure_X(const sym* initial_state, void* gate_data, const unsigned* t
  * :: const unsigned* target_qubits ::  An array of qubits that this gate acts on
  * Returns a new sym object containing the measurement outcomes
  */
-sym* gate_measure_Y(const sym* initial_state, void* gate_data, const unsigned* target_qubits);
+gate_result* gate_measure_Y(const sym* initial_state, const void* gate_data, const unsigned* target_qubits);
 
 /*
  * gate_measure_Z
@@ -49,7 +50,7 @@ sym* gate_measure_Y(const sym* initial_state, void* gate_data, const unsigned* t
  * :: const unsigned* target_qubits ::  An array of qubits that this gate acts on
  * Returns a new sym object containing the measurement outcomes
  */
-sym* gate_measure_Z(const sym* initial_state, void* gate_data, const unsigned* target_qubits);
+gate_result* gate_measure_Z(const sym* initial_state, const void* gate_data, const unsigned* target_qubits);
 
 // ----------------------------------------------------------------------------------------
 // FUNCTION DEFINITIONS
@@ -63,9 +64,9 @@ sym* gate_measure_Z(const sym* initial_state, void* gate_data, const unsigned* t
  * :: const unsigned* target_qubits ::  An array of qubits that this gate acts on
  * Returns a new sym object containing the measurement outcomes
  */
-sym* gate_measure_X(const sym* initial_state, void* gate_data, const unsigned* target_qubits)
+gate_result* gate_measure_X(const sym* initial_state, const void* gate_data, const unsigned* target_qubits)
 {
-    uint32_t n_bits = ((gate_measurement_t*)gate_data)->n_bits;
+    uint32_t n_bits = ((gate*)gate_data)->n_qubits;
     
     // Sym object containing our measurement data
     sym* measurement_outcome = sym_create(1, n_bits);
@@ -75,7 +76,7 @@ sym* gate_measure_X(const sym* initial_state, void* gate_data, const unsigned* t
         sym_set(measurement_outcome, 0, i, sym_get_Z(initial_state, 0, target_qubits[i]));
     }
 
-    return measurement_outcome;
+    return gate_result_create_single(1, measurement_outcome);
 }
 
 /*
@@ -86,9 +87,9 @@ sym* gate_measure_X(const sym* initial_state, void* gate_data, const unsigned* t
  * :: const unsigned* target_qubits ::  An array of qubits that this gate acts on
  * Returns a new sym object containing the measurement outcomes
  */
-sym* gate_measure_Y(const sym* initial_state, void* gate_data, const unsigned* target_qubits)
+gate_result* gate_measure_Y(const sym* initial_state, const void* gate_data, const unsigned* target_qubits)
 {
-    uint32_t n_bits = ((gate_measurement_t*)gate_data)->n_bits;
+    uint32_t n_bits = ((gate*)gate_data)->n_qubits;
 
     // Sym object containing our measurement data
     sym* measurement_outcome = sym_create(1, n_bits);
@@ -98,7 +99,7 @@ sym* gate_measure_Y(const sym* initial_state, void* gate_data, const unsigned* t
         sym_set(measurement_outcome, 0, i, sym_get_X(initial_state, 0, target_qubits[i]) ^ sym_get_Z(initial_state, 0, target_qubits[i]));
     }
 
-    return measurement_outcome;
+    return gate_result_create_single(1, measurement_outcome);
 }
 
 /*
@@ -109,10 +110,10 @@ sym* gate_measure_Y(const sym* initial_state, void* gate_data, const unsigned* t
  * :: const unsigned* target_qubits ::  An array of qubits that this gate acts on
  * Returns a new sym object containing the measurement outcomes
  */
-sym* gate_measure_Z(const sym* initial_state, void* gate_data, const unsigned* target_qubits)
+gate_result* gate_measure_Z(const sym* initial_state, const void* gate_data, const unsigned* target_qubits)
 {
-    uint32_t n_bits = ((gate_measurement_t*)gate_data)->n_bits;
-
+    uint32_t n_bits = ((gate*)gate_data)->n_qubits;
+    
     // Sym object containing our measurement data
     sym* measurement_outcome = sym_create(1, n_bits);
 
@@ -121,7 +122,7 @@ sym* gate_measure_Z(const sym* initial_state, void* gate_data, const unsigned* t
         sym_set(measurement_outcome, 0, i, sym_get_X(initial_state, 0, target_qubits[i]));
     }
 
-    return measurement_outcome;
+    return gate_result_create_single(1, measurement_outcome);
 }
 
 #endif

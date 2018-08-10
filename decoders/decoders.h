@@ -11,14 +11,19 @@
 //----------------------------------------------------------------------------------------
 // The Decoder Base 'class'
 //----------------------------------------------------------------------------------------
+
+// Forward Declaration
 struct decoder;
 
+// The decoder call function pointer type
+// First argument is the decoder parameters, second is the syndrome
 typedef sym* (*decoder_call_f)(void*, const sym*);
 
+// The parameter free function pointer type
 typedef void (*decoder_param_free_f)(void*);
 
+// The decoder struct itself
 typedef struct decoder {
-	// The decoder parameters
 	void* params; // The parameters for that particular decoder
 
 	// V table

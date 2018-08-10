@@ -19,7 +19,7 @@ typedef struct {
 	Allocates memory for the error model and sets the default destructor
 	Returns a pointer to a new error model object on the heap
 */
-decoder* decoder_create_destabiliser();
+decoder* decoder_create_destabiliser(const sym* code, const sym* logicals);
 
 /*
 	decoder_call_destabiliser
@@ -28,7 +28,7 @@ decoder* decoder_create_destabiliser();
 	:: const sym* syndrome :: The  syndrome passed to the decoder
 	Returns the correction suggested by the decoder
 */
-sym* decoder_call_destabiliser(decoder* v_decoder, const sym* syndrome);
+sym* decoder_call_destabiliser(void* v_params, const sym* syndrome);
 
 /*
 	decoder_free_params_destabiliser

@@ -6,7 +6,7 @@
 
 #include "decoders/tailored.h"
 
-#include "circuits/gates.h"
+#include "gates/gates.h"
 #include "circuits/circuit.h"
 #include "circuits/circuit_search.h"
 #include "circuits/encoding.h"
@@ -65,7 +65,6 @@ int main()
 		sym* code = r.code; 
 		sym* logicals = r.logicals;
 
-
 		// Create our circuit
 		circuit* encode = encoding_circuit(code, logicals, cnot, hadamard, phase);
 
@@ -105,61 +104,3 @@ int main()
 	return 0;
 
 }
-
-/*
-	for (unsigned i = 0; i < n_increments; i++)
-	{
-		double error_rate = rate_min * pow(rate_delta, i); 
-	
-		error_model* em_iid = error_model_create_iid(n_qubits, p_error);
-
-		gate* cnot = gate_create(2,  
-			gate_cnot,
-			em_iid,
-			NULL);
-
-
-		random_code_return r = circuit_search_stabiliser(
-			n_qubits, 
-			n_logicals, 
-			distance, 
-			n_codes_searched,
-			encoding_circuit,
-			cnot,
-			hadamard,
-			phase);
-
-		sym* code = r.code; 
-		sym* logicals = r.logicals;
-
-		circuit* encode = encoding_circuit(code, logicals, cnot, hadamard, phase);
-
-		double* initial_error_probs = error_probabilities_identity(n_qubits);
-		double* final_error_probs = circuit_run(encode, initial_error_probs);	
-		
-		// Build an error model using the output probabilities of the circuit
-		error_model* circuit_error = error_model_create_lookup(n_qubits, final_error_probs);
-
-		// Build the tailored decoder
-		decoder* tailored_decoder = decoder_create_tailored(code, logicals, circuit_error);
-
-		// Characterise the code using the tailored decoder and the circuit error model
-		double* probabilities = characterise_code(code, logicals, circuit_error, tailored_decoder);
-		logical_rate[i] = probabilities[0];
-
-		// Free allocated objects 
-		free(initial_error_rate);
-		free(probabilities);		
-	}
-
-	printf("--------------------------------------\n");
-	printf("Best Random of %d \n", n_codes_searched);
-	printf("--------------------------------------\n");
-
-	for (unsigned i = 0; i < n_increments; i++)
-	{
-		printf("%e ", logical_rate[i]);
-		printf("\n");
-	}
-
-	return 0;	*/

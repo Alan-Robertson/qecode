@@ -117,7 +117,6 @@ circuit* encoding_circuit(const sym* code, const sym* logicals, gate* cnot, gate
 		tableau_hadamard(tableau, i);
 	}
 
-
 	// Find D_Z + A = M M^T.
 	for (size_t i = 0; i < tableau->height / 2; i++)
 	{
@@ -129,13 +128,12 @@ circuit* encoding_circuit(const sym* code, const sym* logicals, gate* cnot, gate
 		}
 
 		for (size_t j = i + 1; j < tableau->length / 2; j++)
-		{	
+		{
 			// Ensure that [i,i] is 1
 			if ( 1 == sym_get(tableau, i, j + tableau->height / 2) )
 			{
-
-					circuit_add_gate(encode, cnot, j, j);
-					tableau_cnot(tableau, j, i);
+				circuit_add_gate(encode, cnot, j, i);
+				tableau_cnot(tableau, j, i);
 			}
 		}
 	}

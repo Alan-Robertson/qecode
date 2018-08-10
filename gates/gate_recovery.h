@@ -40,10 +40,8 @@ sym* gate_recovery(const sym* initial_state, void* gate_data, const unsigned* ta
 			tmp_state = gate_operation(dr->pauli_X, recovered_state, target_qubits + i);
 			sym_free(recovered_state);
 			recovered_state = tmp_state;
-
 		}
 	}
-    
     return recovered_state;
 }
 
