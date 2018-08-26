@@ -351,10 +351,10 @@ double* circuit_run_default(circuit* c, double* initial_error_rates, gate* noise
         return circuit_run_noiseless(c, initial_error_rates);
     }
 
-    // Noise should be IID
+    // Noise should act on a single qubit
     if (noise->n_qubits != 1)
     {
-        printf("Noise should be IID!\n");
+        printf("Noise should act on a single qubit!\n");
         return NULL;
     }
 
@@ -382,7 +382,8 @@ double* circuit_run_default(circuit* c, double* initial_error_rates, gate* noise
                     free(tmp_error_rate);
                 }
             }
-        } 
+        }
+
         ce = ce->next;
     }
 

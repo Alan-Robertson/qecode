@@ -1312,6 +1312,23 @@ sym* ll_to_sym_t(unsigned long long ll, const unsigned height, const unsigned le
     return t;
 }
 
+/*
+    sym_is_empty:
+    Checks if the total weight of a sym object is zero
+    :: const sym* s :: The sym object to check
+    Returns true if there are no paulis on the sym object, or false otherwise
+*/
+uint32_t sym_is_empty(const sym* s)
+{
+    for (uint32_t i = 0; i < s->mem_size; i++)
+    {
+        if (s->matrix[i] != 0)
+        {
+            return false;
+        }
+    }
+    return true;
+}
 
 /*
     sym_clear:

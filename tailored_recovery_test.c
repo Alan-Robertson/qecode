@@ -90,7 +90,6 @@ int main()
 	//printf("Measurement: \n");
 	//qcircuit_print(syndrome_circuit);
 
-	
 	// Run the circuit
 	double* initial_error_probs = error_probabilities_identity(n_qubits);
 	initial_error_probs[0] = 0.5;
@@ -99,7 +98,6 @@ int main()
 	double* syndrome_error_probs = circuit_run(syndrome_circuit, initial_error_probs, noise);
 	double* recovered_error_probs = circuit_run(recovery_circuit, syndrome_error_probs, noise);
 	
-
 	//printf("\n\n");
 	//characterise_print(syndrome_error_probs, n_qubits + n_ancilla_qubits);
 

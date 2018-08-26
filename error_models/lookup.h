@@ -2,6 +2,7 @@
 #define ERROR_MODEL_LOOKUP
 
 #include "error_models.h"
+#include "../circuits/error_probabilities.h"
 
 // Lookup Model Composition -------------------------------------------------------------------------------
  
@@ -23,8 +24,7 @@ error_model* error_model_create_lookup(unsigned int n_qubits, double* lookup_tab
 
 	mp->n_qubits = n_qubits;
 
-	mp->lookup_table = (double*)calloc(sizeof(double), (1 << (2 * mp->n_qubits)));
-	memcpy(mp->lookup_table, lookup_table, 1 << (2 * mp->n_qubits));
+	mp->lookup_table = error_probabilities_copy(mp->n_qubits, lookup_table);
 
 	m->params = mp;
 	m->call = error_model_call_lookup;

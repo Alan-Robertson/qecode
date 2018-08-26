@@ -24,7 +24,9 @@ double* characterise_code(const sym* code,
 						error_model* noise_model, 
 						decoder* decoding_operation)
 {
-	double* p_error_probabilities = (double*)calloc(1ull << (logicals->length), sizeof(double));
+	// Setup our array of logical error probabilities
+	double* p_error_probabilities = error_probabilities_m(logicals->length);
+	
 	// Iterate through errors and map back to the code-space
 	sym_iter* physical_error = sym_iter_create(code->length);
 	while (sym_iter_next(physical_error))
@@ -49,6 +51,42 @@ double* characterise_code(const sym* code,
 		sym_free(corrected);
 		sym_free(recovery);
 		sym_free(syndrome);
+	}
+	sym_iter_free(physical_error);
+
+	return p_error_probabilities;
+}
+
+
+double* characterise_code_corrected(const sym* code, 
+						const sym* logicals, 
+						double* error_rates)
+{
+	// Setup our array of logical error probabilities
+	double* p_error_probabilities = error_probabilities_m(logicals->length);
+
+	// Iterate through errors and map back to the code-space
+	sym_iter* physical_error = sym_iter_create(code->length);
+	while (sym_iter_next(physical_error))
+	{
+		if (error_rates[sym_to_ll(physical_error->state)] > 0)
+		{
+			// Calculate the syndrome
+			sym* syndrome = sym_syndrome(code, physical_error->state);
+
+			if (sym_is_empty(syndrome)) // Syndrome is 0, we are in the code space
+			{
+				// Determine the overall logical state
+				sym* logical_state = logical_error(logicals, physical_error->state);
+
+				// Store the probability
+				p_error_probabilities[sym_to_ll(logical_state)] += error_rates[sym_to_ll(physical_error->state)];
+
+				// Free our memory
+				sym_free(logical_state);
+			}
+			sym_free(syndrome);
+		}		
 	}
 	sym_iter_free(physical_error);
 
@@ -92,6 +130,18 @@ void characterise_print(const double* probabilities, const size_t n_qubits)
 	sym_iter_free(physical_error);
 	//printf("Sum of probabilities: %e\n", s);
 	return;
+}
+
+double characterise_test(const double* probabilities, const size_t n_qubits)
+{	
+	double s = 0;
+	sym_iter* physical_error = sym_iter_create_n_qubits(n_qubits);	
+	while (sym_iter_next(physical_error))
+	{
+		s += probabilities[sym_to_ll(physical_error->state)];
+	}
+	sym_iter_free(physical_error);
+	return s;
 }
 
 #endif

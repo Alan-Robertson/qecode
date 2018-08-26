@@ -1,7 +1,7 @@
 #include "error_models/iid.h"
 #include "gates/clifford_generators.h"
 #include "circuits/circuit.h"
-
+#include "misc/qcircuit.h"
 #include "characterise.h"
 
 int main()
@@ -9,7 +9,7 @@ int main()
 	unsigned n_qubits = 2;
 
 	double p_gate_error = 0; // Gates themselves are noiseless
-	double p_error = 0.05;
+	double p_error = 0.01;
 
 	// Build our circuit with noise included:
 	error_model* em_cnot = error_model_create_iid(2, p_gate_error);
@@ -41,11 +41,16 @@ int main()
 	circuit_add_gate(test_circuit, cnot, 0, 1);
 	circuit_add_gate(test_circuit, hadamard, 0);
 	circuit_add_gate(test_circuit, phase, 0);
+	circuit_add_gate(test_circuit, noise, 1);
+
+	// Print the circuit
+	qcircuit_print(test_circuit);
 
 	// Run the circuit
 	double* initial_error_probs = error_probabilities_identity(n_qubits);
 	double* final_error_probs = circuit_run_noiseless(test_circuit, initial_error_probs);
 
+	printf("\n\n");
 	characterise_print(final_error_probs, n_qubits);
 
 	// Cleanup
@@ -64,5 +69,4 @@ int main()
 	gate_free(noise);
 
 	return 0;
-
 }

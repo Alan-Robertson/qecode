@@ -3,6 +3,7 @@
 #include "../sym.h" 
 #include "../sym_iter.h"
 #include "gate_result.h"
+#include "../circuits/error_probabilities.h"
 #include "../error_models/error_models.h"
 
 // STRUCT OBJECTS ----------------------------------------------------------------------------------------
@@ -40,6 +41,17 @@ gate* gate_create(
 	gate_operation_f operation,
 	error_model* em,
 	void* gate_data);
+
+/* 
+    gate_create:
+	Creates a new gate object
+	:: const unsigned n_qubits :: Number of qubits in the gate
+	:: gate_operation_f operation :: The operation to be performed when the gate is applied
+	Returns a heap pointer to the new gate
+*/
+gate* gate_create_noiseless(
+	const unsigned n_qubits,
+	gate_operation_f operation);
 
 /* 
     gate_apply:
@@ -120,6 +132,20 @@ gate* gate_create(
 }
 
 /* 
+    gate_create:
+	Creates a new gate object
+	:: const unsigned n_qubits :: Number of qubits in the gate
+	:: gate_operation_f operation :: The operation to be performed when the gate is applied
+	Returns a heap pointer to the new gate
+*/
+gate* gate_create_noiseless(
+	const unsigned n_qubits,
+	gate_operation_f operation)
+{
+	return gate_create(n_qubits, operation, NULL, NULL);
+}
+
+/* 
     gate_create_independent:
 	Creates a new gate object, copies the data rather than references it
 	:: const unsigned n_qubits :: Number of qubits in the gate
@@ -157,7 +183,7 @@ double* gate_apply(const unsigned n_qubits,
 {
 	// Apply the gate operation	
 	double* gate_operator_probabilities = gate_operator(n_qubits, probabilities, g, target_qubits);
-
+	
 	// Apply the noise operation associated with that gate
 	double* gate_noise_probabilities = gate_noise(n_qubits, gate_operator_probabilities, g, target_qubits);
 
@@ -181,12 +207,13 @@ double* gate_noise(const unsigned n_qubits,
 	const unsigned* target_qubits)
 {
 	// Allocate memory for the new output
-	double* p_state_probabilities = (double*)calloc(1ull << (n_qubits * 2), sizeof(double));
+	double* p_state_probabilities = error_probabilities_zeros(n_qubits);
 
 	// Identity gate, no operation_output
-	if (NULL == applied_gate->operation)
+	
+	if (NULL == applied_gate->gate_error_model)
 	{
-		memcpy(p_state_probabilities, initial_probabilities, sizeof(double) * 1ull << (n_qubits * 2));
+		memcpy(p_state_probabilities, initial_probabilities, error_probabilities_bytes_in_table(n_qubits));
 		return p_state_probabilities;
 	}
 
@@ -214,7 +241,6 @@ double* gate_noise(const unsigned n_qubits,
 	}
 
 	sym_iter_free(initial_state);
-
 	return p_state_probabilities;
 }
 
@@ -239,12 +265,12 @@ double* gate_operator(const unsigned n_qubits,
 	const unsigned* target_qubits)
 {
 	// Allocate memory for the new output
-	double* p_state_probabilities = (double*)calloc(1ull << (n_qubits * 2), sizeof(double));
+	double* p_state_probabilities = error_probabilities_zeros(n_qubits);
 
 	// Identity gate, no operation
 	if (NULL == applied_gate->operation)
 	{
-		memcpy(p_state_probabilities, initial_probabilities, sizeof(double) * 1ull << (n_qubits * 2));
+		memcpy(p_state_probabilities, initial_probabilities, error_probabilities_bytes_in_table(n_qubits));
 		return p_state_probabilities;
 	}
 
@@ -258,12 +284,14 @@ double* gate_operator(const unsigned n_qubits,
 		if (initial_prob > 0)
 		{
 			// Determine the state after the error has been applied 
+		
 			gate_result* operation_output = gate_operation(applied_gate, initial_state->state, target_qubits);
 
 			for (unsigned i = 0; i < operation_output->n_results; i++)
 			{
 				// Cumulatively determine the new probability of each state after the gate has been applied
 				p_state_probabilities[sym_to_ll(operation_output->state_results[i])] += operation_output->prob_results[i] * initial_prob; 
+
 			}
 			// Free allocated memory
 			gate_result_free(operation_output);
@@ -301,6 +329,7 @@ gate_result* gate_iid(const sym* initial_state, const void* gate_data, const uns
 		count++;
 	}
 	sym_iter_free(gate_error);
+
 	return gr;
 }
 

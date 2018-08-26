@@ -46,10 +46,8 @@ error_model* error_model_create_iid(const unsigned int n_qubits, const double p_
 
 	mp->p_error = p_error;
 	mp->n_qubits = n_qubits;
-
 	m->call = error_model_call_iid;
 	m->params = mp;
-
 	return m;
 }
 
@@ -58,10 +56,9 @@ double error_model_call_iid(const sym* error, void* v_model_params)
 {
 	// Recast
 	model_params_iid* model_params = (model_params_iid*)v_model_params;
-	
 	unsigned int weight = sym_weight(error);
-
-	return pow(model_params->p_error / 3, weight) * pow(1 - model_params->p_error, model_params->n_qubits - weight);
+	double prob = pow(model_params->p_error / 3, weight) * pow(1.0 - model_params->p_error, model_params->n_qubits - weight);
+	return prob;
 }
 
 #endif
