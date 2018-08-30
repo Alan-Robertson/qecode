@@ -26,7 +26,7 @@ typedef struct {
 	:: const double bias :: The bias in the type of error
 	Returns a pointer to a new error model object on the heap
 */
-error_model* error_model_create_iid_biased(const double p_error, const unsigned int n_qubits, const double bias);
+error_model* error_model_create_iid_biased(const unsigned int n_qubits, const double p_error, const double bias);
 
 /*
 	error_model_create_iid_biased_X
@@ -36,7 +36,7 @@ error_model* error_model_create_iid_biased(const double p_error, const unsigned 
 	:: const double bias :: The bias towards X errors
 	Returns a pointer to a new error model object on the heap
 */
-error_model* error_model_create_iid_biased_X(const double p_error, const unsigned int n_qubits, const double bias);
+error_model* error_model_create_iid_biased_X(const unsigned int n_qubits, const double p_error, const double bias);
 
 /*
 	error_model_create_iid_biased_Y
@@ -46,7 +46,7 @@ error_model* error_model_create_iid_biased_X(const double p_error, const unsigne
 	:: const double bias :: The bias towards Y errors
 	Returns a pointer to a new error model object on the heap
 */
-error_model* error_model_create_iid_biased_Y(const double p_error, const unsigned int n_qubits, const double bias);
+error_model* error_model_create_iid_biased_Y(const unsigned int n_qubits, const double p_error, const double bias);
 
 /*
 	error_model_create_iid_biased_Z
@@ -56,7 +56,7 @@ error_model* error_model_create_iid_biased_Y(const double p_error, const unsigne
 	:: const double bias :: The bias towards Z errors
 	Returns a pointer to a new error model object on the heap
 */
-error_model* error_model_create_iid_biased_Z(const double p_error, const unsigned int n_qubits, const double bias);
+error_model* error_model_create_iid_biased_Z(const unsigned int n_qubits, const double p_error, const double bias);
 
 // Model Callers
 double error_model_call_iid_biased_X(const sym* error, void* v_model_params);
