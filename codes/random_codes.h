@@ -20,6 +20,7 @@ typedef struct
 {
 	sym* code;
 	sym* logicals;
+	double p_correction;
 } random_code_return;
 
 // FUNCTION DECLARATIONS ----------------------------------------------------------------------------------------

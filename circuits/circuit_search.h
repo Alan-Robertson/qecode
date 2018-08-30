@@ -3,7 +3,7 @@
 
 #include "../sym.h"
 
-#include "gates.h"
+#include "../gates/gates.h"
 #include "circuit.h"
 
 #include "../misc/progress_bar.h"
@@ -90,7 +90,7 @@ random_code_return circuit_search_stabiliser(
 		}
 	}
 
-	random_code_return best_random_code = {code_best, logicals_best};
+	random_code_return best_random_code = {code_best, logicals_best, p_best};
 	return best_random_code;
 }
 

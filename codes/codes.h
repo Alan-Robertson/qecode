@@ -145,8 +145,8 @@ sym* code_11_1_5_gottesman_logicals()
 {
 	unsigned code[] = 
 	{
-		0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1
+		0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1
 	};
 	sym* s =  sym_create_valued(6, 16, code);
 	sym* t = sym_transpose(s);
@@ -164,14 +164,14 @@ sym* code_shor()
 {
 	unsigned code[] = 
 	{
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 
-		1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		0, 0, 0, 0, 0, 0, 0, 0, 0,  1, 1, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0,  1, 0, 1, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 1, 1, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 1, 0, 1, 0, 0, 0, 
+		0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 1, 1, 0, 
+		0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 1, 1, 
+		1, 1, 1, 1, 1, 1, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0,
+		1, 1, 1, 0, 0, 0, 1, 1, 1,  0, 0, 0, 0, 0, 0, 0, 0, 0
 	};
 	return sym_create_valued(8, 18, code);
 }
@@ -184,8 +184,8 @@ sym* code_shor()
 sym* code_shor_logicals()
 {
 	unsigned code[] = {
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 					// XXXXXXXXX
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1  					// ZZZZZZZZZ
+		1, 1, 1, 1, 1, 1, 1, 1, 1,  0, 0, 0, 0, 0, 0, 0, 0, 0, 					// XXXXXXXXX
+		0, 0, 0, 0, 0, 0, 0, 0, 0,  1, 1, 1, 1, 1, 1, 1, 1, 1  					// ZZZZZZZZZ
 	};
 	sym* s = sym_create_valued(2, 18, code);
 	sym* t = sym_transpose(s);
@@ -201,7 +201,7 @@ sym* code_shor_logicals()
 sym* code_two_qubit()
 {
 	unsigned code[] = { 
-		0, 0, 1, 0 																// ZI
+		0, 0,  1, 0 																// ZI
 	};
 	return sym_create_valued(1, 4, code);
 }
@@ -214,8 +214,8 @@ sym* code_two_qubit()
 sym* code_two_qubit_logicals()
 {
 	unsigned code[] = {
-		0, 1, 0, 0,																// IX
-		0, 0, 0, 1																// IZ
+		0, 1,  0, 0,																// IX
+		0, 0,  0, 1																// IZ
 	};
 	sym* s = sym_create_valued(2, 4, code);
 	sym* t = sym_transpose(s);
@@ -226,8 +226,8 @@ sym* code_two_qubit_logicals()
 sym* code_three_qubit()
 {
 	unsigned code[] = { 
-		1, 1, 0, 0, 0, 0, 														// XXI
-		0, 1, 1, 0, 0, 0														// IXX
+		1, 1, 0,  0, 0, 0, 														// XXI
+		0, 1, 1,  0, 0, 0														// IXX
 	};
 	return sym_create_valued(2, 6, code);
 }
@@ -235,8 +235,8 @@ sym* code_three_qubit()
 sym* code_three_qubit_logicals()
 {
 	unsigned code[] = { 
-		0, 1, 0, 0, 0, 0, 														// IXI
-		0, 0, 0, 1, 1, 1														// ZZZ
+		0, 1, 0,  0, 0, 0, 														// IXI
+		0, 0, 0,  1, 1, 1														// ZZZ
 	};
 	sym* s = sym_create_valued(2, 6, code);
 	sym* t = sym_transpose(s);
@@ -247,10 +247,10 @@ sym* code_three_qubit_logicals()
 sym* code_five_qubit()
 {
 	unsigned code[] = {
-		1, 0, 0, 0, 1, 0, 1, 0, 1, 0,
-		1, 1, 0, 0, 0, 0, 0, 1, 0, 1,
-		0, 1, 1, 0, 0, 1, 0, 0, 1, 0,
-		0, 0, 1, 1, 0, 0, 1, 0, 0, 1			
+		1, 0, 0, 0, 1,  0, 1, 0, 1, 0,
+		1, 1, 0, 0, 0,  0, 0, 1, 0, 1,
+		0, 1, 1, 0, 0,  1, 0, 0, 1, 0,
+		0, 0, 1, 1, 0,  0, 1, 0, 0, 1			
 	};
 	return sym_create_valued(4, 10, code);
 }
@@ -258,8 +258,8 @@ sym* code_five_qubit()
 sym* code_five_qubit_logicals()
 {
 	unsigned code[] = {
-		1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 1, 1, 1, 1, 1
+		1, 1, 1, 1, 1,  0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0,  1, 1, 1, 1, 1
 	};
 	sym* s = sym_create_valued(2, 10, code);
 	sym* t = sym_transpose(s);
@@ -272,10 +272,10 @@ sym* code_five_qubit_logicals()
 sym* code_asymmetric_five()
 {
 	unsigned code[] = {
-		0, 0, 0, 0, 0, 0, 1, 1, 0, 0,
-		0, 0, 0, 0, 0, 1, 0, 1, 0, 0,
-		0, 0, 0, 1, 1, 0, 0, 0, 0, 0,
-		0, 0, 0, 1, 0, 0, 0, 1, 0, 0			
+		0, 0, 0, 0, 0,  0, 1, 1, 0, 0,
+		0, 0, 0, 0, 0,  1, 0, 1, 0, 0,
+		0, 0, 0, 1, 1,  0, 0, 0, 0, 0,
+		0, 0, 0, 1, 0,  0, 0, 1, 0, 0			
 	};
 	return sym_create_valued(4, 10, code);
 }
@@ -283,10 +283,33 @@ sym* code_asymmetric_five()
 sym* code_asymmetric_five_logicals()
 {
 	unsigned code[] = {
-		0, 0, 0, 1, 1, 1, 1, 1, 0, 0,
-		1, 1, 1, 0, 0, 0, 0, 0, 1, 1
+		0, 0, 0, 1, 1,  1, 1, 1, 0, 0,
+		1, 1, 1, 0, 0,  0, 0, 0, 1, 1
 	};
 	sym* s = sym_create_valued(2, 10, code);
+	sym* t = sym_transpose(s);
+	sym_free(s);
+	return t;
+}
+
+sym* code_cyclic_seven()
+{
+	unsigned code[] = {
+		1, 0, 0, 0, 1, 0, 0,  0, 1, 0, 1, 0, 0, 0,
+		0, 1, 0, 0, 0, 1, 0,  0, 0, 1, 0, 1, 0, 0,
+		0, 0, 1, 0, 0, 0, 1,  0, 0, 0, 1, 0, 1, 0
+		1, 0, 0, 1, 0, 0, 0,  0, 0, 0, 0, 1, 0, 1			
+	};
+	return sym_create_valued(6, 14, code);
+}
+
+sym* code_cyclic_seven_logicals()
+{
+	unsigned code[] = {
+		1, 1, 1, 1, 1, 1, 1,  0, 0, 0, 0, 0, 0, 0, 
+		0, 0, 0, 0, 0, 0, 0,  1, 1, 1, 1, 1, 1, 1
+	};
+	sym* s = sym_create_valued(2, 14, code);
 	sym* t = sym_transpose(s);
 	sym_free(s);
 	return t;
