@@ -17,35 +17,28 @@
 
 int main()
 {	
-	unsigned n_increments = 15;
+	double rate_min = 0.0000001, rate_delta = 1.25;
+	unsigned n_increments = 5;
+	unsigned n_codes_searched = 30;
 
 	double error_rate = 0.0001;
 	double gate_error = 0.0003;
 
 	double logical_rate[30];
-	uint32_t n_codes_searched = 10;
 
 	unsigned n_qubits = 7, n_logicals = 1, distance = 3;
-
-	sym* code = code_steane();
-	sym* logicals = code_steane_logicals();
-
-	double bias = 0.5;	
+	
+	double bias = 0.5;
 	progress_bar* b = progress_bar_create(n_increments, "Iterations");
 	for (unsigned i = 0; i < n_increments; i++)
 	{
-		bias *= 4;
+		bias *= 2;
 		progress_bar_update(b);
 
 		// Build our circuit with noise included:
 		error_model* gate_noise = error_model_create_iid_biased_Z(1, gate_error, bias);
-		error_model* cnot_noise = error_model_create_iid_biased_Z(2, gate_error, bias);
-		
-		// Setup the error model
-		error_model* local_noise_model = error_model_create_iid_biased_Z(1, error_rate, bias);
+		error_model* cnot_noise = error_model_create_iid_biased_Z(1, gate_error, bias);
 
-		// Construct the gates, including the error gate
-		gate* iid_error_gate = gate_create_iid_noise(local_noise_model);
 		gate* cnot = gate_create(2, gate_cnot, cnot_noise, NULL);
 		gate* hadamard = gate_create(1, gate_hadamard, gate_noise, NULL);
 		gate* phase = gate_create(1, gate_phase, gate_noise, NULL);
