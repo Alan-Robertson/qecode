@@ -9,6 +9,8 @@ typedef struct {
 	unsigned bar_length;
 }  progress_bar;
 
+void progress_bar_print(progress_bar* p);
+
 progress_bar* progress_bar_create(const unsigned max_iters, char const* name)
 {
 	progress_bar* p = (progress_bar*)malloc(sizeof(progress_bar));
@@ -18,12 +20,19 @@ progress_bar* progress_bar_create(const unsigned max_iters, char const* name)
 	p->name = (char*)malloc(sizeof(char) * strlen(name));
 	strcpy(p->name, name);
 	setbuf(stdout, NULL);
+	progress_bar_print(p);
 	return p;
 }
 
 void progress_bar_update(progress_bar* p)
 {
 	p->curr_iter++;
+	progress_bar_print(p);
+	return;
+}
+
+void progress_bar_print(progress_bar* p)
+{
 	fflush(stdout);
 	printf("\r %s ", p->name);
 	printf("[");
@@ -41,6 +50,7 @@ void progress_bar_update(progress_bar* p)
 	}
 	printf("]");
 	printf( " %d Percent Complete", (unsigned)(100.0 * ((double) p->curr_iter / (double) p->max_iters)));
+	return;
 }
 
 void progress_bar_free(progress_bar* p)

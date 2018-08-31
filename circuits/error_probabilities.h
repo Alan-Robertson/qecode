@@ -95,14 +95,14 @@ double* error_probabilities_m(const size_t n_elements)
 	return error_probs;
 }
 
-uint32_t error_probabilities_bytes_in_table(const uint32_t n_qubits)
+uint64_t error_probabilities_bytes_in_table(const uint32_t n_qubits)
 {
-	return (1 << (2 * n_qubits)) * sizeof(double);
+	return (1ull << (2 * n_qubits)) * sizeof(double);
 }
 
-uint32_t error_probabilities_entries_in_table(const uint32_t n_qubits)
+uint64_t error_probabilities_entries_in_table(const uint32_t n_qubits)
 {
-	return 1 << (2 * n_qubits);
+	return 1ull << (2 * n_qubits);
 }
 
 

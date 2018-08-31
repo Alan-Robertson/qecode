@@ -6,6 +6,7 @@
 #include "../circuits/error_probabilities.h"
 #include "../error_models/error_models.h"
 
+
 // STRUCT OBJECTS ----------------------------------------------------------------------------------------
 
 //  Gate operation function pointer
@@ -26,6 +27,35 @@ typedef struct {
 	void* operation_data; // Any additional data to pass to the gate
 	void* error_model_data; // Any additional data to pass to the noise
 } gate;
+
+// MULTITHREADING ----------------------------------------------------------------------------------------
+// Enable to multithread on gate operations
+#ifdef GATE_MULTITHREADING
+	#ifdef N_THREADS
+		#define GATE_MULTITHREADING_ENABLED
+		#include <pthread.h>
+
+		// Struct to contain the data needed for the multi-threading
+		typedef struct 
+		{
+			long long start;
+			long long end;
+			const gate* operation;
+			const unsigned* target_qubits;
+			unsigned n_qubits;
+			double* initial_probabilities;
+			double* final_probabilities;
+			pthread_mutex_t* lock;
+		} mthread_gate_operation_t;
+
+		// Multithreading gate application
+		void* gate_apply_m_thread(void* data);
+
+		// Gate lock
+		pthread_mutex_t gate_lock;
+
+	#endif
+#endif
 
 // FUNCTION DECLARATIONS ----------------------------------------------------------------------------------------
 /*
@@ -217,32 +247,147 @@ double* gate_noise(const unsigned n_qubits,
 		return p_state_probabilities;
 	}
 
-	// Loop over all possible states
-	sym_iter* initial_state = sym_iter_create_n_qubits(n_qubits);
-	while(sym_iter_next(initial_state))
-	{
-		// Save this value as we may be needing it quite a bit
-		double initial_prob = initial_probabilities[sym_to_ll(initial_state->state)];
+	// Check if multithreaded
+	#ifdef GATE_MULTITHREADING_ENABLED
 
+		mthread_gate_operation_t thread_data[N_THREADS];
+		pthread_t threads[N_THREADS]; // Our threads
+
+		// Chunk the blocks
+		uint64_t last_block = error_probabilities_entries_in_table(n_qubits);
+		uint64_t block_size = last_block / N_THREADS;
+
+		// Setup our thread data
+		for (uint32_t i = 0; i < N_THREADS; i++)
+		{
+			/*
+			 Struct to contain the data needed for the multi-threading
+			 Replicated here for useful shorthand
+				typedef struct 
+				{
+					long long start;
+					long long end;
+					const gate* operation;
+					const unsigned* target_qubits;
+					const unsigned n_qubits;
+					double* initial_probabilities;
+					double* final_probabilities;
+					pthread_mutex_t* lock;
+				} mthread_gate_operation_t;
+			*/
+			if (i == N_THREADS - 1) // Handle the last block separately
+			{
+				thread_data[i].start = i * block_size;
+				thread_data[i].end = last_block;
+				thread_data[i].operation = applied_gate;
+				thread_data[i].target_qubits = target_qubits;
+				thread_data[i].n_qubits = n_qubits; 
+				thread_data[i].initial_probabilities = initial_probabilities; 
+				thread_data[i].final_probabilities = p_state_probabilities;
+				thread_data[i].lock = &gate_lock;
+			}
+			else
+			{
+				thread_data[i].start = i * block_size;
+				thread_data[i].end = (i + 1) * block_size;
+				thread_data[i].operation = applied_gate;
+				thread_data[i].target_qubits = target_qubits;
+				thread_data[i].n_qubits = n_qubits; 
+				thread_data[i].initial_probabilities = initial_probabilities; 
+				thread_data[i].final_probabilities = p_state_probabilities;
+				thread_data[i].lock = &gate_lock;
+			}
+		}
+
+		// Release the threads
+		for (uint32_t i = 0; i < N_THREADS; i++)
+		{
+			pthread_create(threads + i, NULL, gate_apply_m_thread, thread_data + i);
+		}
+
+		// Join the threads
+		for (uint32_t i = 0; i < N_THREADS; i++)
+		{
+			pthread_join(threads[i], NULL);
+		}
+
+	#else // If not multithreading
+		// Loop over all possible states
+		sym_iter* initial_state = sym_iter_create_n_qubits(n_qubits);
+		while(sym_iter_next(initial_state))
+		{
+			// Save this value as we may be needing it quite a bit
+			double initial_prob = initial_probabilities[sym_to_ll(initial_state->state)];
+
+			if (initial_prob > 0)
+			{
+				// Determine the state after the error has been applied 
+				gate_result* operation_output = gate_iid(initial_state->state, applied_gate, target_qubits);
+
+				for (unsigned i = 0; i < operation_output->n_results; i++)
+				{
+					// Cumulatively determine the new probability of each state after the gate has been applied
+					p_state_probabilities[sym_to_ll(operation_output->state_results[i])] += operation_output->prob_results[i] * initial_prob; 
+				}
+
+				// Free allocated memory
+				gate_result_free(operation_output);
+			}
+		}
+		sym_iter_free(initial_state);
+	#endif
+
+	
+	return p_state_probabilities;
+}
+
+
+// Multithreading function for gate application
+// To enable this you should include the following headers
+// Either when you compile the code or or somewhere else
+// #define GATE_MULTITHREADING
+// #define N_THREADS <>
+// Don't forget to specify the number of threads!
+#ifdef GATE_MULTITHREADING_ENABLED
+void* gate_apply_m_thread(void* data)
+{
+	mthread_gate_operation_t* mthread_data = (mthread_gate_operation_t*)data;
+
+	// Loop over all possible states
+	for (long long ll_state = mthread_data->start; ll_state < mthread_data->end; ll_state++)
+	{
+		// Convert our long long value to state
+		sym* initial_state = ll_to_sym_n_qubits(ll_state, 1, mthread_data->n_qubits);
+
+		// Save this value as we may be needing it quite a bit
+		double initial_prob = mthread_data->initial_probabilities[sym_to_ll(initial_state)];
+
+		// Save ourselves some time
 		if (initial_prob > 0)
 		{
 			// Determine the state after the error has been applied 
-			gate_result* operation_output = gate_iid(initial_state->state, applied_gate, target_qubits);
+			gate_result* operation_output = gate_iid(initial_state, mthread_data->operation, mthread_data->target_qubits);
 
 			for (unsigned i = 0; i < operation_output->n_results; i++)
 			{
 				// Cumulatively determine the new probability of each state after the gate has been applied
-				p_state_probabilities[sym_to_ll(operation_output->state_results[i])] += operation_output->prob_results[i] * initial_prob; 
-			}
+				// Make sure to lock down this operation as the only write to the data
+				pthread_mutex_lock(mthread_data->lock);
 
+				mthread_data->final_probabilities[sym_to_ll(operation_output->state_results[i])] += operation_output->prob_results[i] * initial_prob; 
+
+				pthread_mutex_unlock(mthread_data->lock);
+			}
 			// Free allocated memory
 			gate_result_free(operation_output);
+			sym_free(initial_state);
 		}
 	}
-
-	sym_iter_free(initial_state);
-	return p_state_probabilities;
+	return NULL;
 }
+#endif
+
+
 
 
 // Wrapper

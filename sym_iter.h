@@ -23,11 +23,11 @@
 
 typedef struct {
     sym* state; // The current state of our sym iterator
-    unsigned length;
-    unsigned max_weight; // The maximum weight we will be testing
-    unsigned curr_weight; // Our current weight
-    long long counter; // Current counter state
-    long long max_counter; 
+    uint32_t length;
+    int32_t max_weight; // The maximum weight we will be testing
+    int32_t curr_weight; // Our current weight
+    int64_t ll_counter; // Current counter state
+    int64_t max_ll_counter; // The maximum state allowed
 } sym_iter; 
 
 // ----------------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ typedef struct {
     :: const unsigned length :: Length of the iterator in bits (2 * qubits)
     Returns a heap pointer to the new iterator
 */
-sym_iter* sym_iter_create(const unsigned length);
+sym_iter* sym_iter_create(const uint32_t length);
 
 /* 
     sym_iter_create_n_qubits:
@@ -48,7 +48,7 @@ sym_iter* sym_iter_create(const unsigned length);
     :: const unsigned n_qubits :: Number of qubits to iterate over
     Returns a heap pointer to the new iterator
 */
-sym_iter* sym_iter_create_n_qubits(const unsigned length);
+sym_iter* sym_iter_create_n_qubits(const uint32_t length);
 
 /* 
     sym_iter_create_range:
@@ -58,7 +58,7 @@ sym_iter* sym_iter_create_n_qubits(const unsigned length);
     :: const unsigned max_weight :: Maximum hamming weight for the iterator
     Returns a heap pointer to the new iterator
 */
-sym_iter* sym_iter_create_range(const unsigned length, const unsigned min_weight, const unsigned max_weight);
+sym_iter* sym_iter_create_range(const uint32_t length, const int32_t min_weight, const uint32_t max_weight);
 
 /*
     sym_iter_next:
@@ -66,7 +66,7 @@ sym_iter* sym_iter_create_range(const unsigned length, const unsigned min_weight
     :: sym_iter* siter :: The iterator whose state is to be updated
     Returns a boolean value, true indicates that the iterator was updated, false indicates that the end of the range has been reached
 */
-bool sym_iter_next(sym_iter* siter);
+uint8_t sym_iter_next(sym_iter* siter);
 
 /*
     sym_iter_ll_from_state:
@@ -86,13 +86,13 @@ long long sym_iter_ll_from_state(const sym_iter* siter);
 void sym_iter_state_from_ll(sym_iter* siter, long long val);
 
 /*
-    sym_iter_max_counter:
+    sym_iter_max_ll_counter:
     Calculate (n, k) to determine the number of elements in the iterator with the same hamming weight 
     :: unsigned length::
     :: unsigned weight::
     Returns an unsigned long long containing the result
 */
-unsigned long long sym_iter_max_counter(unsigned length, unsigned current_weight);
+long long sym_iter_max_ll_counter(uint32_t length, uint32_t current_weight);
 
 /*
     sym_iter_free:
@@ -130,9 +130,9 @@ void sym_iter_free(sym_iter* siter);
     :: const unsigned length :: Length of the iterator in bits (2 * qubits)
     Returns a heap pointer to the new iterator
 */
-sym_iter* sym_iter_create(const unsigned length)
+sym_iter* sym_iter_create(const uint32_t length)
 {
-    sym_iter* siter = sym_iter_create_range(length, 0, length);
+    sym_iter* siter = sym_iter_create_range(length, -1, length);
     return siter;
 }
 
@@ -142,9 +142,9 @@ sym_iter* sym_iter_create(const unsigned length)
     :: const unsigned length :: Length of the iterator in bits (2 * qubits)
     Returns a heap pointer to the new iterator
 */
-sym_iter* sym_iter_create_n_qubits(const unsigned n_qubits)
+sym_iter* sym_iter_create_n_qubits(const uint32_t n_qubits)
 {
-    sym_iter* siter = sym_iter_create_range(2 * n_qubits, 0, 2 * n_qubits);
+    sym_iter* siter = sym_iter_create_range(2 * n_qubits, -1, 2 * n_qubits);
     return siter;
 }
 
@@ -156,7 +156,7 @@ sym_iter* sym_iter_create_n_qubits(const unsigned n_qubits)
     :: const unsigned max_weight :: Maximum hamming weight for the iterator
     Returns a heap pointer to the new iterator
 */
-sym_iter* sym_iter_create_range(const unsigned length, const unsigned min_weight, const unsigned max_weight)
+sym_iter* sym_iter_create_range(const uint32_t length, const int32_t min_weight, const uint32_t max_weight)
 {
     // Allocate memory for the state iterator
     sym_iter* siter = (sym_iter*)malloc(sizeof(sym_iter));
@@ -166,8 +166,8 @@ sym_iter* sym_iter_create_range(const unsigned length, const unsigned min_weight
 
     siter->length = length;
     siter->curr_weight = min_weight; // Our current weight
-    siter->counter = 0; // Current counter state
-    siter->max_counter = sym_iter_max_counter(length, min_weight); // Current maximum counter
+    siter->ll_counter = sym_iter_max_ll_counter(length, min_weight - 1);
+    siter->max_ll_counter = sym_iter_max_ll_counter(length, min_weight - 1); // Current maximum counter
 
     siter->max_weight = max_weight;
     
@@ -180,14 +180,14 @@ sym_iter* sym_iter_create_range(const unsigned length, const unsigned min_weight
     :: sym_iter* siter :: The iterator whose state is to be updated
     Returns a boolean value, true indicates that the iterator was updated, false indicates that the end of the range has been reached
 */
-bool sym_iter_next(sym_iter* siter)
+uint8_t sym_iter_next(sym_iter* siter)
 {
-    if (siter->counter < siter->max_counter)
+    if (siter->ll_counter < siter->max_ll_counter)
     {
         // Cast from iterator to long long
         long long val = sym_iter_ll_from_state(siter);
 
-        // Bill-Gosper Hamming Weight generator
+        // Bill Gosper Hamming Weight generator
         long long c = val & -val;
         long long r = val + c;
         
@@ -196,7 +196,7 @@ bool sym_iter_next(sym_iter* siter)
         // Push the result back to the state
         sym_iter_state_from_ll(siter, val);
 
-        siter->counter++;
+        siter->ll_counter = val;
         return true;
     }
     else
@@ -204,10 +204,11 @@ bool sym_iter_next(sym_iter* siter)
         if (siter->curr_weight < siter->max_weight)
         {
             siter->curr_weight++;
-            siter->counter = 1; // Current counter state
-            siter->max_counter = sym_iter_max_counter(siter->length, siter->curr_weight);
-
+            // Generate the new string of 1s right alligned and of length equal to the current weight
             long long val = (1ll << (long long)(siter->curr_weight)) - 1ll;
+
+            siter->ll_counter = val; // Current counter state
+            siter->max_ll_counter = sym_iter_max_ll_counter(siter->length, siter->curr_weight);
             sym_iter_state_from_ll(siter, val);
             return true;
         }
@@ -224,17 +225,20 @@ bool sym_iter_next(sym_iter* siter)
     :: const sym_iter* siter :: The iterator whose state is to be cast
     Returns a long long representation of the state of the iterator
 */
-long long sym_iter_ll_from_state(const sym_iter* siter)
-{
-    long long val = 0;
+/* If you want to calculate it from the state directly, do this
+long long val = 0;
     for (int i = 0; i < siter->state->mem_size; i++)
     {
         val <<= 8ll;
         val += (BYTE)(siter->state->matrix[i]);
     }
     val >>= ((siter->length % 8) ? 8 - (siter->length % 8) : 0);
-    return val;
+*/
+long long sym_iter_ll_from_state(const sym_iter* siter)
+{    
+    return siter->ll_counter;
 }
+
 
 /*
     sym_iter_state_from_ll:
@@ -255,34 +259,36 @@ void sym_iter_state_from_ll(sym_iter* siter, long long val)
 }
 
 /*
-    sym_iter_max_counter:
-    Calculate (n, k) to determine the number of elements in the iterator with the same hamming weight 
+    sym_iter_update:
+    Updates the tracking parameters for the sym iterator
+    Do this manually if you've changed the state without calling next
+    :: sym_iter* siter :: The iterator whose state is to be cast 
+    Does not return anything, updates the values of the iterator in place.
+*/
+void sym_iter_update(sym_iter* siter)
+{
+    uint32_t curr_weight = sym_weight_hamming(siter->state); // Determine the current weight
+    long long ll_counter = sym_iter_ll_from_state(siter);
+    long long unsigned max_ll_counter = sym_iter_max_ll_counter(siter->length, curr_weight);
+    return;
+}
+
+
+/*
+    sym_iter_max_ll_counter:
+    Determine the maximum allowed state given the current weight and length before the weight needs to be increased 
     :: unsigned length::
     :: unsigned weight::
     Returns an unsigned long long containing the result
 */
-unsigned long long sym_iter_max_counter(unsigned length, unsigned current_weight)
+long long sym_iter_max_ll_counter(uint32_t length, uint32_t current_weight)
 {
-    long long result = 1;
+    // Create the correctly weighted ll state
+    long long unsigned result = (1 << current_weight) - 1;
 
-    // If current_weight greater than length - weight then it's faster to calculate length - weight and it's symmetric!
-    current_weight = current_weight > length - current_weight ? length - current_weight : current_weight;
-   
-    for (unsigned j = 1; j <= current_weight; j++, length--)
-    {
-        if (length % j == 0)
-        {
-            result *= length / j;
-        } 
-        else if (result % j == 0)
-        {
-            result = result / j * length;
-        }
-        else
-        {
-            result = (result * length) / j;
-        }
-    }
+    // Shift again till it's at the max weight;
+    result <<= length - current_weight;
+
     return result;
 }
 
@@ -293,7 +299,7 @@ unsigned long long sym_iter_max_counter(unsigned length, unsigned current_weight
     :: sym_iter* siter :: Pointer to the iterator whose current value is to be determined
     Returns a long long value
 */
-long long sym_iter_value(sym_iter* siter)
+int64_t sym_iter_value(sym_iter* siter)
 {   
     return sym_iter_ll_from_state(siter);
 }

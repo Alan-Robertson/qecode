@@ -328,7 +328,7 @@ BYTE sym_anticommutes_Z(const sym* s, const unsigned i, const unsigned j);
  *  :: unsigned end :: The end of where the weight is being checked
  *  Returns the weight as an unsigned integer
  */
-unsigned sym_weight_type_partial(const sym* s, const char type, unsigned start, unsigned end);
+uint32_t sym_weight_type_partial(const sym* s, const char type, unsigned start, unsigned end);
 
 /*
  *  sym_weight:
@@ -402,7 +402,7 @@ void sym_sym_to_sym(sym* target, sym const* control, ...);
     :: const sym* s :: Pointer to the sym object to be represented
     Returns an unsigned long long
 */
-unsigned long long sym_to_ll(const sym* s);
+long long sym_to_ll(const sym* s);
 /*
     ll_to_sym:
     Given a long long representation of a sym object, constructs the sym object
@@ -412,6 +412,16 @@ unsigned long long sym_to_ll(const sym* s);
     Returns a sym object
 */
 sym* ll_to_sym(unsigned long long ll, const unsigned height, const unsigned length);
+
+/*
+    ll_to_sym:
+    Given a long long representation of a sym object, constructs the sym object
+    :: unsigned long long ll :: The long long that is to be used to build the sym object
+    :: const unsigned height :: height of the sym object
+    :: const unsigned n_qubits :: length of the sym object in qubits
+    Returns a sym object
+*/
+sym* ll_to_sym_n_qubits(unsigned long long ll, const unsigned height, const unsigned n_qubits);
 
 /*
     ll_to_sym_t:
@@ -1053,7 +1063,7 @@ BYTE sym_anticommutes_Z(const sym* s, const unsigned i, const unsigned j)
     :: unsigned end :: The end of where the weight is being checked
     Returns the weight as an unsigned integer
 */
-unsigned sym_weight_type_partial(const sym* s, const char type, unsigned start, unsigned end)
+uint32_t sym_weight_type_partial(const sym* s, const char type, unsigned start, unsigned end)
 {
     unsigned weight = 0;
     BYTE (*is_pauli)(const sym* s, const unsigned i, const unsigned j);
@@ -1088,6 +1098,27 @@ unsigned sym_weight_type_partial(const sym* s, const char type, unsigned start, 
             {
                 weight++;
             }
+        }
+    }
+    return weight;
+}
+
+/*
+    sym_weight_hamming:
+    Returns the classical hamming weight of a symplectic matrix object with specified bounds, this function is wrapped by the 
+    other weight functions and serves as a more generic type
+    :: const sym* s :: Pointer to the object to be weighed
+    Returns the weight as an unsigned integer
+*/
+uint32_t sym_weight_hamming(const sym* s)
+{
+    unsigned weight = 0;
+    
+    for (size_t i = 0; i < s->height; i++)
+    {
+        for (size_t j = 0; j < s->length; j++)
+        {
+            weight += sym_get(s, i, j);
         }
     }
     return weight;
@@ -1251,7 +1282,7 @@ sym* sym_resize(sym const* s, uint32_t n_qubits)
     :: const sym* s :: Pointer to the sym object to be represented
     Returns an unsigned long long
 */
-unsigned long long sym_to_ll(const sym* s)
+long long sym_to_ll(const sym* s)
 {
     if (s->mem_size > 8)
     {
@@ -1294,6 +1325,19 @@ sym* ll_to_sym(unsigned long long ll, const unsigned height, const unsigned leng
         ll >>= 8;
     }
     return s;
+}
+
+/*
+    ll_to_sym:
+    Given a long long representation of a sym object, constructs the sym object
+    :: unsigned long long ll :: The long long that is to be used to build the sym object
+    :: const unsigned height :: height of the sym object
+    :: const unsigned n_qubits :: length of the sym object in qubits
+    Returns a sym object
+*/
+sym* ll_to_sym_n_qubits(unsigned long long ll, const unsigned height, const unsigned n_qubits)
+{
+    return ll_to_sym(ll, height, n_qubits * 2);
 }
 
 /*
