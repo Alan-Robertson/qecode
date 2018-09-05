@@ -94,6 +94,7 @@ void sym_iter_state_from_ll(sym_iter* siter, long long val);
 */
 long long sym_iter_max_ll_counter(uint32_t length, uint32_t current_weight);
 
+
 /*
     sym_iter_free:
     Frees a symplectic iterator object
@@ -219,20 +220,30 @@ uint8_t sym_iter_next(sym_iter* siter)
     }
 }
 
+
 /*
     sym_iter_ll_from_state:
-    Casts the current state of the iterator to long long
+    Actually calculates the ll value from the state rather than just returning it
     :: const sym_iter* siter :: The iterator whose state is to be cast
     Returns a long long representation of the state of the iterator
 */
-/* If you want to calculate it from the state directly, do this
-long long val = 0;
+long long sym_iter_ll_from_state_calc(sym_iter* siter)
+{
+    long long val = 0;
     for (int i = 0; i < siter->state->mem_size; i++)
     {
         val <<= 8ll;
         val += (BYTE)(siter->state->matrix[i]);
     }
     val >>= ((siter->length % 8) ? 8 - (siter->length % 8) : 0);
+    return val;
+}
+
+/*
+    sym_iter_ll_from_state:
+    Casts the current state of the iterator to long long
+    :: const sym_iter* siter :: The iterator whose state is to be cast
+    Returns a long long representation of the state of the iterator
 */
 long long sym_iter_ll_from_state(const sym_iter* siter)
 {    
@@ -267,9 +278,9 @@ void sym_iter_state_from_ll(sym_iter* siter, long long val)
 */
 void sym_iter_update(sym_iter* siter)
 {
-    uint32_t curr_weight = sym_weight_hamming(siter->state); // Determine the current weight
-    long long ll_counter = sym_iter_ll_from_state(siter);
-    long long unsigned max_ll_counter = sym_iter_max_ll_counter(siter->length, curr_weight);
+    siter->curr_weight = sym_weight_hamming(siter->state); // Determine the current weight
+    siter->ll_counter = sym_iter_ll_from_state_calc(siter);
+    siter->max_ll_counter = sym_iter_max_ll_counter(siter->length, siter->curr_weight);
     return;
 }
 

@@ -186,7 +186,10 @@ double* circuit_syndrome_measurement_run(
 				sym_set(target_buffer->state, 0, i, sym_get(cpy_iter->state, 0, i)); // X elements
  				sym_set(target_buffer->state, 0, i + target_buffer->state->n_qubits, sym_get(cpy_iter->state, 0, i + cpy_iter->state->n_qubits)); // Z elements
 			} 
-
+			
+			// Update the other values in the buffer
+			sym_iter_update(target_buffer);
+			
 			// Set the value in the new buffer
 			expanded_error_probs[sym_iter_ll_from_state(target_buffer)] += initial_error_rates[sym_iter_ll_from_state(cpy_iter)];
 		}

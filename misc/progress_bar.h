@@ -17,7 +17,7 @@ progress_bar* progress_bar_create(const unsigned max_iters, char const* name)
 	p->max_iters = max_iters;
 	p->curr_iter = 0;
 	p->bar_length = 20;
-	p->name = (char*)malloc(sizeof(char) * strlen(name));
+	p->name = (char*)malloc(sizeof(char) * strlen(name) + 1);
 	strcpy(p->name, name);
 	setbuf(stdout, NULL);
 	progress_bar_print(p);
