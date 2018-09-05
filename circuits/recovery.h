@@ -128,7 +128,7 @@ double* circuit_recovery_run(
 				sym_set_Z(target_buffer->state, 0, i, sym_get_Z(recovered_state, 0, i)); // Z elements
 			} 
 			sym_free(recovered_state);
-
+			sym_iter_update(target_buffer);
 			// Set the value in the new buffer
 			recovered_error_rates[sym_iter_ll_from_state(target_buffer)] += initial_error_rates[sym_iter_ll_from_state(siter)];
 		}

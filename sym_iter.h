@@ -295,6 +295,11 @@ void sym_iter_update(sym_iter* siter)
 long long sym_iter_max_ll_counter(uint32_t length, uint32_t current_weight)
 {
     // Create the correctly weighted ll state
+    if (current_weight == 0)
+    {
+        return 0;
+    }
+
     long long unsigned result = (1 << current_weight) - 1;
 
     // Shift again till it's at the max weight;
