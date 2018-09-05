@@ -5,6 +5,7 @@
 #include "sym_iter.h"
 #include "error_models/error_models.h"
 #include "decoders/decoders.h"
+#include "circuits/error_probabilities.h"
 #include "errors.h"
 #include <math.h>
 
