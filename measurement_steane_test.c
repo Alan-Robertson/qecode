@@ -1,5 +1,5 @@
-#define GATE_MULTITHREADING
-#define N_THREADS 4
+//#define GATE_MULTITHREADING
+//#define N_THREADS 4
 
 #include "sym.h"
 #include <float.h>
@@ -24,7 +24,7 @@
 int main()
 {	
 	double rate_min = 0.000001, rate_delta = 1.25;
-	unsigned n_increments = 20;
+	unsigned n_increments = 2;
 
 	double p_gate_error = 0.00001;
 

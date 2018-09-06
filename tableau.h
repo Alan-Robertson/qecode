@@ -94,6 +94,7 @@ sym* tableau_create(const sym* code, const sym* logicals)
 
 	sym* tableau = sym_create(code->length, code->length);
 
+
 	// Create the tableau object
 	for (size_t i = 0; i < code->height; i++)
 	{
@@ -105,6 +106,13 @@ sym* tableau_create(const sym* code, const sym* logicals)
 
 	// Add the additional stabilisers and destabilisers
 	tableau_extend(tableau, logicals, code->height);
+
+	// Free the destabilisers
+	for (uint32_t i = 0; i < code->height; i++)
+	{
+		sym_free(destabilisers[i]);
+	}
+	free(destabilisers);
 
 	return tableau;
 }

@@ -1,5 +1,5 @@
-#define GATE_MULTITHREADING
-#define N_THREADS 4
+//#define GATE_MULTITHREADING
+//#define N_THREADS 4
 
 #include "sym.h"
 #include <float.h>
@@ -30,10 +30,10 @@ int main()
 
 	double logical_rate[30];
 
-	unsigned n_qubits = 7, n_logicals = 1, distance = 3;
+	unsigned n_qubits = 5, n_logicals = 1, distance = 3;
 
-	sym* code = code_steane();
-	sym* logicals = code_steane_logicals();
+	sym* code = code_five_qubit();
+	sym* logicals = code_five_qubit_logicals();
 
 	double bias = 0.5;	
 	progress_bar* p = progress_bar_create(n_increments, "Steane Code Bias: ");
@@ -75,10 +75,23 @@ int main()
 		logical_rate[i] = probabilities[0];
 
 		// Free allocated objects
-		error_model_free(local_noise_model);			
+		error_probabilities_free(initial_error_probs);
+		error_probabilities_free(encoded_error_probs);
+		error_probabilities_free(probabilities);
+
+		error_model_free(local_noise_model);
+		error_model_free(gate_noise);
+		error_model_free(cnot_noise);
+		error_model_free(encoding_error);
+
 		gate_free(hadamard);
 		gate_free(cnot);
 		gate_free(phase);
+		gate_free(iid_error_gate);
+
+		decoder_free(tailored);
+
+		circuit_free(encode);
 
 		progress_bar_update(p);
 	}
@@ -92,6 +105,9 @@ int main()
 		printf("%f \t %.15f", bias, logical_rate[i]);
 		printf("\n");
 	}
+
+	sym_free(code);
+	sym_free(logicals);
 
 	return 0;	
 }
