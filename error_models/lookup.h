@@ -41,8 +41,15 @@ double error_model_call_lookup(const sym* error, void* v_model_params)
 void error_model_free_lookup(void* v_model_params)
 {
 	error_model_params_lookup_t* model_params = (error_model_params_lookup_t*)v_model_params;
-	free(model_params->lookup_table);
-	free(model_params);
+	if (model_params->lookup_table != NULL)
+	{
+		free(model_params->lookup_table);
+	}
+
+	if (model_params != NULL)
+	{
+		free(model_params);
+	}
 	return;
 }
 

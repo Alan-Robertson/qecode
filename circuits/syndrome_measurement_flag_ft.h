@@ -193,7 +193,7 @@ void syndrome_measurement_flag_ft_circuit_construct(
                 }
 
                 // Cnot in the Z basis
-                circuit_add_gate(syndrome_measurement, cnot, i, ancilla_qubit + j);
+                circuit_add_gate(syndrome_measurement, cnot, i, ancilla_qubit);
                 circuit_add_gate(circuit_data->sub_circuits[j], cnot, i, ancilla_qubit + j);
             }
 
@@ -212,7 +212,7 @@ void syndrome_measurement_flag_ft_circuit_construct(
                     circuit_add_gate(circuit_data->sub_circuits[j], hadamard, i);
                     x_basis[i] = true;
                 }
-                circuit_add_gate(syndrome_measurement, cnot, i, ancilla_qubit + j);
+                circuit_add_gate(syndrome_measurement, cnot, i, ancilla_qubit);
                 circuit_add_gate(circuit_data->sub_circuits[j], cnot, i, ancilla_qubit + j);
             }
 
@@ -238,7 +238,7 @@ void syndrome_measurement_flag_ft_circuit_construct(
                     y_basis[i] = true;
                 }
                 // Cnot in the Y basis
-                circuit_add_gate(syndrome_measurement, cnot, i, ancilla_qubit + j);
+                circuit_add_gate(syndrome_measurement, cnot, i, ancilla_qubit);
                 circuit_add_gate(circuit_data->sub_circuits[j], cnot, i, ancilla_qubit + j);
             }
         }
