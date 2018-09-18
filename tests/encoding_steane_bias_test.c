@@ -1,3 +1,6 @@
+//#define GATE_MULTITHREADING
+//#define N_THREADS 4
+
 #include "sym.h"
 #include <float.h>
 
@@ -20,29 +23,33 @@
 
 int main()
 {	
-	unsigned n_increments = 15;
+	unsigned n_increments = 2;
 
 	double error_rate = 0.0001;
 	double gate_error = 0.0003;
 
 	double logical_rate[30];
 
-	unsigned n_qubits = 7, n_logicals = 1, distance = 3;
+	unsigned n_qubits = 5, n_logicals = 1, distance = 3;
 
-	sym* code = code_steane();
-	sym* logicals = code_steane_logicals();
+	sym* code = code_five_qubit();
+	sym* logicals = code_five_qubit_logicals();
 
 	double bias = 0.5;	
+	progress_bar* p = progress_bar_create(n_increments, "Steane Code Bias: ");
 	for (unsigned i = 0; i < n_increments; i++)
 	{
 		bias *= 4;
 
 		// Build our circuit with noise included:
 		error_model* gate_noise = error_model_create_iid_biased_Z(1, gate_error, bias);
+		//printf("Gate Error: %e\n", error_model_debug(gate_noise, 1));
 		error_model* cnot_noise = error_model_create_iid_biased_Z(2, gate_error, bias);
+		//printf("Cnot Error: %e\n", error_model_debug(cnot_noise, 2));
 		
 		// Setup the error model
 		error_model* local_noise_model = error_model_create_iid_biased_Z(1, error_rate, bias);
+		//printf("Local Error: %e\n", error_model_debug(local_noise_model, 1));
 
 		// Construct the gates, including the error gate
 		gate* iid_error_gate = gate_create_iid_noise(local_noise_model);
@@ -57,8 +64,8 @@ int main()
 
 		// The error model to feed to our decoder		
 		error_model* encoding_error = error_model_create_lookup(n_qubits, encoded_error_probs);
-		printf("Encoding Error: %e\n", error_model_debug(encoding_error, n_qubits));
-
+		//printf("Encoding Error: %e\n", error_model_debug(encoding_error, n_qubits));
+		
 		// Tailoring the decoder
 		decoder* tailored = decoder_create_tailored(code, logicals, encoding_error);
 
@@ -68,11 +75,27 @@ int main()
 		logical_rate[i] = probabilities[0];
 
 		// Free allocated objects
-		error_model_free(local_noise_model);			
+		error_probabilities_free(initial_error_probs);
+		error_probabilities_free(encoded_error_probs);
+		error_probabilities_free(probabilities);
+
+		error_model_free(local_noise_model);
+		error_model_free(gate_noise);
+		error_model_free(cnot_noise);
+		error_model_free(encoding_error);
+
 		gate_free(hadamard);
 		gate_free(cnot);
 		gate_free(phase);
+		gate_free(iid_error_gate);
+
+		decoder_free(tailored);
+
+		circuit_free(encode);
+
+		progress_bar_update(p);
 	}
+	progress_bar_free(p);
 
 	printf("Physical Rate \t Logical Rate\n");
 	bias = 0.5;
@@ -82,6 +105,9 @@ int main()
 		printf("%f \t %.15f", bias, logical_rate[i]);
 		printf("\n");
 	}
+
+	sym_free(code);
+	sym_free(logicals);
 
 	return 0;	
 }

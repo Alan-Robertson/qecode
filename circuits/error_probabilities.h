@@ -141,7 +141,7 @@ double* error_probabilities_identity(const size_t n_qubits)
 double* error_probabilities_copy(const size_t n_qubits, double* error_probs)
 {
 	double* error_probs_cpy = error_probabilities_zeros(n_qubits);
-	memcpy(error_probs_cpy, error_probs, (1 << (2 * n_qubits)) * sizeof(double));
+	memcpy(error_probs_cpy, error_probs, error_probabilities_bytes_in_table(n_qubits));
 	return error_probs_cpy;
 }
 

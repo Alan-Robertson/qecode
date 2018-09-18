@@ -23,7 +23,7 @@ error_model* error_model_create_lookup(unsigned int n_qubits, double* lookup_tab
 	error_model_params_lookup_t* mp = (error_model_params_lookup_t*)malloc(sizeof(error_model_params_lookup_t));
 
 	mp->n_qubits = n_qubits;
-
+	
 	mp->lookup_table = error_probabilities_copy(mp->n_qubits, lookup_table);
 
 	m->params = mp;

@@ -5,25 +5,26 @@
 #include "error_models/iid.h"
 #include "error_models/iid_biased.h"
 #include "characterise.h"
+#include "misc/progress_bar.h"
 
 int main()
 {	
-	//double rate_min = 0.00000000001, rate_delta = 2;
-	unsigned n_increments = 1000;
-	double physical_error_rate = 0.005;
+	unsigned n_increments = 24;
+	double physical_error_rate = 0.0001;
 
-	double logical_rate[1000];
+	double logical_rate[24];
 
 	unsigned n_qubits = 7, n_logicals = 1, distance = 3;
-	unsigned n_codes_searched = 100000;
 
-	sym* code = code_steane();
-	sym* logicals = code_steane_logicals();
+	sym* code = code_random_candidate_seven();
+	sym* logicals = code_random_candidate_seven_logicals();
 
-	for (unsigned i = 1; i <= n_increments; i++)
+	double bias = 0.5;
+	progress_bar* p = progress_bar_create(n_increments, "Decoder Bias Test");
+	for (unsigned i = 0; i < n_increments; i++)
 	{
 		// Set the error rate
-		double bias = i; 
+		bias *= 2; 
 		
 		// Setup the error model
 		error_model* noise_model = error_model_create_iid_biased_X(n_qubits, physical_error_rate, bias);
@@ -32,19 +33,31 @@ int main()
 		decoder* tailored_decoder = decoder_create_tailored(code, logicals, noise_model);
 		
 		double* probabilities = characterise_code(code, logicals, noise_model, tailored_decoder);
+		
 		logical_rate[i] = probabilities[0];
-
+		
 		// Free allocated objects
 		error_model_free(noise_model);
+		decoder_free(tailored_decoder);
 		free(probabilities);	
+
+		progress_bar_update(p);
 	}
+	progress_bar_free(p);
 
 	printf("Bias \t Logical Rate\n");
-	for (unsigned i = 1; i <= n_increments; i++)
+	bias = 0.5;
+	printf("((");
+	for (unsigned i = 0; i < n_increments; i++)
 	{
-		printf("%d \t %e ", i, 1.0 - logical_rate[i]);
-		printf("\n");
+		bias *= 2;
+		printf("(%f, %.15f)", bias, logical_rate[i]);
+		if (i != n_increments - 1)
+		{
+			printf(",\n");
+		}
 	}
+	printf("))\n");
 
 	return 0;	
 }

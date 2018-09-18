@@ -151,7 +151,7 @@ double error_model_call_iid_biased_X(const sym* error, void* v_model_params)
 	unsigned int weight = sym_weight(error);
 	unsigned int x_weight = sym_weight_X(error);
 
-	double p_b = model_params->p_error / (1.0 + 2.0 / model_params->bias);
+	double p_b = model_params->p_error * model_params->bias / (2.0  + model_params->bias);
 	double p_nb = model_params->p_error / (2.0 +  model_params->bias);
 	
 	return (pow(p_b, x_weight)  // p_x
@@ -168,7 +168,7 @@ double error_model_call_iid_biased_Y(const sym* error, void* v_model_params)
 	unsigned int weight = sym_weight(error);
 	unsigned int y_weight = sym_weight_Y(error);
 
-	double p_b = model_params->p_error / (1.0 + 2.0 / model_params->bias);
+	double p_b = model_params->p_error * model_params->bias / (2.0  + model_params->bias);
 	double p_nb = model_params->p_error / (2.0 +  model_params->bias);
 	
 		return (pow(p_b, y_weight)  // p_y
@@ -185,7 +185,7 @@ double error_model_call_iid_biased_Z(const sym* error, void* v_model_params)
 	unsigned int weight = sym_weight(error);
 	unsigned int z_weight = sym_weight_Z(error);
 
-	double p_b = model_params->p_error / (1.0 + 2.0 / model_params->bias);
+	double p_b = model_params->p_error * model_params->bias / (2.0  + model_params->bias);
 	double p_nb = model_params->p_error / (2.0 +  model_params->bias);
 	
 	return (pow(p_b, z_weight)  // p_z

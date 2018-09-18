@@ -151,11 +151,21 @@ void syndrome_measurement_flag_ft_circuit_construct(
     uint8_t* x_basis = (uint8_t*)calloc(code->height, sizeof(uint8_t));
     uint8_t* y_basis = (uint8_t*)calloc(code->height, sizeof(uint8_t));
 
+
+    // This is a stricly poor way of setting up the flagged FT, but it works for weight 4 and below measurements
+    uint32_t curr_flag;
+
     // Iterate through ancillas
     for (size_t j = 0; j < code->height; j++)
     {
         circuit_add_gate(syndrome_measurement, prepare_z, i);
         circuit_add_gate(circuit_data->sub_circuits[j], prepare_z, i);
+
+        // Prepare the flags
+        for (uint32_t i = 0; i < code->n_flag_qubits; i++)
+        {
+            
+        }
 
         // Determine the weight of this particular stabiliser
         // This is equivalent to the number of CNOTs performed between the code block and the ancilla
@@ -169,78 +179,87 @@ void syndrome_measurement_flag_ft_circuit_construct(
         for (size_t i = 0; i < code->n_qubits; i++)
         {
             // Add Flag FT gate
-            
-
-            // Pauli Z checks
-            if (sym_is_Z(code, j, i))
+            if (sym_is_not_I(code, j, i))
             {
-                // Move out of the X basis
-                if (x_basis[i] == true)
+                // Propagate errors to the flag qubit
+                circuit_add_gate(syndrome_measurement, cnot, ancilla + curr_flag + 1, ancilla_qubit);
+                circuit_add_gate(circuit_data->sub_circuits[j], cnot, flag_qubit + curr_flag, ancilla_qubit + j);
+
+                // This needs replacing with a better method, but it will do for now
+                curr_flag++;
+                curr_flag %= circuit_data->n_flag_qubits;
+
+                // Pauli Z checks
+                if (sym_is_Z(code, j, i))
                 {
-                    circuit_add_gate(syndrome_measurement, hadamard, i);
-                    circuit_add_gate(circuit_data->sub_circuits[j], hadamard, i);
-                    x_basis[i] = false;
+                    // Move out of the X basis
+                    if (x_basis[i] == true)
+                    {
+                        circuit_add_gate(syndrome_measurement, hadamard, i);
+                        circuit_add_gate(circuit_data->sub_circuits[j], hadamard, i);
+                        x_basis[i] = false;
+                    }
+
+                    // Move out of the Y basis
+                    if (y_basis[i] == true)
+                    {
+                        circuit_add_gate(syndrome_measurement, hadamard, i);
+                        circuit_add_gate(syndrome_measurement, phase, i);
+                        circuit_add_gate(circuit_data->sub_circuits[j], hadamard, i);
+                        circuit_add_gate(circuit_data->sub_circuits[j], phase, i);
+                        y_basis[i] = false;
+                    }
+
+                    // Cnot in the Z basis
+                    circuit_add_gate(syndrome_measurement, cnot, i, ancilla_qubit);
+                    circuit_add_gate(circuit_data->sub_circuits[j], cnot, i, ancilla_qubit + j);
+                }
+                else if (sym_is_X(code, j, i))
+                {
+                    if (y_basis[i] == true)
+                    {
+                        circuit_add_gate(syndrome_measurement, hadamard, i);
+                        circuit_add_gate(syndrome_measurement, phase, i);
+                        circuit_add_gate(circuit_data->sub_circuits[j], hadamard, i);
+                        circuit_add_gate(circuit_data->sub_circuits[j], phase, i);
+                    }
+                    if (x_basis[i] == false)
+                    {
+                        circuit_add_gate(syndrome_measurement, hadamard, i);
+                        circuit_add_gate(circuit_data->sub_circuits[j], hadamard, i);
+                        x_basis[i] = true;
+                    }
+                    circuit_add_gate(syndrome_measurement, cnot, i, ancilla_qubit);
+                    circuit_add_gate(circuit_data->sub_circuits[j], cnot, i, ancilla_qubit + j);
+                }
+                else if (sym_is_Y(code, j, i))
+                {
+                    if (x_basis[i] == true)
+                    {
+                        circuit_add_gate(syndrome_measurement, hadamard, i);
+                        circuit_add_gate(circuit_data->sub_circuits[j], hadamard, i);
+                        x_basis[i] = false;
+                    }
+
+                    if (y_basis[i] == false)
+                    { // Map Y to Z then cnot to pass the error along
+                        circuit_add_gate(syndrome_measurement, phase, i);
+                        circuit_add_gate(syndrome_measurement, phase, i);
+                        circuit_add_gate(syndrome_measurement, phase, i);
+                        circuit_add_gate(syndrome_measurement, hadamard, i);
+                        circuit_add_gate(circuit_data->sub_circuits[j], phase, i);
+                        circuit_add_gate(circuit_data->sub_circuits[j], phase, i);
+                        circuit_add_gate(circuit_data->sub_circuits[j], phase, i);
+                        circuit_add_gate(circuit_data->sub_circuits[j], hadamard, i);
+                        y_basis[i] = true;
+                    }
+                    // Cnot in the Y basis
+                    circuit_add_gate(syndrome_measurement, cnot, i, ancilla_qubit);
+                    circuit_add_gate(circuit_data->sub_circuits[j], cnot, i, ancilla_qubit + j);
                 }
 
-                // Move out of the Y basis
-                if (y_basis[i] == true)
-                {
-                    circuit_add_gate(syndrome_measurement, hadamard, i);
-                    circuit_add_gate(syndrome_measurement, phase, i);
-                    circuit_add_gate(circuit_data->sub_circuits[j], hadamard, i);
-                    circuit_add_gate(circuit_data->sub_circuits[j], phase, i);
-                    y_basis[i] = false;
-                }
-
-                // Cnot in the Z basis
-                circuit_add_gate(syndrome_measurement, cnot, i, ancilla_qubit);
-                circuit_add_gate(circuit_data->sub_circuits[j], cnot, i, ancilla_qubit + j);
             }
 
-            if (sym_is_X(code, j, i))
-            {
-                if (y_basis[i] == true)
-                {
-                    circuit_add_gate(syndrome_measurement, hadamard, i);
-                    circuit_add_gate(syndrome_measurement, phase, i);
-                    circuit_add_gate(circuit_data->sub_circuits[j], hadamard, i);
-                    circuit_add_gate(circuit_data->sub_circuits[j], phase, i);
-                }
-                if (x_basis[i] == false)
-                {
-                    circuit_add_gate(syndrome_measurement, hadamard, i);
-                    circuit_add_gate(circuit_data->sub_circuits[j], hadamard, i);
-                    x_basis[i] = true;
-                }
-                circuit_add_gate(syndrome_measurement, cnot, i, ancilla_qubit);
-                circuit_add_gate(circuit_data->sub_circuits[j], cnot, i, ancilla_qubit + j);
-            }
-
-            if (sym_is_Y(code, j, i))
-            {
-                if (x_basis[i] == true)
-                {
-                    circuit_add_gate(syndrome_measurement, hadamard, i);
-                    circuit_add_gate(circuit_data->sub_circuits[j], hadamard, i);
-                    x_basis[i] = false;
-                }
-
-                if (y_basis[i] == false)
-                { // Map Y to Z then cnot to pass the error along
-                    circuit_add_gate(syndrome_measurement, phase, i);
-                    circuit_add_gate(syndrome_measurement, phase, i);
-                    circuit_add_gate(syndrome_measurement, phase, i);
-                    circuit_add_gate(syndrome_measurement, hadamard, i);
-                    circuit_add_gate(circuit_data->sub_circuits[j], phase, i);
-                    circuit_add_gate(circuit_data->sub_circuits[j], phase, i);
-                    circuit_add_gate(circuit_data->sub_circuits[j], phase, i);
-                    circuit_add_gate(circuit_data->sub_circuits[j], hadamard, i);
-                    y_basis[i] = true;
-                }
-                // Cnot in the Y basis
-                circuit_add_gate(syndrome_measurement, cnot, i, ancilla_qubit);
-                circuit_add_gate(circuit_data->sub_circuits[j], cnot, i, ancilla_qubit + j);
-            }
         }
 
         // Measure!!

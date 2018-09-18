@@ -1,3 +1,6 @@
+#define GATE_MULTITHREADING
+#define N_THREADS 4
+
 #include "sym.h"
 #include <float.h>
 
@@ -15,11 +18,12 @@
 
 #include "misc/progress_bar.h"
 
+
 int main()
 {	
 	double rate_min = 0.0000001, rate_delta = 1.25;
-	unsigned n_increments = 5;
-	unsigned n_codes_searched = 30;
+	unsigned n_increments = 15;
+	unsigned n_codes_searched = 1000;
 
 	double error_rate = 0.0001;
 	double gate_error = 0.0003;
@@ -37,7 +41,7 @@ int main()
 
 		// Build our circuit with noise included:
 		error_model* gate_noise = error_model_create_iid_biased_Z(1, gate_error, bias);
-		error_model* cnot_noise = error_model_create_iid_biased_Z(1, gate_error, bias);
+		error_model* cnot_noise = error_model_create_iid_biased_Z(2, gate_error, bias);
 
 		gate* cnot = gate_create(2, gate_cnot, cnot_noise, NULL);
 		gate* hadamard = gate_create(1, gate_hadamard, gate_noise, NULL);

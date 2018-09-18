@@ -214,6 +214,12 @@ sym** tailor_recovery_operators(const sym* code,
 		// Calculate the probability of this particular error occurring and store it
 		p_options[sym_to_ll(syndrome)][sym_to_ll(logical_state)] += error_model_call(noise, physical_error->state);
 
+		/*if (sym_to_ll(syndrome) == 0)
+		{
+			printf("%.15f\n", error_model_call(noise, physical_error->state));
+			sym_print(physical_error->state);
+		}*/
+
 		// Free our memory in order to prevent leaks and fragmentation
 		sym_free(logical_state);
 		sym_free(corrected);
@@ -229,7 +235,7 @@ sym** tailor_recovery_operators(const sym* code,
 
 	// Determine the anti-commutation relations between the logical operators
 	decoder* logical_destabilisers = decoder_create_logical_destabiliser(logicals);
-
+		
 	// Setup the decoder	
 	for (size_t i = 0; i < n_syndromes; i++)
 	{
@@ -237,7 +243,7 @@ sym** tailor_recovery_operators(const sym* code,
 		// This covers the case when that particular syndrome is never encountered
 		double p_correction = p_options[i][0];
 		unsigned r_operator = 0;
-				
+
 		// This syndrome was never encountered, we can skip searching the rest and just
 		// correct the mem_size, p == 0
 		if (!tailored_decoder[i]->mem_size) 
@@ -257,6 +263,7 @@ sym** tailor_recovery_operators(const sym* code,
 				}
 			}
 		}
+		
 		// Find the logical syndrome
 		sym* logical_syndrome = ll_to_sym_t(r_operator, 1, logicals->length);
 
@@ -268,7 +275,8 @@ sym** tailor_recovery_operators(const sym* code,
 		sym_free(logical_recovery);
 		sym_free(logical_syndrome);
 	}
-	
+
+
 	// ------------------------------------------
 	// Cleanup
 	// ------------------------------------------
