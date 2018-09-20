@@ -373,14 +373,22 @@ double* circuit_run_default(circuit* c, double* initial_error_rates, gate* noise
         // Environmental Noise operations
         for (unsigned i = 0; i < c->n_qubits; i++)
         {
-            for (uint32_t j = 0; j < ce->gate_operation->n_qubits; j++)
+            uint8_t participant = 0;
+            // Check that the qubit doesn't participate
+            for (uint32_t j = 0; j < ce->gate_operation->n_qubits && !participant; j++)
             {
-                if (i != ce->target_qubits[j])
+                if (i == ce->target_qubits[j])
                 {
-                    double* tmp_error_rate = gate_apply(c->n_qubits, error_rate, noise, &i);
-                    memcpy(error_rate, tmp_error_rate, n_bytes);
-                    free(tmp_error_rate);
+                    participant = 1;
                 }
+            }
+
+            // If the qubit hasn't participated in the gate, apply the environmental noise
+            if (!participant) 
+            {
+                double* tmp_error_rate = gate_apply(c->n_qubits, error_rate, noise, &i);
+                memcpy(error_rate, tmp_error_rate, n_bytes);
+                free(tmp_error_rate);   
             }
         }
 
