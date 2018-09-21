@@ -56,7 +56,7 @@ uint32_t low_weight_code_rank(const sym* code);
  *	:: const sym* code :: Pointer to the stabiliser code
  *	Returns the lowest weight representation
  */
-sym* lowest_weight_rep(const sym* code)
+sym* lowest_weight_rep(const sym* code, const sym* logicals)
 {
 	// Get an array of all the generators
 	sym** generators = low_weight_find_all_generators(code);
