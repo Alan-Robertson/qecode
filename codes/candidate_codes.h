@@ -1,3 +1,5 @@
+#ifndef CODES_CANDIDATE
+#define CODES_CANDIDATE
 #include "../sym.h"
 
 // Some candidate random codes for seven qubits that seem to perform reasonably well 
@@ -12,7 +14,7 @@ sym* code_candidate_seven_a()
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1,
                 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0
         };
-        sym* s = sym_create_valued(6, 14, candidate_logicals);
+        sym* s = sym_create_valued(6, 14, candidate);
         return s;
 }
 
@@ -50,7 +52,7 @@ sym* code_candidate_seven_b()
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1,
                 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0
         };
-        sym* s = sym_create_valued(6, 14, candidate_logicals);
+        sym* s = sym_create_valued(6, 14, candidate);
         return s;
 }
 
@@ -76,3 +78,4 @@ sym* code_candidate_seven_b_logicals()
         sym* s = sym_create_valued(14, 2, candidate_logicals);
         return s;
 }
+#endif

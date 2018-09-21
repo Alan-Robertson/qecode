@@ -9,6 +9,7 @@
 #include "../misc/progress_bar.h"
 
 #include "../codes/codes.h"
+#include "../codes/low_weight.h"
 #include "../codes/random_codes.h"
 #include "../codes/random_code_search.h"
 
