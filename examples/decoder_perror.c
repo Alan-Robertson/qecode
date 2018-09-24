@@ -1,6 +1,7 @@
 
 #include "../sym.h"
 #include "../codes/codes.h"
+#include "../codes/candidate_codes.h"
 #include "../decoders/tailored.h"
 #include "../error_models/iid.h"
 #include "../error_models/iid_biased.h"
@@ -18,8 +19,8 @@ int main()
 
 	unsigned n_qubits = 7, n_logicals = 1, distance = 3;
 
-	sym* code = code_steane();
-	sym* logicals = code_steane_logicals();
+	sym* code = code_candidate_seven_a();
+	sym* logicals = code_candidate_seven_a_logicals();
 
 	double perror = perror_init;
 	progress_bar* p = progress_bar_create(n_increments, "Decoder Bias Test");

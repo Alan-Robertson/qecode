@@ -78,4 +78,41 @@ sym* code_candidate_seven_b_logicals()
         sym* s = sym_create_valued(14, 2, candidate_logicals);
         return s;
 }
+
+sym* code_candidate_seven_c()
+{
+        unsigned candidate[] = {
+                1,0,0,0,1,0,0 ,0,1,1,0,0,0,1,
+                0,1,0,0,1,1,1 ,0,0,0,0,0,0,0,
+                0,0,1,1,1,1,1 ,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0 ,0,0,1,1,0,0,0,
+                0,0,0,0,0,0,0 ,1,1,1,0,1,0,0,
+                0,0,0,0,0,0,0 ,0,0,0,0,0,1,1
+        };
+        sym* s = sym_create_valued(6, 14, candidate);
+        return s;
+}
+
+sym* code_candidate_seven_c_logicals()
+{
+        unsigned candidate_logicals[] = 
+        {
+                0 ,0,
+                0 ,0,
+                0 ,0,
+                0 ,0,
+                0 ,0,
+                1 ,0,
+                1 ,0,
+                1 ,0,
+                0 ,1,
+                0 ,1,
+                0 ,0,
+                0 ,0,
+                0 ,0,
+                0 ,1
+        };
+        sym* s = sym_create_valued(14, 2, candidate_logicals);
+        return s;
+}
 #endif

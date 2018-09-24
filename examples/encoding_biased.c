@@ -4,6 +4,9 @@
 #include "../sym.h"
 #include <float.h>
 
+#include "../codes/codes.h"
+#include "../codes/candidate_codes.h"
+
 #include "../codes/random_code_search.h"
 #include "../decoders/tailored.h"
 
@@ -34,8 +37,8 @@ int main()
 
 	unsigned n_qubits = 7, n_logicals = 1, distance = 3;
 
-	sym* code = code_steane();
-	sym* logicals = code_steane_logicals();
+	sym* code = code_candidate_seven_c();
+	sym* logicals = code_candidate_seven_c_logicals();
 
 	double bias = init_bias;	
 	progress_bar* p = progress_bar_create(n_increments, "Steane Code Bias: ");
