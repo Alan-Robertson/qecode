@@ -91,7 +91,8 @@ gate* gate_create_noiseless(
 	:: const void* noisy_gate :: The gate to be applied
 	Returns a heap pointer to a block of allocated memory containing the new probabilities
 */
-double* gate_apply(const unsigned n_qubits,
+double* gate_apply(
+	const unsigned n_qubits,
 	double* probabilities,
 	const gate* g,
 	const unsigned* target_qubits);
@@ -205,7 +206,14 @@ gate* gate_create_iid_noise(error_model* em)
 	return gate_create(1, NULL, em, NULL);
 }
 
-
+/* 
+    gate_apply:
+	Applies a gate object to an existing noise model this is comprised of both a noise operator and a gate operator
+	:: const unsigned n_qubits :: Number of qubits in the gate
+	:: const double* initial_probabilities :: The current probabilities for each noise operator
+	:: const void* noisy_gate :: The gate to be applied
+	Returns a heap pointer to a block of allocated memory containing the new probabilities
+*/
 double* gate_apply(const unsigned n_qubits,
 	double* probabilities,
 	const gate* g,

@@ -5,6 +5,7 @@
 #include "destabiliser.h"
 #include "logical_destabiliser.h"
 
+
 //----------------------------------------------------------------------------------------
 // Function Declarations
 //----------------------------------------------------------------------------------------
@@ -176,7 +177,6 @@ sym** tailor_recovery_operators(const sym* code,
 
 	// Find the destabilisers
 	decoder* destabilisers = decoder_create_destabiliser(code, logicals);
-
 
 	// Store this for potential quality of life
 	unsigned mem_size = ((decoder_params_destabiliser_t*)destabilisers->params)->destabilisers[0]->mem_size;

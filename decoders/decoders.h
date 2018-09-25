@@ -68,6 +68,14 @@ sym* decoder_call(decoder* d, const sym* syndrome);
 */
 void decoder_free(decoder* d);
 
+/*
+	decoder_entries_in_table
+	Determines the number of decoder entries exist in a table given some number of syndrome bits
+	:: const uint32_t n_bits :: The number of syndrome bits to pass
+	Returns the number of entries in the table
+*/
+uint64_t decoder_entries_in_table(const uint32_t n_bits)
+
 // FUNCTION DEFINITIONS ----------------------------------------------------------------------------------------
 
 /*
@@ -122,6 +130,18 @@ void decoder_free(decoder* d)
 	d->param_free(d->params);	
 	free(d);
 	return;
+}
+
+
+/*
+	decoder_entries_in_table
+	Determines the number of decoder entries exist in a table given some number of syndrome bits
+	:: const uint32_t n_bits :: The number of syndrome bits to pass
+	Returns the number of entries in the table
+*/
+uint64_t decoder_entries_in_table(const uint32_t n_bits)
+{
+	return 1ull << (2 * n_bits);
 }
 
 #endif

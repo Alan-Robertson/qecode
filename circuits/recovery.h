@@ -1,33 +1,94 @@
 #ifndef CIRCUIT_RECOVERY
 #define CIRCUIT_RECOVERY
 
+// ----------------------------------------------------------------------------------------
+// DIRECTIVES
+// ----------------------------------------------------------------------------------------
+
 #include "../sym.h"
 #include "circuit.h"
 #include "error_probabilities.h"
 #include "../decoders/decoders.h"
 #include "../gates/gates.h"
 
+// ----------------------------------------------------------------------------------------
+// STRUCTS
+// ----------------------------------------------------------------------------------------
+
 typedef struct {
-	uint32_t n_code_qubits;
-	uint32_t n_ancilla_qubits;
-	decoder* decoder_operation;
-	gate* pauli_X;
-	gate* pauli_Z;
-	gate* measure_Z;
-	uint32_t* measurement_targets;
+	uint32_t n_code_qubits;  // Number of code qubits
+	uint32_t n_ancilla_qubits; // Number of ancilla qubits
+	decoder* decoder_operation; // The action of the decoder
+	gate* pauli_X; // The pauli X gate
+	gate* pauli_Z; // The pauli Z gate
+	gate* measure_Z; // The measurement gate in the Z basis
+	uint32_t* measurement_targets; // The targets to measure for the recovery operation
 } circuit_recovery_data_t;
 
 
+// ----------------------------------------------------------------------------------------
+// FUNCTION DECLARATIONS 
+// ----------------------------------------------------------------------------------------
+
+/* 
+ *  circuit_recovery_run:
+ *  Runs the recovery circuit, this should be referenced by the circuit.circuit_operation struct member of the circuit struct
+ *  :: const uint32_t n_code_qubits :: Number of code qubits
+ *  :: const uint32_t n_ancilla_qubits :: Number of ancilla qubits
+ *  :: decoder* d :: The decoder used with the syndrome information
+ *  :: gate* pauli_X :: The pauli X gate to be applied during recovery
+ *  :: gate* pauli_Z :: The pauli Z gate to be applied during recovery
+ *	:: gate* measure_Z :: A Z measurement operation
+ *  Returns a circuit object that performs the recovery operation dictated by the decoder
+ */
+circuit* circuit_recovery_create(
+	const uint32_t n_code_qubits,
+	const uint32_t n_ancilla_qubits,
+	decoder* d,
+	gate* pauli_X,
+	gate* pauli_Z,
+	gate* measure_Z);
+
+/* 
+ *  circuit_recovery_run:
+ *  Runs the recovery circuit, this should be referenced by the circuit.circuit_operation struct member of the circuit struct
+ *  :: circuit* recovery :: The circuit object
+ *  :: double* initial_error_rates ::  The initial error probabilities associated with each pauli string
+ *  :: gate* noise :: Noise operation acting on the wires in the circuit
+ *  Returns a heap pointer to the new matrix
+ */
 double* circuit_recovery_run(
 	circuit* recovery, 
 	double* initial_error_rates, 
 	gate* noise);
 
+/* 
+ *  circuit_recovery_param_free:
+ *  Frees the parameters of the circuit object
+ *  :: void* rd :: The pointer to the recovery data object 
+ *  Frees the data stored in the recovery data pointer
+ */
 void circuit_recovery_param_free(void* rd);
 
+
+// ----------------------------------------------------------------------------------------
+// FUNCTION DEFINITIONS
+// ----------------------------------------------------------------------------------------
+
+/* 
+ *  circuit_recovery_run:
+ *  Runs the recovery circuit, this should be referenced by the circuit.circuit_operation struct member of the circuit struct
+ *  :: const uint32_t n_code_qubits :: Number of code qubits
+ *  :: const uint32_t n_ancilla_qubits :: Number of ancilla qubits
+ *  :: decoder* d :: The decoder used with the syndrome information
+ *  :: gate* pauli_X :: The pauli X gate to be applied during recovery
+ *  :: gate* pauli_Z :: The pauli Z gate to be applied during recovery
+ *	:: gate* measure_Z :: A Z measurement operation
+ *  Returns a circuit object that performs the recovery operation dictated by the decoder
+ */
 circuit* circuit_recovery_create(
-	uint32_t n_code_qubits,
-	uint32_t n_ancilla_qubits,
+	const uint32_t n_code_qubits,
+	const uint32_t n_ancilla_qubits,
 	decoder* d,
 	gate* pauli_X,
 	gate* pauli_Z,
@@ -66,7 +127,14 @@ circuit* circuit_recovery_create(
 	return recovery;
 }
 
-// Could be expanded to account for errors in the recovery operations
+/* 
+ *  circuit_recovery_run:
+ *  Runs the recovery circuit, this should be referenced by the circuit.circuit_operation struct member of the circuit struct
+ *  :: circuit* recovery :: The circuit object
+ *  :: double* initial_error_rates ::  The initial error probabilities associated with each pauli string
+ *  :: gate* noise :: Noise operation acting on the wires in the circuit
+ *  Returns a heap pointer to the new matrix
+ */
 double* circuit_recovery_run(
 	circuit* recovery, 
 	double* initial_error_rates, 
@@ -86,11 +154,12 @@ double* circuit_recovery_run(
 	{	
 		if (initial_error_rates[sym_iter_ll_from_state(siter)] > 0)
 		{
-			// Measure
+			// Measure the syndrome bits
 			gate_result* syndrome_results = gate_operation(rd->measure_Z, siter->state, rd->measurement_targets);
 			sym* syndrome = sym_copy(syndrome_results->state_results[0]);
 			gate_result_free(syndrome_results);
 
+			// Transpose the syndrome for easier reading
 			sym* syndrome_trans = sym_transpose(syndrome);
 			sym_free(syndrome);
 		
@@ -137,11 +206,21 @@ double* circuit_recovery_run(
 	return recovered_error_rates;
 }
 
+/* 
+ *  circuit_recovery_param_free:
+ *  Frees the parameters of the circuit object
+ *  :: void* rd :: The pointer to the recovery data object 
+ *  Frees the data stored in the recovery data pointer
+ */
 void circuit_recovery_param_free(void* void_rd)
 {
-	circuit_recovery_data_t* rd = (circuit_recovery_data_t*)void_rd;
-	free(rd->measurement_targets);
-	free(void_rd);
+	// If the recovery data pointer is not null, free the associated memory
+	if (void_rd != NULL)
+	{
+		circuit_recovery_data_t* rd = (circuit_recovery_data_t*)void_rd;
+		free(rd->measurement_targets);
+		free(void_rd);
+	}
 	return;
 }
 

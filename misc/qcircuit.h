@@ -60,8 +60,9 @@ void qcircuit_print(circuit* c)
 
 	// For building arbitrary unknown gates
 	uint32_t symbol_table_length = 0;
+	uint32_t symbol_table_max_length = 20;
 	char const* unspecified_unitary = "U_{";
-	gate_operation_f* symbol_table = (gate_operation_f*)malloc(sizeof(gate_operation_f));
+	gate_operation_f* symbol_table = (gate_operation_f*)malloc(sizeof(gate_operation_f) * 20);
 
 	// Our set of qubit strings
 	char** qubits = (char**)malloc(sizeof(char*) * c->n_qubits);
@@ -76,6 +77,7 @@ void qcircuit_print(circuit* c)
 	circuit_element* ce = c->start;
 	while (NULL != ce)
 	{
+
 		// Break from previous round
 		for (int i = 0; i < c->n_qubits; i++)
 		{
@@ -120,11 +122,17 @@ void qcircuit_print(circuit* c)
 					symbol_index = i;
 				}
 			}
+
 			if (!existing_symbol) // Yeah, this isn't efficient at all, but it's scalable and shouldn't come up too often
 			{ // Gate hasn't been seen, increase the size of the symbol table and add it
 				symbol_table[symbol_table_length] = ce->gate_operation->operation;
 				symbol_table_length++;
-				symbol_table = (gate_operation_f*)realloc(symbol_table, symbol_table_length + 1);
+				if (symbol_table_length == symbol_table_max_length)
+				{
+					symbol_table_max_length *= 2;
+
+					symbol_table = (gate_operation_f*)realloc(symbol_table, symbol_table_max_length);
+				}
 			}
 			
 			// Add the relevant gate

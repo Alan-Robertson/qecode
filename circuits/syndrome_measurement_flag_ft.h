@@ -8,7 +8,7 @@
 #include "../sym.h"
 #include "circuit.h"
 #include "error_probabilities.h"
-#include "decoders/lookup.h"
+#include "../decoders/lookup.h"
 
 // ----------------------------------------------------------------------------------------
 // STRUCTS
@@ -20,42 +20,46 @@ typedef struct {
     uint32_t n_flag_qubits;
     decoder** flag_decoders;
     circuit** sub_circuits;
-} circuit_syndrome_measurement_sequential_data_t;
+} circuit_syndrome_measurement_flag_ft_data_t;
 
 // ----------------------------------------------------------------------------------------
 // FUNCTION DECLARATIONS 
 // ----------------------------------------------------------------------------------------
 
-circuit* syndrome_measurement_sequential_circuit(
+circuit* syndrome_measurement_flag_ft_circuit_create(
     const sym* code,
     gate* cnot,
     gate* hadamard,
     gate* phase,
-    gate* prepare_z,
-    gate* measure_z,
-    gate* prepare_x,
-    gate* measure_x);
+    gate* pauli_X,
+    gate* pauli_Z,
+    gate* prepare_X,
+    gate* prepare_Z,
+    gate* measure_X,
+    gate* measure_Z);
 
-void syndrome_measurement_sequential_circuit_construct(
+void syndrome_measurement_flag_ft_circuit_construct(
     circuit* syndrome_measurement,
     const sym* code,
     gate* cnot,
     gate* hadamard,
     gate* phase,
-    gate* prepare_z,
-    gate* measure_z,
-    gate* prepare_x,
-    gate* measure_x);
+    gate* pauli_X,
+    gate* pauli_Z,
+    gate* prepare_X,
+    gate* prepare_Z,
+    gate* measure_X,
+    gate* measure_Z);
 
 /*
  * circuit_syndrome_measurement_run
- * 
+ * Runs the syndrome measurement circuit, this should overload the circuit.circuit_operation member
  * :: circuit* syndrome_measurement ::
  * :: double* initial_error_rates ::
  * :: gate* noise :: 
- * 
+ * Returns the probabilities associated with each output state
  */
-double* circuit_syndrome_measurement_sequential_run(
+double* circuit_syndrome_measurement_flag_ft_run(
     circuit* syndrome_measurement, 
     double* initial_error_rates, 
     gate* noise);
@@ -64,24 +68,20 @@ double* circuit_syndrome_measurement_sequential_run(
 // FUNCTION DEFINITIONS
 // ----------------------------------------------------------------------------------------
 
-circuit* syndrome_measurement_flag_ft(
+circuit* syndrome_measurement_flag_ft_circuit_create(
     const sym* code,
     gate* cnot,
     gate* hadamard,
     gate* phase,
-    gate* prepare_z,
-    gate* measure_z,
-    gate* prepare_x,
-    gate* measure_x)
+    gate* pauli_X,
+    gate* pauli_Z,
+    gate* prepare_X,
+    gate* prepare_Z,
+    gate* measure_X,
+    gate* measure_Z)
 {
-    // Qubits 0 -> n_qubits are the regular qubits, the others are ancillas
-    circuit* syndrome_measurement = circuit_create(code->n_qubits + code->height);
-
-    // Override the operation that runs the circuit
-    syndrome_measurement->circuit_operation = circuit_syndrome_measurement_flag_ft_run;
-
     // Setup the circuit data
-    circuit_syndrome_measurement_sequential_data_t* circuit_data = (circuit_syndrome_measurement_sequential_data_t*)malloc(sizeof(circuit_syndrome_measurement_sequential_data_t));
+    circuit_syndrome_measurement_flag_ft_data_t* circuit_data = (circuit_syndrome_measurement_flag_ft_data_t*)malloc(sizeof(circuit_syndrome_measurement_flag_ft_data_t));
     circuit_data->n_code_qubits = code->n_qubits;
     circuit_data->n_ancilla_qubits = code->height;
 
@@ -109,15 +109,18 @@ circuit* syndrome_measurement_flag_ft(
         circuit_data->n_flag_qubits++;
     }
 
-    // Add the flag qubits to be tracked
-    syndrome_measurement->n_qubits += circuit_data->n_flag_qubits;
+    // Create the circuit itself
+    // Qubits 0 -> n_qubits are the regular qubits, the others are ancillas and then flags
+    circuit* syndrome_measurement = circuit_create(code->n_qubits + code->height + circuit_data->n_flag_qubits);
+
+    // Override the operation that runs the circuit
+    syndrome_measurement->circuit_operation = circuit_syndrome_measurement_flag_ft_run;
 
     // One measurement circuit for each qubit, and one for cleanup
     circuit_data->sub_circuits = (circuit**)malloc(sizeof(circuit*) * (circuit_data->n_ancilla_qubits + 1));
 
-    // One final sub-circuit for any cleanup
 
-    // The sub-circuits for each of the ancilla measurements
+    // The sub-circuits for each of the ancilla measurements and the cleanup circuit
     for (uint32_t i = 0; i <= circuit_data->n_ancilla_qubits; i++)
     {
         circuit_data->sub_circuits[i] = circuit_create(circuit_data->n_code_qubits + circuit_data->n_ancilla_qubits + circuit_data->n_flag_qubits);
@@ -126,7 +129,18 @@ circuit* syndrome_measurement_flag_ft(
     syndrome_measurement->circuit_data = circuit_data;
 
     // Construct the gates for the circuit
-    syndrome_measurement_sequential_circuit_construct(syndrome_measurement, code, cnot, hadamard, phase, measure_z);
+    syndrome_measurement_flag_ft_circuit_construct(
+        syndrome_measurement, 
+        code, 
+        cnot, 
+        hadamard, 
+        phase, 
+        pauli_X,
+        pauli_Z,
+        prepare_X,
+        prepare_Z,
+        measure_X,
+        measure_Z);
 
     return syndrome_measurement;
 }
@@ -137,12 +151,14 @@ void syndrome_measurement_flag_ft_circuit_construct(
     gate* cnot,
     gate* hadamard,
     gate* phase,
-    gate* prepare_z,
-    gate* measure_z,
-    gate* prepare_x,
-    gate* measure_x);
+    gate* pauli_X,
+    gate* pauli_Z,
+    gate* prepare_X,
+    gate* prepare_Z,
+    gate* measure_X,
+    gate* measure_Z)
 {
-    circuit_syndrome_measurement_sequential_data_t* circuit_data = (circuit_syndrome_measurement_sequential_data_t*) syndrome_measurement->circuit_data;
+    circuit_syndrome_measurement_flag_ft_data_t* circuit_data = (circuit_syndrome_measurement_flag_ft_data_t*) syndrome_measurement->circuit_data;
 
     size_t ancilla_qubit = code->n_qubits;
     size_t flag_qubit = circuit_data->n_code_qubits + circuit_data->n_ancilla_qubits;
@@ -151,29 +167,32 @@ void syndrome_measurement_flag_ft_circuit_construct(
     uint8_t* x_basis = (uint8_t*)calloc(code->height, sizeof(uint8_t));
     uint8_t* y_basis = (uint8_t*)calloc(code->height, sizeof(uint8_t));
 
-
-    // This is a stricly poor way of setting up the flagged FT, but it works for weight 4 and below measurements
-    uint32_t curr_flag;
+    // This is a strictly poor way of setting up the flagged FT, but it works for weight 4 and below measurements
+    // Future work can improve on this particular scheme
+    uint32_t curr_flag = 0;
 
     // Iterate through ancillas
     for (size_t j = 0; j < code->height; j++)
     {
-        circuit_add_gate(syndrome_measurement, prepare_z, i);
-        circuit_add_gate(circuit_data->sub_circuits[j], prepare_z, i);
-
-        // Prepare the flags
-        for (uint32_t i = 0; i < code->n_flag_qubits; i++)
-        {
-            
-        }
-
         // Determine the weight of this particular stabiliser
         // This is equivalent to the number of CNOTs performed between the code block and the ancilla
+        // We will be using this to determine what the flag operations should be
         uint32_t weight = 0;
         for (size_t i = 0; i < code->n_qubits; i++)
         {
             weight += sym_is_not_I(code, j, i);
         }
+
+        // Prepare the ancillas
+        circuit_add_gate(syndrome_measurement, prepare_Z, ancilla_qubit); 
+        circuit_add_gate(circuit_data->sub_circuits[j], prepare_Z, ancilla_qubit);
+
+        // Prepare the flags
+        for (uint32_t i = 0; i < circuit_data->n_flag_qubits; i++)
+        {
+            circuit_add_gate(syndrome_measurement, prepare_X, ancilla_qubit + 1 + i);
+            circuit_add_gate(circuit_data->sub_circuits[j], prepare_X, flag_qubit + i);
+        }       
 
         // Iterate over the qubits
         for (size_t i = 0; i < code->n_qubits; i++)
@@ -182,7 +201,7 @@ void syndrome_measurement_flag_ft_circuit_construct(
             if (sym_is_not_I(code, j, i))
             {
                 // Propagate errors to the flag qubit
-                circuit_add_gate(syndrome_measurement, cnot, ancilla + curr_flag + 1, ancilla_qubit);
+                circuit_add_gate(syndrome_measurement, cnot, ancilla_qubit + curr_flag + 1, ancilla_qubit);
                 circuit_add_gate(circuit_data->sub_circuits[j], cnot, flag_qubit + curr_flag, ancilla_qubit + j);
 
                 // This needs replacing with a better method, but it will do for now
@@ -257,14 +276,52 @@ void syndrome_measurement_flag_ft_circuit_construct(
                     circuit_add_gate(syndrome_measurement, cnot, i, ancilla_qubit);
                     circuit_add_gate(circuit_data->sub_circuits[j], cnot, i, ancilla_qubit + j);
                 }
-
             }
-
         }
 
         // Measure!!
-        circuit_add_gate(syndrome_measurement, measure_z, ancilla_qubit + j);
+        circuit_add_gate(syndrome_measurement, measure_Z, ancilla_qubit);
+        for (uint32_t i = 0; i < circuit_data->n_flag_qubits; i++)
+        {
+            circuit_add_gate(syndrome_measurement, measure_X, ancilla_qubit + 1 + i);
+        }
+
+        // TODO:
+        // Build the FT 'decoder' here and add it in
+        // Keep things easy for now; only worry about correcting for single CNOT gate failures  
+        circuit_data[i]->flag_decoders = decoder_create_lookup(circuit_data->n_flag_qubits);
+
+        // Trawl the sub circuit, finding CNOT operations back to the code block
+        gate_operation_f cnot_operation = cnot->operation; // Function pointer to the CNOT operation
+        for (circuit_element* ce = circuit_data->sub_circuits[j]->start; ce != NULL; ce = ce->next)
+        {
+            if (ce->gate_operation->operation == cnot_operation
+             && ce->target_qubits[0] < ancilla_qubit) // Found a cnot from the code block!
+            {
+                // Propagate through the rest of the circuit and see what happens to the flag qubits!
+                sym* flag_bits = sym_create(1, circuit_data->n_flag_qubits);
+                
+                for (circuit_element* cf = ce->next; cf != NULL; cf = cf->next)
+                {
+                    // Check if it's a CNOT gate to the flag qubit!
+                    if (ce->gate_operation->operation == cnot_operation // It's a CNOT operation
+                     && ce->target_qubits[0] > circuit_data->n_code_qubits) // And it's from a flag qubit
+                    {
+                        // XOR 1 with the bit to propagate the flipped error!
+                        sym_xor(flag_bits, 0, ce->target_qubits[0] - flag_qubit, 1);
+                    }
+                }
+
+                // Add it to our decoder!
+                decoder_lookup_insert();
+
+            }
+        }
+
+
     }
+
+    
 
     // Cleanup any residual transformations
     // This occurs on the last sub-circuit
@@ -302,7 +359,7 @@ double* circuit_syndrome_measurement_flag_ft_run(
     gate* noise)
 {
     // Unpack the syndrome measurement data
-    circuit_syndrome_measurement_sequential_data_t* smd = (circuit_syndrome_measurement_sequential_data_t*)syndrome_measurement->circuit_data;
+    circuit_syndrome_measurement_flag_ft_data_t* smd = (circuit_syndrome_measurement_flag_ft_data_t*)syndrome_measurement->circuit_data;
 
     // Setup the larger state space
     double* expanded_error_probs = error_probabilities_zeros(smd->n_code_qubits + smd->n_ancilla_qubits);

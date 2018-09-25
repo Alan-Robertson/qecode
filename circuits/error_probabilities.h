@@ -105,7 +105,6 @@ uint64_t error_probabilities_entries_in_table(const uint32_t n_qubits)
 	return 1ull << (2 * n_qubits);
 }
 
-
 /*
  * error_probabilities_zeros
  * Allocates an array of doubles for storing a probability distribution of pauli errors
@@ -114,7 +113,7 @@ uint64_t error_probabilities_entries_in_table(const uint32_t n_qubits)
  */
 double* error_probabilities_zeros(const size_t n_qubits)
 {
-	double* error_probs = (double*)calloc(1 << (2 * n_qubits), sizeof(double));
+	double* error_probs = (double*)calloc(error_probabilities_entries_in_table(n_qubits), sizeof(double));
 	return error_probs;
 }
 
@@ -127,7 +126,7 @@ double* error_probabilities_zeros(const size_t n_qubits)
 double* error_probabilities_identity(const size_t n_qubits)
 {
 	double* error_probs = error_probabilities_zeros(n_qubits);
-	error_probs[0] = 1; // Set the identity to 1	
+	error_probs[0] = 1.0; // Set the identity to 1	
 	return error_probs;
 }
 
