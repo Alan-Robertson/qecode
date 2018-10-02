@@ -42,7 +42,7 @@ void decoder_free_params_lookup(void* v_params);
 	:: const sym* value :: The sym state used for that particular value in the table
 	Returns nothing, operation occurs in place
 */
-void decoder_lookup_insert(void* v_params, const sym* syndrome, const sym* value);
+void decoder_lookup_insert(decoder* d, const sym* syndrome, const sym* value);
 
 //----------------------------------------------------------------------------------------
 // The Lookup Decoder `Class'

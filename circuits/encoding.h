@@ -2,6 +2,7 @@
 #define ENCODING
 
 #include "circuit.h"
+#include "unitary.h"
 #include "../destabilisers.h"
 #include "../tableau.h"
 
@@ -35,7 +36,7 @@ circuit* encoding_circuit(const sym* code, const sym* logicals, gate* cnot, gate
 			{
 				if (1 == sym_get(tableau, i + tableau->height / 2, j)) 
 				{
-					circuit_add_gate(encode, cnot, j, i);
+					circuit_add_gate_start(encode, cnot, j, i);
 					tableau_cnot(tableau, j, i);
 					pivot_found = true;
 				}
@@ -47,7 +48,7 @@ circuit* encoding_circuit(const sym* code, const sym* logicals, gate* cnot, gate
 		{
 			if (i != j && 1 == sym_get(tableau, i + tableau->height / 2, j))
 			{
-				circuit_add_gate(encode, cnot, i, j);
+				circuit_add_gate_start(encode, cnot, i, j);
 				tableau_cnot(tableau, i, j);
 			}
 		}
@@ -59,7 +60,7 @@ circuit* encoding_circuit(const sym* code, const sym* logicals, gate* cnot, gate
 		// Ensure that [i,i] is 1
 		if ( 0 == sym_get(tableau, i + tableau->height / 2, i + tableau->height / 2) )
 		{
-			circuit_add_gate(encode, phase, i);
+			circuit_add_gate_start(encode, phase, i);
 			tableau_phase(tableau, i);
 		}
 		
@@ -68,7 +69,7 @@ circuit* encoding_circuit(const sym* code, const sym* logicals, gate* cnot, gate
 		{	
 			if ( 1 == sym_get(tableau, i + tableau->height / 2, j + tableau->height / 2) )
 			{
-				circuit_add_gate(encode, cnot, j, i);
+				circuit_add_gate_start(encode, cnot, j, i);
 				tableau_cnot(tableau, j, i);
 			}
 		}
@@ -77,7 +78,7 @@ circuit* encoding_circuit(const sym* code, const sym* logicals, gate* cnot, gate
 	// Phase on all qubits
 	for(size_t i = 0; i < tableau->length / 2; i++)
 	{
-		circuit_add_gate(encode, phase, i);
+		circuit_add_gate_start(encode, phase, i);
 		tableau_phase(tableau, i);
 	}
 
@@ -92,7 +93,7 @@ circuit* encoding_circuit(const sym* code, const sym* logicals, gate* cnot, gate
 			{
 				if (1 == sym_get(tableau, i + tableau->height / 2, j)) 
 				{
-					circuit_add_gate(encode, cnot, j, i);
+					circuit_add_gate_start(encode, cnot, j, i);
 					tableau_cnot(tableau, j, i);
 					pivot_found = true;
 				}
@@ -104,7 +105,7 @@ circuit* encoding_circuit(const sym* code, const sym* logicals, gate* cnot, gate
 		{
 			if (i != j && 1 == sym_get(tableau, i + tableau->height / 2, j))
 			{
-				circuit_add_gate(encode, cnot, i, j);
+				circuit_add_gate_start(encode, cnot, i, j);
 				tableau_cnot(tableau, i, j);
 			}
 		}
@@ -113,7 +114,7 @@ circuit* encoding_circuit(const sym* code, const sym* logicals, gate* cnot, gate
 	// Hadamards on all qubits
 	for(size_t i = 0; i < tableau->length / 2; i++)
 	{
-		circuit_add_gate(encode, hadamard, i);
+		circuit_add_gate_start(encode, hadamard, i);
 		tableau_hadamard(tableau, i);
 	}
 
@@ -123,7 +124,7 @@ circuit* encoding_circuit(const sym* code, const sym* logicals, gate* cnot, gate
 		// Ensure that [i,i] is 1
 		if ( 0 == sym_get(tableau, i, i + tableau->height / 2) )
 		{
-			circuit_add_gate(encode, phase, i);
+			circuit_add_gate_start(encode, phase, i);
 			tableau_phase(tableau, i);
 		}
 
@@ -132,7 +133,7 @@ circuit* encoding_circuit(const sym* code, const sym* logicals, gate* cnot, gate
 			// Ensure that [i,i] is 1
 			if ( 1 == sym_get(tableau, i, j + tableau->height / 2) )
 			{
-				circuit_add_gate(encode, cnot, j, i);
+				circuit_add_gate_start(encode, cnot, j, i);
 				tableau_cnot(tableau, j, i);
 			}
 		}
@@ -141,7 +142,7 @@ circuit* encoding_circuit(const sym* code, const sym* logicals, gate* cnot, gate
 	// Phase on all qubits
 	for(size_t i = 0; i < tableau->length / 2; i++)
 	{
-		circuit_add_gate(encode, phase, i);
+		circuit_add_gate_start(encode, phase, i);
 		tableau_phase(tableau, i);
 	}
 
@@ -156,7 +157,7 @@ circuit* encoding_circuit(const sym* code, const sym* logicals, gate* cnot, gate
 			{
 				if (1 == sym_get(tableau, i, j)) 
 				{
-					circuit_add_gate(encode, cnot, j, i);
+					circuit_add_gate_start(encode, cnot, j, i);
 					tableau_cnot(tableau, j, i);
 					pivot_found = true;
 				}
@@ -168,12 +169,14 @@ circuit* encoding_circuit(const sym* code, const sym* logicals, gate* cnot, gate
 		{
 			if (i != j && 1 == sym_get(tableau, i, j))
 			{
-				circuit_add_gate(encode, cnot, i, j);
+				circuit_add_gate_start(encode, cnot, i, j);
 				tableau_cnot(tableau, i, j);
 			}
 		}
 	}
 
+	// Of course what we have created up to now is actually the decoding circuit
+	// Let's fix that
 	sym_free(tableau);
 	return encode;
 }

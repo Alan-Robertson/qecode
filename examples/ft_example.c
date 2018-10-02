@@ -5,6 +5,8 @@
 #include <float.h>
 
 #include "../codes/codes.h"
+#include "../codes/candidate_codes.h"
+
 #include "../decoders/tailored.h"
 
 #include "../gates/clifford_generators.h"
@@ -13,7 +15,7 @@
 #include "../gates/preparation.h"
 
 #include "../circuits/encoding.h"
-#include "../circuits/syndrome_measurement_flag_ft.h"
+//#include "../circuits/syndrome_measurement_flag_ft.h"
 #include "../circuits/recovery.h"
 
 #include "../error_models/iid.h"
@@ -29,11 +31,11 @@ int main()
 	double p_gate_error = 0.0001;
 	double p_wire_error = 0.0001;
 
-	unsigned n_qubits = 3;
-	unsigned n_ancilla_qubits = 4;
+	unsigned n_qubits = 7;
+	unsigned n_ancilla_qubits = 6;
 
-	sym* code = code_five_qubit();
-	sym* logicals = code_five_qubit_logicals();
+	sym* code = code_steane();
+	sym* logicals = code_steane_logicals();
 	
 	// Build our circuit with noise included:
 	error_model* em_cnot = error_model_create_iid(2, p_gate_error);
@@ -55,10 +57,11 @@ int main()
 	// Create our encoding circuit
 	circuit* encode = encoding_circuit(code, logicals, cnot, hadamard, phase);
 
-	double* initial_error_probs = error_probabilities_identity(n_qubits);
+	qcircuit_print(encode);
+	//double* initial_error_probs = error_probabilities_identity(n_qubits);
 	
 	// And the syndrome measurement circuit
-	circuit* syndromes = syndrome_measurement_flag_ft_circuit_create(
+	/*circuit* syndromes = syndrome_measurement_flag_ft_circuit_create(
 		code, 
 		cnot, 
 		hadamard, 
@@ -68,9 +71,9 @@ int main()
 		prepare_syndromes,
 		prepare_flags,
 		measure_syndromes,
-		measure_flags);
+		measure_flags);*/
 
-	qcircuit_print(syndromes);
+	//qcircuit_print(syndromes);
 
 
 	/*

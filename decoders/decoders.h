@@ -74,7 +74,7 @@ void decoder_free(decoder* d);
 	:: const uint32_t n_bits :: The number of syndrome bits to pass
 	Returns the number of entries in the table
 */
-uint64_t decoder_entries_in_table(const uint32_t n_bits)
+uint64_t decoder_entries_in_table(const uint32_t n_bits);
 
 // FUNCTION DEFINITIONS ----------------------------------------------------------------------------------------
 

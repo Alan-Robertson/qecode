@@ -1,8 +1,10 @@
-#include "error_models/iid.h"
-#include "gates/clifford_generators.h"
-#include "circuits/circuit.h"
+#include "../error_models/iid.h"
+#include "../gates/clifford_generators.h"
+#include "../circuits/circuit.h"
 
-#include "characterise.h"
+#include "../codes/candidate_codes.h"
+
+#include "../characterise.h"
 
 int main()
 {	
