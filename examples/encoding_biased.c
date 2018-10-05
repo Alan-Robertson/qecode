@@ -1,5 +1,5 @@
 #define GATE_MULTITHREADING
-#define N_THREADS 4
+#define N_THREADS 20
 
 #include "../sym.h"
 #include <float.h>
@@ -25,7 +25,7 @@
 
 int main()
 {	
-	unsigned n_increments = 2;
+	unsigned n_increments = 24;
 
 	double init_bias = 0.5;
 	double delta = 2;
@@ -37,8 +37,8 @@ int main()
 
 	unsigned n_qubits = 7, n_logicals = 1, distance = 3;
 
-	sym* code = code_candidate_seven_c();
-	sym* logicals = code_candidate_seven_c_logicals();
+	sym* code = code_cyclic_seven();
+	sym* logicals = code_cyclic_seven_logicals();
 
 	double bias = init_bias;	
 	progress_bar* p = progress_bar_create(n_increments, "Steane Code Bias: ");
@@ -100,14 +100,18 @@ int main()
 
 	printf("Physical Rate \t Logical Rate\n");
 	bias = init_bias;
-	//printf("");
+	printf("((\n");
 	for (unsigned i = 0; i < n_increments; i++)
 	{
 		bias *= delta;
-		printf("%f \t %.15f", bias, logical_rate[i]);
+		printf("(%f , %.15f)", bias, logical_rate[i]);
+		if (i < n_increments - 1)
+		{
+		printf(",");
+		}
 		printf("\n");
 	}
-
+	printf("))\n");
 	sym_free(code);
 	sym_free(logicals);
 

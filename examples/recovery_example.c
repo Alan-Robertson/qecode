@@ -1,10 +1,12 @@
-//#define GATE_MULTITHREADING
-//#define N_THREADS 4
+#define GATE_MULTITHREADING
+#define N_THREADS 20
 
 #include "../sym.h"
 #include <float.h>
 
 #include "../codes/codes.h"
+#include "../codes/candidate_codes.h"
+
 #include "../decoders/tailored.h"
 
 #include "../gates/clifford_generators.h"
@@ -27,11 +29,11 @@ int main()
 	double p_gate_error = 0.0001;
 	double p_wire_error = 0.0001;
 
-	unsigned n_qubits = 5;
-	unsigned n_ancilla_qubits = 4;
+	unsigned n_qubits = 7;
+	unsigned n_ancilla_qubits = 6;
 
-	sym* code = code_five_qubit();
-	sym* logicals = code_five_qubit_logicals();
+	sym* code = code_candidate_seven_a();
+	sym* logicals = code_candidate_seven_a_logicals();
 	
 	// Build our circuit with noise included:
 	error_model* em_cnot = error_model_create_iid(2, p_gate_error);

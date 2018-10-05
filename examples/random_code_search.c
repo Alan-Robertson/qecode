@@ -1,11 +1,10 @@
 //#include <iostream>
-#include "codes.h"
-#include "error_models.h"
-#include "destabilisers.h"
-#include "sym_iter.h"
-#include "tailored.h"
-#include "decoders.h"
-#include "dmatrix.h"
+#include "../codes.h"
+#include "../error_models.h"
+#include "../destabilisers.h"
+#include "../sym_iter.h"
+#include "../tailored.h"
+#include "../decoders.h"
 #include "characterise.h"
 #include "random_code_search.h"
 #include "channel.h"
@@ -20,8 +19,8 @@ int main()
 	/*
 		Error Model
 	*/
-	unsigned n_qubits = 5, n_logicals = 1, distance = 3;
-	unsigned n_codes_searched = 100;
+	unsigned n_qubits = 7, n_logicals = 1, distance = 3;
+	unsigned n_codes_searched = 1000;
 	// Setup the error model
 	error_model_f error_model = error_model_iid;
 
