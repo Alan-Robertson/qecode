@@ -36,7 +36,7 @@ typedef struct {
 
 /* 
     sym_iter_create:
-    Creates a new symplectic matrix object
+    Creates a new symplectic matrix object iterator
     :: const unsigned length :: Length of the iterator in bits (2 * qubits)
     Returns a heap pointer to the new iterator
 */
@@ -51,8 +51,18 @@ sym_iter* sym_iter_create(const uint32_t length);
 sym_iter* sym_iter_create_n_qubits(const uint32_t length);
 
 /* 
+    sym_iter_create_n_qubits_range:
+    Creates a new symplectic matrix object iterator
+    :: const unsigned n_qubits :: Number of qubits to iterate over
+    :: const unsigned min_weight :: Minimum number of qubits for the iterator
+    :: const unsigned max_weight :: Maximum number of qubits for the iterator
+    Returns a heap pointer to the new iterator
+*/
+sym_iter* sym_iter_create_n_qubits_range(const uint32_t length, const uint32_t min_weight, const uint32_t max_weight);
+
+/* 
     sym_iter_create_range:
-    Creates a new symplectic matrix object
+    Creates a new symplectic matrix object iterator
     :: const unsigned length :: Length of the iterator in bits (2 * qubits)
     :: const unsigned min_weight :: Minimum hamming weight for the iterator
     :: const unsigned max_weight :: Maximum hamming weight for the iterator
@@ -62,7 +72,7 @@ sym_iter* sym_iter_create_range(const uint32_t length, const int32_t min_weight,
 
 /*
     sym_iter_next:
-    Updates the state of the sym iterator
+    Updates the state of the sym iterator iterator
     :: sym_iter* siter :: The iterator whose state is to be updated
     Returns a boolean value, true indicates that the iterator was updated, false indicates that the end of the range has been reached
 */
@@ -148,6 +158,20 @@ sym_iter* sym_iter_create_n_qubits(const uint32_t n_qubits)
     sym_iter* siter = sym_iter_create_range(2 * n_qubits, -1, 2 * n_qubits);
     return siter;
 }
+
+
+/* 
+    sym_iter_create_n_qubits:
+    Creates a new symplectic matrix object
+    :: const unsigned length :: Length of the iterator in bits (2 * qubits)
+    Returns a heap pointer to the new iterator
+*/
+sym_iter* sym_iter_create_n_qubits_range(const uint32_t n_qubits, const int32_t min_weight, const uint32_t max_weight)
+{
+    sym_iter* siter = sym_iter_create_range(2 * n_qubits, min_weight -1 , 2 * max_weight);
+    return siter;
+}
+
 
 /* 
     sym_iter_create_range:
@@ -331,6 +355,40 @@ void sym_iter_free(sym_iter* siter)
 {
     sym_free(siter->state);
     free(siter);
+}
+
+
+// Calculates binomial coefficients
+/*
+    sym_iter_max_counter:
+    Calculate (n, k) to determine the number of elements in the iterator with the same hamming weight 
+    :: unsigned length::
+    :: unsigned weight::
+    Returns an unsigned long long containing the result
+*/
+unsigned long long sym_iter_binom(unsigned length, unsigned weight)
+{
+    long long result = 1;
+ 
+     // If current_weight greater than length - weight then it's faster to calculate length - weight and it's symmetric!
+     weight = weight > length - weight ? length - weight : weight;
+    
+     for (unsigned j = 1; j <= weight; j++, length--)
+     {
+         if (length % j == 0)
+         {
+             result *= length / j;
+         } 
+         else if (result % j == 0)
+         {
+             result = result / j * length;
+         }
+         else
+         {
+             result = (result * length) / j;
+         }
+     }
+    return result;
 }
 
 /*
