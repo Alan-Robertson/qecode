@@ -143,7 +143,7 @@ void sym_iter_free(sym_iter* siter);
 */
 sym_iter* sym_iter_create(const uint32_t length)
 {
-    sym_iter* siter = sym_iter_create_range(length, -1, length);
+    sym_iter* siter = sym_iter_create_range(length, 0, length);
     return siter;
 }
 
@@ -155,32 +155,32 @@ sym_iter* sym_iter_create(const uint32_t length)
 */
 sym_iter* sym_iter_create_n_qubits(const uint32_t n_qubits)
 {
-    sym_iter* siter = sym_iter_create_range(2 * n_qubits, -1, 2 * n_qubits);
+    sym_iter* siter = sym_iter_create_range(2 * n_qubits, 0, 2 * n_qubits + 1);
     return siter;
 }
 
 
 /* 
-    sym_iter_create_n_qubits:
-    Creates a new symplectic matrix object
-    :: const unsigned length :: Length of the iterator in bits (2 * qubits)
-    Returns a heap pointer to the new iterator
-*/
+ *  sym_iter_create_n_qubits:
+ *  Creates a new symplectic matrix object
+ *  :: const unsigned length :: Length of the iterator in bits (2 * qubits)
+ *  Returns a heap pointer to the new iterator
+ */
 sym_iter* sym_iter_create_n_qubits_range(const uint32_t n_qubits, const int32_t min_weight, const uint32_t max_weight)
 {
-    sym_iter* siter = sym_iter_create_range(2 * n_qubits, min_weight -1 , 2 * max_weight);
+    sym_iter* siter = sym_iter_create_range(2 * n_qubits, min_weight, 2 * max_weight + 1);
     return siter;
 }
 
 
 /* 
-    sym_iter_create_range:
-    Creates a new symplectic matrix object
-    :: const unsigned length :: Length of the iterator in bits (2 * qubits)
-    :: const unsigned min_weight :: Minimum hamming weight for the iterator
-    :: const unsigned max_weight :: Maximum hamming weight for the iterator
-    Returns a heap pointer to the new iterator
-*/
+ *  sym_iter_create_range:
+ *  Creates a new symplectic matrix object
+ *  :: const unsigned length :: Length of the iterator in bits (2 * qubits)
+ *  :: const unsigned min_weight :: Minimum hamming weight for the iterator
+ *  :: const unsigned max_weight :: Maximum hamming weight for the iterator
+ *  Returns a heap pointer to the new iterator
+ */
 sym_iter* sym_iter_create_range(const uint32_t length, const int32_t min_weight, const uint32_t max_weight)
 {
     // Allocate memory for the state iterator
@@ -190,21 +190,24 @@ sym_iter* sym_iter_create_range(const uint32_t length, const int32_t min_weight,
     siter->state = sym_create(1, length);
 
     siter->length = length;
-    siter->curr_weight = min_weight; // Our current weight
+    siter->curr_weight = min_weight - 1; // Our current weight
+
+    // This is set up such that the first call to update will bump the
+    // Iterator to the correct weight; it starts with one less than the required weight
     siter->ll_counter = sym_iter_max_ll_counter(length, min_weight - 1);
     siter->max_ll_counter = sym_iter_max_ll_counter(length, min_weight - 1); // Current maximum counter
 
-    siter->max_weight = max_weight;
+    siter->max_weight = max_weight - 1;
     
     return siter;
 }
 
 /*
-    sym_iter_next:
-    Updates the state of the sym iterator
-    :: sym_iter* siter :: The iterator whose state is to be updated
-    Returns a boolean value, true indicates that the iterator was updated, false indicates that the end of the range has been reached
-*/
+ *  sym_iter_next:
+ *  Updates the state of the sym iterator
+ *  :: sym_iter* siter :: The iterator whose state is to be updated
+ *  Returns a boolean value, true indicates that the iterator was updated, false indicates that the end of the range has been reached
+ */
 uint8_t sym_iter_next(sym_iter* siter)
 {
     if (siter->ll_counter < siter->max_ll_counter)
@@ -246,11 +249,11 @@ uint8_t sym_iter_next(sym_iter* siter)
 
 
 /*
-    sym_iter_ll_from_state:
-    Actually calculates the ll value from the state rather than just returning it
-    :: const sym_iter* siter :: The iterator whose state is to be cast
-    Returns a long long representation of the state of the iterator
-*/
+ *  sym_iter_ll_from_state:
+ *  Actually calculates the ll value from the state rather than just returning it
+ *  :: const sym_iter* siter :: The iterator whose state is to be cast
+ *  Returns a long long representation of the state of the iterator
+ */
 long long sym_iter_ll_from_state_calc(sym_iter* siter)
 {
     long long val = 0;
@@ -264,11 +267,11 @@ long long sym_iter_ll_from_state_calc(sym_iter* siter)
 }
 
 /*
-    sym_iter_ll_from_state:
-    Casts the current state of the iterator to long long
-    :: const sym_iter* siter :: The iterator whose state is to be cast
-    Returns a long long representation of the state of the iterator
-*/
+ *  sym_iter_ll_from_state:
+ *  Casts the current state of the iterator to long long
+ *  :: const sym_iter* siter :: The iterator whose state is to be cast
+ *  Returns a long long representation of the state of the iterator
+ */
 long long sym_iter_ll_from_state(const sym_iter* siter)
 {    
     return siter->ll_counter;
@@ -276,12 +279,12 @@ long long sym_iter_ll_from_state(const sym_iter* siter)
 
 
 /*
-    sym_iter_state_from_ll:
-    Casts from long long to the state of the iterator
-    :: sym_iter* siter :: The iterator whose state is to be cast
-    :: const long long val :: The long long val 
-    Does not return anything, updates the value of the iterator in place.
-*/
+ *  sym_iter_state_from_ll:
+ *  Casts from long long to the state of the iterator
+ *  :: sym_iter* siter :: The iterator whose state is to be cast
+ *  :: const long long val :: The long long val 
+ *  Does not return anything, updates the value of the iterator in place.
+ */
 void sym_iter_state_from_ll(sym_iter* siter, long long val)
 {
     val <<= ((siter->length % 8) ? 8 - (siter->length % 8) : 0);

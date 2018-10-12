@@ -282,48 +282,58 @@ double* gate_noise(const unsigned n_qubits,
 
 	// Check if multi threaded
 	#ifdef GATE_MULTITHREADING_ENABLED
-		uint32_t threads_used = N_THREADS;
+		int32_t threads_used = N_THREADS;
 
 		mthread_gate_operation_t thread_data[N_THREADS];
 		pthread_t threads[N_THREADS]; // Our threads
 
-		#ifdef GATE_MAX_DEPTH
-			
+		// If we've got a max gate depth
+		#ifdef GATE_MAX_DEPTH 
+
 			if (n_qubits > GATE_MAX_DEPTH)
 			{
 				// Generate an array containing the number of elements to iterate through for each weight
-				uint32_t* binom_dist = (uint32_t*)malloc(sizeof(uint32_t) * GATE_MAX_DEPTH * 2);
-				uint32_t avg = 0;
-				for (uint32_t i = 0; i < 2 * GATE_MAX_DEPTH; i++)
+				uint32_t* binom_dist = (uint32_t*)malloc(sizeof(uint32_t) * (GATE_MAX_DEPTH * 2 + 1));
+				int32_t avg = 0;
+				
+				for (uint32_t i = 0; i <= 2 * GATE_MAX_DEPTH; i++)
 				{
-					binom_dist[i] = sym_iter_binom(2 * GATE_MAX_DEPTH, i);
+					binom_dist[i] = sym_iter_binom(2 * n_qubits, i);
 					avg += binom_dist[i];
 				}
-				avg /= (2 * GATE_MAX_DEPTH);
+				
+				avg /= (N_THREADS);
 
 				// Now we attempt to evenly distribute joint segments of this array over the number of threads
 				// And we're going to be greedy
-				uint32_t current_position = 0;
-				uint32_t current_delta = 0;
-				for (uint32_t i = 0; i < N_THREADS; i++)
+				// Start from the far end; if we're peaked it's going to distribute the work more evenly, if we're not then 
+				// It's symmetric
+				int32_t current_position = 2 * GATE_MAX_DEPTH;
+				int32_t current_delta = 0;
+				for (uint32_t i = 0; i < N_THREADS && current_position >= 0; i++)
 				{
-					thread_data[i].start = current_position;
-					uint32_t total = 0;
-					while (total + current_delta < avg)
+					int32_t total = binom_dist[current_position];
+					thread_data[i].start = 0;
+					thread_data[i].end = current_position + 1;
+
+					while (total + current_delta < avg && current_position >= 0)
 					{
-						current_position++;
+						current_position--;
 						total += binom_dist[current_position];
 
 						// If we reach the end and run out of threads
-						if (current_position == 2 * GATE_MAX_DEPTH - 1)
+						// This may occur due to a rounding error when calculating the average
+						if (current_position == 0)
 						{ 
+							current_position = 0;
 							total = INT_MAX;
 							current_delta = 0;
-							threads_used = i;
-							i = N_THREADS;
+							threads_used = i + 1;
 						}
 					}
-					thread_data[i].end = current_position;
+					
+					thread_data[i].start = current_position;
+					current_position--;
 					current_delta = avg - total;
 
 					// And the rest of the standard thread data
@@ -334,12 +344,11 @@ double* gate_noise(const unsigned n_qubits,
 					thread_data[i].final_probabilities = p_state_probabilities;
 					thread_data[i].lock = &gate_lock;
 				}
+
 				free(binom_dist);
-
 			}
-			else // Number of qubits is smaller than the max gate depth; break up the problem evenly
+			else // Number of qubits is smaller than the max gate depth, break up the problem evenly between the threads
 			{
-
 				// Chunk the blocks
 				uint64_t last_block = error_probabilities_entries_in_table(n_qubits);
 				uint64_t block_size = last_block / N_THREADS;
@@ -456,7 +465,7 @@ double* gate_noise(const unsigned n_qubits,
 		while(sym_iter_next(initial_state))
 		{
 			// Save this value as we may be needing it quite a bit
-			double initial_prob = initial_probabilities[sym_to_ll(initial_state->state)];
+			double initial_prob = initial_probabilities[sym_iter_ll_from_state(initial_state)];
 
 			if (initial_prob > 0)
 			{
@@ -493,20 +502,19 @@ void* gate_apply_m_thread(void* data)
 
 	// If a maximum gate depth is set, change the behavior of this loop
 	#ifdef GATE_MAX_DEPTH
-		if (mthread_data->n_qubits * 2 < N_THREADS)
+		if (mthread_data->n_qubits > GATE_MAX_DEPTH)
 		{
 			// Loop over all states in the range
 			sym_iter* siter = sym_iter_create_range(mthread_data->n_qubits * 2,  mthread_data->start, mthread_data->end);
 			while (sym_iter_next(siter))
 			{
-				printf("%lld \t", sym_iter_ll_from_state(siter));
-				sym_print(siter->state);
+				
 				// Save this value as we may be needing it quite a bit
 				double initial_prob = mthread_data->initial_probabilities[sym_iter_ll_from_state(siter)];
 
 				// Save ourselves some time
 				if (initial_prob > 0)
-				{
+				{	
 					// Determine the state after the error has been applied 
 					gate_result* operation_output = gate_iid(siter->state, mthread_data->operation, mthread_data->target_qubits);
 
@@ -515,7 +523,7 @@ void* gate_apply_m_thread(void* data)
 						// Cumulatively determine the new probability of each state after the gate has been applied
 						// Make sure to lock down this operation as the only write to the data
 						pthread_mutex_lock(mthread_data->lock);
-
+						
 						mthread_data->final_probabilities[sym_to_ll(operation_output->state_results[i])] += operation_output->prob_results[i] * initial_prob; 
 
 						pthread_mutex_unlock(mthread_data->lock);
@@ -533,6 +541,7 @@ void* gate_apply_m_thread(void* data)
 			{
 				// Convert our long long value to state
 				sym* initial_state = ll_to_sym_n_qubits(ll_state, 1, mthread_data->n_qubits);
+				sym_print(initial_state);
 
 				// Save this value as we may be needing it quite a bit
 				double initial_prob = mthread_data->initial_probabilities[sym_to_ll(initial_state)];

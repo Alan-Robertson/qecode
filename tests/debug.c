@@ -1,6 +1,8 @@
-#define GATE_MAX_DEPTH 4
+#define GATE_MAX_DEPTH 3
 #define GATE_MULTITHREADING
-#define N_THREADS 4
+#define N_THREADS 3
+
+#define CHARACTERISE_MAX_DEPTH 2
 
 #include "../gates/clifford_generators.h"
 #include "../error_models/iid.h"
@@ -9,7 +11,7 @@
 
 int main()
 {
-	unsigned n_qubits = 6;
+	unsigned n_qubits = 5;
 	double p_gate_error = 0.001;
 	double p_wire_error = 0.0001;
 
@@ -36,7 +38,7 @@ int main()
 	double* final_error_probabilities = gate_apply(n_qubits, round_one_error_probabilities, noise, target_qubits);
 
 	//characterise_print(final_error_probabilities, n_qubits);
-	printf("Error: %.20e\n", 1 - characterise_test(final_error_probabilities, n_qubits));
+	printf("Error: %.20e\n", 1.0 - characterise_test(final_error_probabilities, n_qubits));
 	// Cleanup
 	free(target_qubits);
 

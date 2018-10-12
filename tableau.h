@@ -1,6 +1,9 @@
 #ifndef TABLEAU
 #define TABLEAU
 
+// This is a "hidden" column containing the phase information
+#define TABLEAU_PHASE_COL (tableau->length)
+
 #include "destabilisers.h"
 
 /*
@@ -92,6 +95,7 @@ sym* tableau_create(const sym* code, const sym* logicals)
 		return NULL;
 	}
 
+	// One extra column to track the phases
 	sym* tableau = sym_create(code->length, code->length);
 
 
@@ -113,6 +117,9 @@ sym* tableau_create(const sym* code, const sym* logicals)
 		sym_free(destabilisers[i]);
 	}
 	free(destabilisers);
+
+	// Add a phase tracking column
+	//tableau_add_phase_col(tableau);
 
 	return tableau;
 }
@@ -140,6 +147,7 @@ void tableau_extend(sym* tableau, const sym* logicals, const unsigned n_stabilis
 	}
 
 	sym_free(t);
+	return;
 	// If you want to search for a low weight stabiliser use this, however it may not be linearly independent
 	// And if it's not then this isn't going to work
 	/*if (n_stabilisers < tableau->height / 2)
@@ -366,6 +374,35 @@ void tableau_phase(sym* tableau, const unsigned target)
 	{
 		sym_set(tableau, i, target + tableau->length / 2, sym_get(tableau, i, target) ^ sym_get(tableau, i, target + tableau->length / 2));
 	}
+	return;
+}
+
+/*
+ * tableau_add_phase_col
+ * Adds a column to track phase information on the tableau
+ * :: sym* tableau :: The tableau object being operated on
+ * Operations are performed in place, nothing is returned
+ * You don't really need this if you don't care about the phases
+ */
+void tableau_add_phase_col(sym* tableau)
+{
+	// Create a new tableau
+	sym* tableau_new = sym_create(tableau->height, tableau->length + 1);
+	
+	for (uint32_t i = 0; i < tableau->height; i++)
+	{
+		for (uint32_t j = 0; j < tableau->length; j++)
+		{
+			sym_set(tableau_new, i, j, sym_get(tableau, i, j));
+		}
+	}
+
+	// Swap the old matrix to the new sym object and free it
+	BYTE* old_matrix = tableau->matrix;
+	tableau->matrix = tableau_new->matrix;
+	tableau_new->matrix = old_matrix;
+	sym_free(tableau_new);
+
 	return;
 }
 

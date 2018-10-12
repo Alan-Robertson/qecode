@@ -77,7 +77,6 @@ void qcircuit_print(circuit* c)
 	circuit_element* ce = c->start;
 	while (NULL != ce)
 	{
-
 		// Break from previous round
 		for (int i = 0; i < c->n_qubits; i++)
 		{

@@ -29,7 +29,11 @@ double* characterise_code(const sym* code,
 	double* p_error_probabilities = error_probabilities_m(logicals->length);
 	
 	// Iterate through errors and map back to the code-space
-	sym_iter* physical_error = sym_iter_create(code->length);
+	#ifdef CHARACTERISE_MAX_DEPTH
+		sym_iter* physical_error = sym_iter_create_range(code->length, 0, 2 * CHARACTERISE_MAX_DEPTH + 1);
+	#else
+		sym_iter* physical_error = sym_iter_create(code->length);
+	#endif
 	while (sym_iter_next(physical_error))
 	{
 		// Calculate the syndrome
@@ -67,7 +71,11 @@ double* characterise_code_corrected(const sym* code,
 	double* p_error_probabilities = error_probabilities_m(logicals->length);
 
 	// Iterate through errors and map back to the code-space
-	sym_iter* physical_error = sym_iter_create(code->length);
+	#ifdef CHARACTERISE_MAX_DEPTH
+		sym_iter* physical_error = sym_iter_create_range(code->length, 0, 2 * CHARACTERISE_MAX_DEPTH + 1);
+	#else
+		sym_iter* physical_error = sym_iter_create(code->length);
+	#endif
 	while (sym_iter_next(physical_error))
 	{
 		if (error_rates[sym_to_ll(physical_error->state)] > 0)
@@ -104,7 +112,11 @@ void characterise_save(const double* probabilities, const size_t n_qubits, const
 		return;
 	}
 	double s = 0;
-	sym_iter* physical_error = sym_iter_create_n_qubits(n_qubits);	
+	#ifdef CHARACTERISE_MAX_DEPTH
+		sym_iter* physical_error = sym_iter_create_n_qubits_range(n_qubits, 0, CHARACTERISE_MAX_DEPTH);
+	#else
+		sym_iter* physical_error = sym_iter_create_n_qubits(n_qubits);
+	#endif	
 	while (sym_iter_next(physical_error))
 	{
 		char* error_string = error_sym_to_str(physical_error->state);
@@ -120,7 +132,11 @@ void characterise_save(const double* probabilities, const size_t n_qubits, const
 void characterise_print(const double* probabilities, const size_t n_qubits)
 {	
 	double s = 0;
-	sym_iter* physical_error = sym_iter_create_n_qubits(n_qubits);	
+	#ifdef CHARACTERISE_MAX_DEPTH
+		sym_iter* physical_error = sym_iter_create_n_qubits_range(n_qubits, 0, CHARACTERISE_MAX_DEPTH);
+	#else
+		sym_iter* physical_error = sym_iter_create_n_qubits(n_qubits);
+	#endif	
 	while (sym_iter_next(physical_error))
 	{
 		char* error_string = error_sym_to_str(physical_error->state);
@@ -136,7 +152,11 @@ void characterise_print(const double* probabilities, const size_t n_qubits)
 double characterise_test(const double* probabilities, const size_t n_qubits)
 {	
 	double s = 0;
-	sym_iter* physical_error = sym_iter_create_n_qubits(n_qubits);	
+	#ifdef CHARACTERISE_MAX_DEPTH
+		sym_iter* physical_error = sym_iter_create_n_qubits_range(n_qubits, 0, CHARACTERISE_MAX_DEPTH);
+	#else
+		sym_iter* physical_error = sym_iter_create_n_qubits(n_qubits);
+	#endif	
 	while (sym_iter_next(physical_error))
 	{
 		s += probabilities[sym_to_ll(physical_error->state)];
