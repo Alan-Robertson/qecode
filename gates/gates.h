@@ -541,8 +541,7 @@ void* gate_apply_m_thread(void* data)
 			{
 				// Convert our long long value to state
 				sym* initial_state = ll_to_sym_n_qubits(ll_state, 1, mthread_data->n_qubits);
-				sym_print(initial_state);
-
+				
 				// Save this value as we may be needing it quite a bit
 				double initial_prob = mthread_data->initial_probabilities[sym_to_ll(initial_state)];
 
