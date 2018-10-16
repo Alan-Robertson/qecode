@@ -151,7 +151,7 @@ void characterise_print(const double* probabilities, const size_t n_qubits)
 
 double characterise_test(const double* probabilities, const size_t n_qubits)
 {	
-	double s = 0;
+	double total = 0;
 	#ifdef CHARACTERISE_MAX_DEPTH
 		sym_iter* physical_error = sym_iter_create_n_qubits_range(n_qubits, 0, CHARACTERISE_MAX_DEPTH);
 	#else
@@ -159,10 +159,10 @@ double characterise_test(const double* probabilities, const size_t n_qubits)
 	#endif	
 	while (sym_iter_next(physical_error))
 	{
-		s += probabilities[sym_to_ll(physical_error->state)];
+		total += probabilities[sym_to_ll(physical_error->state)];
 	}
 	sym_iter_free(physical_error);
-	return s;
+	return total;
 }
 
 #endif

@@ -79,6 +79,15 @@ sym_iter* sym_iter_create_range(const uint32_t length, const int32_t min_weight,
 uint8_t sym_iter_next(sym_iter* siter);
 
 /*
+    sym_iter_update:
+    Updates the tracking parameters for the sym iterator
+    Do this manually if you've changed the state without calling next
+    :: sym_iter* siter :: The iterator whose state is to be cast 
+    Does not return anything, updates the values of the iterator in place.
+*/
+void sym_iter_update(sym_iter* siter);
+
+/*
     sym_iter_ll_from_state:
     Casts the current state of the iterator to long long
     :: const sym_iter* siter :: The iterator whose state is to be cast

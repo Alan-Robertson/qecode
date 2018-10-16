@@ -189,9 +189,12 @@ double* error_probabilities_step_up(double* error_probs, const uint32_t n_qubits
 			// Copy the state to the target buffer
 			for (uint32_t i = 0; i < n_qubits_initial; i++)
 			{ // All other values in the target buffer should be zero
-				sym_set(target_buffer->state, 0, i, sym_get(cpy_iter->state, 0, i)); // X elements
- 				sym_set(target_buffer->state, 0, i + target_buffer->state->n_qubits, sym_get(cpy_iter->state, 0, i + cpy_iter->state->n_qubits)); // Z elements
+				sym_set_X(target_buffer->state, 0, i, sym_get_X(cpy_iter->state, 0, i)); // X elements
+ 				sym_set_Z(target_buffer->state, 0, i, sym_get_Z(cpy_iter->state, 0, i)); // Z elements
 			} 
+
+			// We've manually changed the iterator, need to update it
+			sym_iter_update(target_buffer);
 
 			// Set the value in the new buffer
 			expanded_error_probs[sym_iter_ll_from_state(target_buffer)] += error_probs[sym_iter_ll_from_state(cpy_iter)];
@@ -225,9 +228,12 @@ double* error_probabilities_step_down(double* error_probs, const uint32_t n_qubi
 			// Copy the state to the target buffer
 			for (uint32_t i = 0; i < n_qubits_final; i++)
 			{ // All other values in the target buffer should be zero
-				sym_set(target_buffer->state, 0, i, sym_get(cpy_iter->state, 0, i)); // X elements
- 				sym_set(target_buffer->state, 0, i + target_buffer->state->n_qubits, sym_get(cpy_iter->state, 0, i + cpy_iter->state->n_qubits)); // Z elements
+				sym_set_X(target_buffer->state, 0, i, sym_get_X(cpy_iter->state, 0, i)); // X elements
+ 				sym_set_Z(target_buffer->state, 0, i, sym_get_Z(cpy_iter->state, 0, i)); // Z elements
 			}
+
+			// We've manually changed the iterator, need to update it
+			sym_iter_update(target_buffer);
 
 			// Set the value in the new buffer
 			contracted_error_probs[sym_iter_ll_from_state(target_buffer)] += error_probs[sym_iter_ll_from_state(cpy_iter)];

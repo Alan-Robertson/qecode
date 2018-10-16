@@ -18,7 +18,7 @@ typedef struct {
     uint32_t n_code_qubits;
     uint32_t n_ancilla_qubits;
     uint32_t n_flag_qubits;
-    decoder** flag_decoders;
+    circuit** flag_recovery_circuits;
     circuit** sub_circuits;
     gate* measure_ancilla;
     gate* measure_flag;
@@ -39,8 +39,8 @@ circuit* syndrome_measurement_flag_ft_circuit_create(
     gate* pauli_Z,
     gate* prepare_X,
     gate* prepare_Z,
-    gate* measure_X, // This should be a measurement gate over the flag qubits
-    gate* measure_Z // This should be a measurement gate over the ancilla qubits);
+    gate* measure_flags, // This should be a measurement gate over the flag qubits
+    gate* measure_ancillas); // This should be a measurement gate over the ancilla qubits);
 
 void syndrome_measurement_flag_ft_circuit_construct(
     circuit* syndrome_measurement,
@@ -52,8 +52,8 @@ void syndrome_measurement_flag_ft_circuit_construct(
     gate* pauli_Z,
     gate* prepare_X,
     gate* prepare_Z,
-    gate* measure_X, // This should be a measurement gate over the flag qubits
-    gate* measure_Z // This should be a measurement gate over the ancilla qubits);
+    gate* measure_flags, // This should be a measurement gate over the flag qubits
+    gate* measure_ancillas); // This should be a measurement gate over the ancilla qubits);
 
 /*
  * circuit_syndrome_measurement_run
@@ -81,8 +81,8 @@ circuit* syndrome_measurement_flag_ft_circuit_create(
     gate* pauli_Z,
     gate* prepare_X,
     gate* prepare_Z,
-    gate* measure_X,
-    gate* measure_Z)
+    gate* measure_flags,
+    gate* measure_ancillas)
 {
     // Setup the circuit data
     circuit_syndrome_measurement_flag_ft_data_t* circuit_data = (circuit_syndrome_measurement_flag_ft_data_t*)malloc(sizeof(circuit_syndrome_measurement_flag_ft_data_t));
@@ -122,6 +122,9 @@ circuit* syndrome_measurement_flag_ft_circuit_create(
 
     // One measurement circuit for each qubit, and one for cleanup
     circuit_data->sub_circuits = (circuit**)malloc(sizeof(circuit*) * (circuit_data->n_ancilla_qubits + 1));
+
+    // And one flag recovery circuit for each measurement circuit
+    circuit_data->flag_recovery_circuits = (circuit**)malloc(sizeof(circuit*) * (circuit_data->n_ancilla_qubits));
 
     // Copy the flag and pauli operations over
     circuit_data->measure_flag = measure_flag;
@@ -164,8 +167,8 @@ void syndrome_measurement_flag_ft_circuit_construct(
     gate* pauli_Z,
     gate* prepare_X,
     gate* prepare_Z,
-    gate* measure_X,
-    gate* measure_Z)
+    gate* measure_flags,
+    gate* measure_ancillas)
 {
     circuit_syndrome_measurement_flag_ft_data_t* circuit_data = (circuit_syndrome_measurement_flag_ft_data_t*) syndrome_measurement->circuit_data;
 
@@ -288,17 +291,14 @@ void syndrome_measurement_flag_ft_circuit_construct(
             }
         }
 
-        // Measure!!
+        // Measure
         circuit_add_gate(syndrome_measurement, measure_Z, ancilla_qubit);
         for (uint32_t i = 0; i < circuit_data->n_flag_qubits; i++)
         {
             circuit_add_gate(syndrome_measurement, measure_X, ancilla_qubit + 1 + i);
         }
 
-        // TODO:
-        // Build the FT 'decoder' here and add it in
-        // Keep things easy for now; only worry about correcting for single CNOT gate failures  
-        circuit_data->flag_decoders[j] = decoder_create_lookup(circuit_data->n_flag_qubits);
+        decoder* flag_decoder = decoder_create_lookup(circuit_data->n_flag_qubits);
 
         sym* stabiliser = sym_row_copy(code, j);
 
@@ -341,6 +341,17 @@ void syndrome_measurement_flag_ft_circuit_construct(
                 sym_free(propagated_error);
             }
         }
+
+        // Create the flag recovery circuit for this syndrome measurement circuit
+        circuit_data->flag_recovery_circuits[j] = circuit_recovery_create(
+            circuit_data->n_code_qubits + circuit_data->n_ancilla_qubits,
+            circuit_data->n_flag_qubits,
+            flag_decoder,
+            pauli_X,
+            pauli_Z,
+
+            );
+
         // Cleanup
         sym_free(stabiliser);
     }
@@ -408,8 +419,10 @@ double* circuit_syndrome_measurement_flag_ft_run(
     sym_iter_free(target_buffer);
     sym_iter_free(cpy_iter);
 
-    unsigned long n_bytes = (1ull << ((smd->n_code_qubits + smd->n_ancilla_qubits) * 2)) * sizeof(double);
-
+    unsigned long n_bytes_code = error_probabilities_bytes_in_table(smd->n_code_qubits);
+    unsigned long n_bytes_ancilla = error_probabilities_bytes_in_table(smd->n_code_qubits + smd->n_ancilla_qubits);
+    unsigned long n_bytes_ft = error_probabilities_bytes_in_table(smd->n_code_qubits + smd->n_ancilla_qubits + smd->n_flag_qubits);
+    
     // Run the sub-circuits
     // These let us track the "active" ancilla qubit while leaving the others untouched
     for (uint32_t i = 0; i <= smd->n_ancilla_qubits; i++)
@@ -468,11 +481,12 @@ double* circuit_syndrome_measurement_flag_ft_run(
             ce = ce->next;
         }
 
-        // Apply FT correction
-        // Gate apply measure on the flags
-
+        // Apply FT correction circuit
+        if (i != smd->n_ancilla_qubits) // We don't do any flag FT correction on the cleanup sub-circuit
+        {
+            double* tmp_error_rate = circuit_run(smd->flag_recovery_circuits[i]);    
+        }
         
-
     }
 
     // Cleanup anything that needs to be de-allocated

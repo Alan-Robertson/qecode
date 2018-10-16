@@ -21,7 +21,7 @@ typedef struct {
 	decoder* decoder_operation; // The action of the decoder
 	gate* pauli_X; // The pauli X gate
 	gate* pauli_Z; // The pauli Z gate
-	gate* measure_Z; // The measurement gate in the Z basis
+	gate* measure; // The measurement gate
 	uint32_t* measurement_targets; // The targets to measure for the recovery operation
 } circuit_recovery_data_t;
 
@@ -38,7 +38,7 @@ typedef struct {
  *  :: decoder* d :: The decoder used with the syndrome information
  *  :: gate* pauli_X :: The pauli X gate to be applied during recovery
  *  :: gate* pauli_Z :: The pauli Z gate to be applied during recovery
- *	:: gate* measure_Z :: A Z measurement operation
+ *	:: gate* measure :: A measurement operation
  *  Returns a circuit object that performs the recovery operation dictated by the decoder
  */
 circuit* circuit_recovery_create(
@@ -47,7 +47,7 @@ circuit* circuit_recovery_create(
 	decoder* d,
 	gate* pauli_X,
 	gate* pauli_Z,
-	gate* measure_Z);
+	gate* measure);
 
 /* 
  *  circuit_recovery_run:
@@ -83,7 +83,7 @@ void circuit_recovery_param_free(void* rd);
  *  :: decoder* d :: The decoder used with the syndrome information
  *  :: gate* pauli_X :: The pauli X gate to be applied during recovery
  *  :: gate* pauli_Z :: The pauli Z gate to be applied during recovery
- *	:: gate* measure_Z :: A Z measurement operation
+ *	:: gate* measure :: A measurement operation
  *  Returns a circuit object that performs the recovery operation dictated by the decoder
  */
 circuit* circuit_recovery_create(
@@ -92,7 +92,7 @@ circuit* circuit_recovery_create(
 	decoder* d,
 	gate* pauli_X,
 	gate* pauli_Z,
-	gate* measure_Z)
+	gate* measure)
 {
 	circuit* recovery = circuit_create(n_code_qubits + n_ancilla_qubits);
 	recovery->circuit_operation = circuit_recovery_run;
@@ -109,7 +109,7 @@ circuit* circuit_recovery_create(
 	// Copy the gate operations
 	rd->pauli_X = pauli_X;
 	rd->pauli_Z = pauli_Z;
-	rd->measure_Z = measure_Z;
+	rd->measure = measure;
 	rd->decoder_operation = d;
 
 	// Measure the ancilla qubits to get the syndromes
@@ -155,7 +155,7 @@ double* circuit_recovery_run(
 		if (initial_error_rates[sym_iter_ll_from_state(siter)] > 0)
 		{
 			// Measure the syndrome bits
-			gate_result* syndrome_results = gate_operation(rd->measure_Z, siter->state, rd->measurement_targets);
+			gate_result* syndrome_results = gate_operation(rd->measure, siter->state, rd->measurement_targets);
 			sym* syndrome = sym_copy(syndrome_results->state_results[0]);
 			gate_result_free(syndrome_results);
 

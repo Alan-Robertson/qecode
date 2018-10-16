@@ -24,7 +24,7 @@ int main()
 	gate* cnot = gate_create(2, gate_cnot, em_cnot, NULL);
 	gate* hadamard = gate_create(2, gate_hadamard, em_gate, NULL);
 	gate* phase = gate_create(2, gate_phase, em_gate, NULL);
-	gate* noise = gate_create(n_qubits, gate_iid, em_noise, NULL);
+	gate* noise = gate_create(n_qubits, NULL, em_noise, NULL);
 
 	uint32_t* target_qubits = (uint32_t*)malloc(sizeof(uint32_t) * n_qubits);
 	for (uint32_t i = 0; i < n_qubits; i++)
