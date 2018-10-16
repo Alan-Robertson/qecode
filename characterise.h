@@ -74,15 +74,14 @@ double* characterise_code_corrected(const sym* code,
 	#ifdef CHARACTERISE_MAX_DEPTH
 		sym_iter* physical_error = sym_iter_create_range(code->length, 0, 2 * CHARACTERISE_MAX_DEPTH + 1);
 	#else
-		sym_iter* physical_error = sym_iter_create(code->length);
+		sym_iter* physical_error = sym_iter_create_n_qubits(code->n_qubits);
 	#endif
 	while (sym_iter_next(physical_error))
 	{
-		if (error_rates[sym_to_ll(physical_error->state)] > 0)
+		if (error_rates[sym_iter_ll_from_state(physical_error)] > 0)
 		{
 			// Calculate the syndrome
 			sym* syndrome = sym_syndrome(code, physical_error->state);
-
 			if (sym_is_empty(syndrome)) // Syndrome is 0, we are in the code space
 			{
 				// Determine the overall logical state

@@ -286,7 +286,6 @@ long long sym_iter_ll_from_state(const sym_iter* siter)
     return siter->ll_counter;
 }
 
-
 /*
  *  sym_iter_state_from_ll:
  *  Casts from long long to the state of the iterator

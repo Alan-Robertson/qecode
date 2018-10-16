@@ -10,11 +10,11 @@ int main()
 
 	double p_error = 0.01;
 
-	error_model* em_noise = error_model_create_iid(initial_qubits, p_error);
-	gate* noise = gate_create_error(initial_qubits, em_noise);
+	error_model* em_noise = error_model_create_iid(1, p_error);
+	gate* noise = gate_create_error(1, em_noise);
 
 	uint32_t* target_qubits = (uint32_t*)malloc(sizeof(uint32_t) * initial_qubits);
-	for (uint32_t i = 0; i < initial_qubits; i++)
+	for (uint32_t i = 0; i < initial_qubits - 1; i++)
 	{
 		target_qubits[i] = i;
 	}

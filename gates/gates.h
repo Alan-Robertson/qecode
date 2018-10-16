@@ -28,8 +28,10 @@
 
 // STRUCT OBJECTS ----------------------------------------------------------------------------------------
 
+// Forward declaration of the gate type
+
 //  Gate operation function pointer
-// typedef sym* (*gate_operation_f)(const sym*, void*, const unsigned* target_qubits);
+// The second object is actually the gate object
 typedef gate_result* (*gate_operation_f)(const sym*, const void*, const unsigned* target_qubits);
 
 /*
@@ -160,7 +162,7 @@ gate_result* gate_operation(const gate* g, sym* initial_state, const unsigned* t
 void gate_free(gate* g);
 
 
-gate_result* gate_iid(const sym* initial_state, const void* gate_data, const unsigned* target_qubits);
+gate_result* gate_apply_noise(const sym* initial_state, const void* gate_data, const unsigned* target_qubits);
 
 // FUNCTION DEFINITIONS ----------------------------------------------------------------------------------------
 /* 
@@ -244,6 +246,8 @@ double* gate_apply(const unsigned n_qubits,
 	const gate* g,
 	const unsigned* target_qubits)
 {
+	// This ordering is slightly more computationally efficient; 
+
 	// Apply the gate operation	
 	double* gate_operator_probabilities = gate_operator(n_qubits, probabilities, g, target_qubits);
 	
@@ -470,7 +474,7 @@ double* gate_noise(const unsigned n_qubits,
 			if (initial_prob > 0)
 			{
 				// Determine the state after the error has been applied 
-				gate_result* operation_output = gate_iid(initial_state->state, applied_gate, target_qubits);
+				gate_result* operation_output = gate_apply_noise(initial_state->state, applied_gate, target_qubits);
 
 				for (unsigned i = 0; i < operation_output->n_results; i++)
 				{
@@ -515,9 +519,15 @@ void* gate_apply_m_thread(void* data)
 				// Save ourselves some time
 				if (initial_prob > 0)
 				{	
-					// Determine the state after the error has been applied 
-					gate_result* operation_output = gate_iid(siter->state, mthread_data->operation, mthread_data->target_qubits);
-
+					gate_result* operation_output;
+					if () // Check if this is actually an IID error
+						// Determine the state after the error has been applied 
+						operation_output = gate_apply_noise(siter->state, mthread_data->operation, mthread_data->target_qubits);
+					else
+					{
+						operation_output = 
+					}
+					
 					for (unsigned i = 0; i < operation_output->n_results; i++)
 					{
 						// Cumulatively determine the new probability of each state after the gate has been applied
@@ -549,7 +559,7 @@ void* gate_apply_m_thread(void* data)
 				if (initial_prob > 0)
 				{
 					// Determine the state after the error has been applied 
-					gate_result* operation_output = gate_iid(initial_state, mthread_data->operation, mthread_data->target_qubits);
+					gate_result* operation_output = gate_apply_noise(initial_state, mthread_data->operation, mthread_data->target_qubits);
 
 					for (unsigned i = 0; i < operation_output->n_results; i++)
 					{
@@ -581,7 +591,7 @@ void* gate_apply_m_thread(void* data)
 			if (initial_prob > 0)
 			{
 				// Determine the state after the error has been applied 
-				gate_result* operation_output = gate_iid(initial_state, mthread_data->operation, mthread_data->target_qubits);
+				gate_result* operation_output = gate_apply_noise(initial_state, mthread_data->operation, mthread_data->target_qubits);
 
 				for (unsigned i = 0; i < operation_output->n_results; i++)
 				{
@@ -602,8 +612,6 @@ void* gate_apply_m_thread(void* data)
 	return NULL;
 }
 #endif
-
-
 
 
 // Wrapper
@@ -644,7 +652,7 @@ double* gate_operator(const unsigned n_qubits,
 
 		if (initial_prob > 0)
 		{
-			// Determine the state after the error has been applied 
+			// Determine the state after the operation has been applied 
 		
 			gate_result* operation_output = gate_operation(applied_gate, initial_state->state, target_qubits);
 
@@ -675,8 +683,8 @@ void gate_free(gate* g)
 	free(g);
 }
 
-// Applies an iid error model
-gate_result* gate_iid(const sym* initial_state, const void* gate_data, const unsigned* target_qubits)
+// Applies an iid operation
+gate_result* gate_apply_noise(const sym* initial_state, const void* gate_data, const unsigned* target_qubits)
 {
 	gate* g = (gate*)gate_data;
 	gate_result* gr = gate_result_create(1 << (g->n_qubits * 2));

@@ -94,6 +94,7 @@ circuit* circuit_recovery_create(
 	gate* pauli_Z,
 	gate* measure)
 {
+	// Create the initial circuit and overwrite the default run and free operations
 	circuit* recovery = circuit_create(n_code_qubits + n_ancilla_qubits);
 	recovery->circuit_operation = circuit_recovery_run;
 	recovery->circuit_param_free = circuit_recovery_param_free;
