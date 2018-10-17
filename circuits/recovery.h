@@ -114,11 +114,7 @@ circuit* circuit_recovery_create(
 	rd->decoder_operation = d;
 
 	// Measure the ancilla qubits to get the syndromes
-	uint32_t* measurement_targets = (uint32_t*)malloc(sizeof(uint32_t) * n_ancilla_qubits);
-	for (int i = 0; i < n_ancilla_qubits; i++)
-	{
-		measurement_targets[i] = n_code_qubits + i;
-	}
+	uint32_t* measurement_targets = target_qubits_create_range(n_code_qubits, n_code_qubits + n_ancilla_qubits);
 	rd->measurement_targets = measurement_targets;
 
 	// Link up the recovery data

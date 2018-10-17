@@ -152,7 +152,7 @@ void sym_iter_free(sym_iter* siter);
 */
 sym_iter* sym_iter_create(const uint32_t length)
 {
-    sym_iter* siter = sym_iter_create_range(length, 0, length);
+    sym_iter* siter = sym_iter_create_range(length, 0, length + 1);
     return siter;
 }
 
@@ -197,7 +197,7 @@ sym_iter* sym_iter_create_range(const uint32_t length, const int32_t min_weight,
     
     // Create the state currently occupied by the state iterator
     siter->state = sym_create(1, length);
-
+       
     siter->length = length;
     siter->curr_weight = min_weight - 1; // Our current weight
 
@@ -232,7 +232,7 @@ uint8_t sym_iter_next(sym_iter* siter)
         
         // Push the result back to the state
         sym_iter_state_from_ll(siter, val);
-
+            
         siter->ll_counter = val;
         return true;
     }
@@ -296,11 +296,13 @@ long long sym_iter_ll_from_state(const sym_iter* siter)
 void sym_iter_state_from_ll(sym_iter* siter, long long val)
 {
     val <<= ((siter->length % 8) ? 8 - (siter->length % 8) : 0);
+
     for (int i = siter->state->mem_size - 1; i >= 0; i--)
     {
         siter->state->matrix[i] = (BYTE)(val);
         val >>= 8ll;
     }
+
     return;
 }
 

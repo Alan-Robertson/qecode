@@ -5,7 +5,10 @@
 
 #include "../sym.h" 
 #include "../sym_iter.h"
+
 #include "gate_result.h"
+#include "target_qubits.h"
+
 #include "../circuits/error_probabilities.h"
 #include "../error_models/error_models.h"
 

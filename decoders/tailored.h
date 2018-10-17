@@ -31,7 +31,7 @@ sym** tailor_recovery_operators(const sym* code,
 	:: const unsigned n_syndrome_bits :: The number of syndrome bits that will be communicated to the decoder
 	Returns a pointer to a new error model object on the heap
 */
-decoder* decoder_create_tailored(const sym* code, const sym* logicals, 	error_model* noise);
+decoder* decoder_create_tailored(const sym* code, const sym* logicals, error_model* noise);
 
 /*
 	decoder_call_tailored
@@ -150,23 +150,27 @@ sym** tailor_recovery_operators(const sym* code,
 
 	// Some quality of life variables
 	long long n_syndromes = (1ull << (code->height));
+	printf("N_SYNDROMES: %lld\n", n_syndromes);
 	long long n_logical_operations = (1ull << (logicals->length));
 
 	// Build the decoder table, there should be a single decoding operation for each syndrome
 	sym** tailored_decoder = (sym**)malloc(sizeof(sym*) * n_syndromes);
 
 	// Initialise the recovery operators to prevent fragmentation
+	printf("LEN: %u\n", code->height);
 	sym_iter* syndromes = sym_iter_create(code->height);
 	while (sym_iter_next(syndromes))
 	{
-		unsigned long long index = sym_to_ll(syndromes->state);
-		tailored_decoder[index] = (sym*)sym_create(1, code->length);
+
+		unsigned long long index = sym_iter_ll_from_state(syndromes);
+		tailored_decoder[index] = sym_create(1, code->length);
 
 		// Set the mem_size to 0 as a flag for undiscovered recovery operators
-		//tailored_decoder[index]->mem_size = 0;
+		tailored_decoder[index]->mem_size = 0;
+		// This will cause issues if you attempt to copy from here!
 	}
 	sym_iter_free(syndromes);
-
+	
 	// Initialise the probabilities and set them to 0 efficiently
 	double p_options[n_syndromes][n_logical_operations];
 
@@ -198,7 +202,7 @@ sym** tailor_recovery_operators(const sym* code,
 		sym* recovery = decoder_call(destabilisers, syndrome);
 
 		// If we haven't seen this recovery operator before, we save it
-		if (!tailored_decoder[sym_to_ll(syndrome)]->mem_size)
+		if (0 == tailored_decoder[sym_to_ll(syndrome)]->mem_size)
 		{
 			// Reset the mem_size and perform this copy operation in place
 			tailored_decoder[sym_to_ll(syndrome)]->mem_size = recovery->mem_size;
@@ -213,12 +217,6 @@ sym** tailor_recovery_operators(const sym* code,
 
 		// Calculate the probability of this particular error occurring and store it
 		p_options[sym_to_ll(syndrome)][sym_to_ll(logical_state)] += error_model_call(noise, physical_error->state);
-
-		/*if (sym_to_ll(syndrome) == 0)
-		{
-			printf("%.15f\n", error_model_call(noise, physical_error->state));
-			sym_print(physical_error->state);
-		}*/
 
 		// Free our memory in order to prevent leaks and fragmentation
 		sym_free(logical_state);

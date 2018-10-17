@@ -639,6 +639,8 @@ sym* sym_add(const sym* a, const sym* b)
 /*
     sym_partial_add:
     Adds two symplectic matrices that are not of the same size
+    Adds the second sym object to a copy of the first, the target bits is a map from the ith element in b to the target[i]th element in a
+    This preserves relations between X and Z bits, it is not agnostic to them.
     :: const sym* a :: One of the matrices to be added 
     :: const sym* b :: The other matrix
     :: const unsigned* target_bits :: The mapping from each bit in b to the corresponding bit in a
@@ -664,12 +666,12 @@ sym* sym_partial_add(const sym* a, const sym* b, const unsigned* target_bits)
         for (size_t j = 0; j < b->n_qubits; j++)
         {
             // Add the X components
-            sym_set(added, i, target_bits[j], sym_get(added, i, target_bits[j]) ^ sym_get(b, i, j));
+            sym_set_X(added, i, target_bits[j], sym_get_X(added, i, target_bits[j]) ^ sym_get_X(b, i, j));
+
             // Add the Z components
-            sym_set(added, i, target_bits[j] + a->n_qubits, sym_get(added, i, target_bits[j] + a->n_qubits) ^ sym_get(b, i, j + b->n_qubits));
+            sym_set_Z(added, i, target_bits[j], sym_get_Z(added, i, target_bits[j]) ^ sym_get_Z(b, i, j));
         }
     }
-
     return added;
 }
 
