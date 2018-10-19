@@ -66,7 +66,6 @@ int main()
 		pauli_Z,
 		measure_ancillas);
 
-
 	// Get our recovery circuit for the tailored
 	circuit* recovery_tailored = circuit_recovery_create(
 		n_qubits,

@@ -1,95 +1,120 @@
 #include "../codes/codes.h"
-#include "../gates/pauli_generators.h"
-#include "../gates/gate_recovery.h"
+#include "../codes/candidate_codes.h"
+
 #include "../decoders/destabiliser.h"
+#include "../decoders/tailored.h"
+
+#include "../gates/measurement.h"
+#include "../gates/preparation.h"
+#include "../gates/pauli_generators.h"
+#include "../gates/clifford_generators.h"
+
+#include "../error_models/lookup.h"
+
+#include "../circuits/syndrome_measurement_flag_ft.h"
+
 #include "../sym_iter.h"
 #include "../characterise.h"
 
 /*
- *	Check that some trivial error is recovered
+ *	Check the recovery circuit
+ *
  */
 
 int main()
 {	
-	unsigned n_qubits = 5;
 
-	double p_error = 0;
-
+	//--------------------------------
+	// Setup the code and the space of qubits
+	//--------------------------------
 	sym* code = code_five_qubit();
 	sym* logicals = code_five_qubit_logicals();
 
-	// Build our decoder (with an incomplete error model):
-	decoder* destab_decoder = decoder_create_destabiliser(code, logicals);
+	unsigned n_qubits = code->n_qubits;
+	unsigned n_ancilla_qubits = code->height;
+	unsigned n_flag_qubits = 2;
 
+	//--------------------------------
 	// Setup our gates
+	//--------------------------------
+	// Paulis
 	gate* pauli_X = gate_create(1, gate_pauli_X, NULL, NULL);
 	gate* pauli_Z = gate_create(1, gate_pauli_Z, NULL, NULL);
-	gate* recovery = gate_create_recovery(n_qubits, pauli_X, pauli_Z);
 
+	// State preparation
+	gate* prepare_X = gate_create_prepare_X(1, 0, NULL);
+	gate* prepare_Z = gate_create_prepare_Z(1, 0, NULL);
+
+	// Measurement
+	gate* measure_flags = gate_create(n_flag_qubits, gate_measure_X, NULL, NULL);
+	gate* measure_ancillas = gate_create(n_ancilla_qubits, gate_measure_Z, NULL, NULL);
+
+	// Cliffords 
+	gate* cnot = gate_create(2, gate_cnot, NULL, NULL);
+	gate* hadamard = gate_create(1, gate_hadamard, NULL, NULL);
+	gate* phase = gate_create(1, gate_phase, NULL, NULL);
+
+
+	//--------------------------------
 	// Setup our initial error probabilities
+	//--------------------------------
 	double* initial_error_probs = error_probabilities_zeros(n_qubits);
-	double* final_error_probs = error_probabilities_zeros(n_qubits);
 
-	// Generate some single qubit errors
-	double prob = (1.0) / (code->length);
+	// Generate some single qubit X and Z errors
+	double prob = (1.0) / (code->n_qubits * 3);
 	for (int i = 0; i < code->length; i++)
 	{
 		initial_error_probs[1 << i] = prob;
 	}
 
-	// Setup the target qubits
-	uint32_t* target_qubits = (uint32_t*)malloc(sizeof(uint32_t) * n_qubits);
-	for (uint32_t i = 0; i < n_qubits; i++)
+	// Generate some single qubit Y errors
+	for (int i = 0; i < code->n_qubits; i++)
 	{
-		target_qubits[i] = i;
+		initial_error_probs[((1 << code->n_qubits) + 1) << i] = prob;
 	}
 
-	// Find and recover each of these errors
-	sym_iter* siter = sym_iter_create_n_qubits(n_qubits);
-	while (sym_iter_next(siter))
-	{
-		if (initial_error_probs[sym_iter_ll_from_state(siter)] > 0)
-		{
-			printf("#######\n");
-			sym* error_state = sym_copy(siter->state);
-			sym* syndrome = sym_syndrome(code, error_state);
-			sym* recovery_operation = decoder_call(destab_decoder, syndrome);
+	printf("qwop\n");
+	//--------------------------------------------
+	// Use the above to build what we need to
+	//-------------------------------------------
 
-			// Cracking this open to setup the recovery operation
-			((gate_data_recovery_t*)(recovery->operation_data))->recovery_operation = sym_copy(recovery_operation);
+	// Treat the above as a lookup based error model
+	error_model* em =  error_model_create_lookup(n_qubits, initial_error_probs);
+	// Note that we're going to pass this into our circuit, you might want to run the circuit using 
+	// The distribution as the input, then use the output of the measurement circuit 
+	// as the error model to create the decoder
 
-			// Calling the method here directly, because normally we need a specialised circuit 
-			// to determine the other values to pass to this
-			gate_result* recovered_state = gate_recovery(error_state, recovery, target_qubits);
-			printf("Error Rate %e\n", initial_error_probs[sym_iter_ll_from_state(siter)]);
-			printf("Initial Error: \t\t");
-			sym_print(error_state);
+	// Tailor a decoder
+	decoder* tailored = decoder_create_tailored(code, logicals, em);
 
-			printf("Recovery Operation: \t");
-			sym_print(recovery_operation);
 
-			printf("Recovered State: \t");
-			sym_print(recovered_state->state_results[0]);
+	printf("qwop\n");
 
-			// Setup the recovered state
-			final_error_probs[sym_to_ll(recovered_state->state_results[0])] += initial_error_probs[sym_iter_ll_from_state(siter)];
+	// Get our recovery circuit for the tailored
+	circuit* flag_ft_measurement = syndrome_measurement_flag_ft_circuit_create(
+    code,
+    cnot,
+    hadamard,
+    phase,
+    pauli_X,
+    pauli_Z,
+    prepare_X,
+    prepare_Z,
+    measure_flags, 
+    measure_ancillas);
 
-			sym_free(syndrome);
-			sym_free(recovery_operation);
-			sym_free(error_state);
-			gate_result_free(recovered_state);
-		}
-	}
-	sym_iter_free(siter);
-	double* logical_rates = characterise_code_corrected(code, logicals, final_error_probs);
-	siter = sym_iter_create_n_qubits(logicals->n_qubits);
+
+	printf("qwop\n");
+	double* recovered_state = circuit_run(flag_ft_measurement, initial_error_probs, NULL);	
 	
+	printf("Tailored Results\n");
+	//logical_rates = characterise_code_corrected(code, logicals, recovered_state);
+	/*siter = sym_iter_create_n_qubits(logicals->n_qubits ++);
 	while(sym_iter_next(siter))
 	{
 		printf("%e \t", logical_rates[sym_iter_ll_from_state(siter)]);
 		sym_print(siter->state);
-	}
-	
+	}*/
 
 	return 0;
 }
