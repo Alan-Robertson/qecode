@@ -1183,6 +1183,11 @@ uint32_t sym_weight_Z(const sym* s)
  */
 void sym_row_copy(sym* s, const sym* t, const unsigned s_row, const unsigned t_row)
 {
+    if (s->length != t->length)
+    {
+        printf("Rows in sym_row_copy operation are not the same length\n");
+        return;
+    }
     for (size_t i = 0; i < s->length; i++)
     {
         sym_set(s, s_row, i, sym_get(t, t_row, i));

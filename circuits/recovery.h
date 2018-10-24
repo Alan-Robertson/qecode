@@ -151,10 +151,12 @@ double* circuit_recovery_run(
 	{	
 		if (initial_error_rates[sym_iter_ll_from_state(siter)] > 0)
 		{
+
 			// Measure the syndrome bits
 			gate_result* syndrome_results = gate_operation(rd->measure, siter->state, rd->measurement_targets);
 			sym* syndrome = sym_copy(syndrome_results->state_results[0]);
 			gate_result_free(syndrome_results);
+
 
 			// Transpose the syndrome for easier reading
 			sym* syndrome_trans = sym_transpose(syndrome);
@@ -162,6 +164,12 @@ double* circuit_recovery_run(
 		
 			// Decode to determine the recovery operation required
 			sym* recovery_operator = decoder_call(rd->decoder_operation, syndrome_trans);
+
+			if (NULL == recovery_operator) // Decoder table has no entry for this syndrome
+			{ // Give a blank recovery operation
+				recovery_operator = sym_create(1, rd->n_code_qubits * 2);
+			}
+
 			sym_free(syndrome_trans);
 
 			// Recover the state
@@ -187,19 +195,23 @@ double* circuit_recovery_run(
 			}
 			sym_free(recovery_operator);
 
+
 			// Copy the state to the target buffer
+			// TODO: use the pauli gates to do this
 			for (uint32_t i = 0; i < rd->n_code_qubits; i++)
 			{ // All other values in the target buffer should be zero
 				sym_set_X(target_buffer->state, 0, i, sym_get_X(recovered_state, 0, i)); // X elements
-				sym_set_Z(target_buffer->state, 0, i, sym_get_Z(recovered_state, 0, i)); // Z elements
+				sym_set_Z(target_buffer->state, 0, i, sym_get_Z(recovered_state, 0, i)); // Z elements 
 			} 
 			sym_free(recovered_state);
 			sym_iter_update(target_buffer);
+			
 			// Set the value in the new buffer
 			recovered_error_rates[sym_iter_ll_from_state(target_buffer)] += initial_error_rates[sym_iter_ll_from_state(siter)];
 		}
 	}
 	sym_iter_free(siter);
+	sym_iter_free(target_buffer);
 	return recovered_error_rates;
 }
 

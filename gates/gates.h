@@ -651,19 +651,18 @@ double* gate_operator(const unsigned n_qubits,
 	while(sym_iter_next(initial_state))
 	{
 		// Save this value as we may be needing it quite a bit
-		double initial_prob = initial_probabilities[sym_to_ll(initial_state->state)];
+		double initial_prob = initial_probabilities[sym_iter_ll_from_state(initial_state)];
 
 		if (initial_prob > 0)
 		{
 			// Determine the state after the operation has been applied 
-		
+
 			gate_result* operation_output = gate_operation(applied_gate, initial_state->state, target_qubits);
 
 			for (unsigned i = 0; i < operation_output->n_results; i++)
 			{
 				// Cumulatively determine the new probability of each state after the gate has been applied
 				p_state_probabilities[sym_to_ll(operation_output->state_results[i])] += operation_output->prob_results[i] * initial_prob; 
-
 			}
 			// Free allocated memory
 			gate_result_free(operation_output);

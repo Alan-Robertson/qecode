@@ -5,7 +5,8 @@
 // DIRECTIVES
 // ----------------------------------------------------------------------------------------
 
-#define DEFAULT_STRING_SIZE 1
+#define DEFAULT_STRING_SIZE 100
+#define STRING_SCALE_GATES_SIZE 15
 #define CNOT_CONTROL_VALUE 0
 #define CNOT_TARGET_VALUE 1
 #define CLIFFORD_DEFAULT_VALUE 0
@@ -34,6 +35,10 @@ void qcircuit_print(circuit* c);
  * Reallocs the malloced string and returns the pointer to the new memory
  */
 char* str_increase(char* original, char const* added);
+
+
+// Because realloc was throwing errors in munmap
+void* realloc_reliable(void* original_ptr, const size_t len_orig, const size_t len_new);
 
 // ----------------------------------------------------------------------------------------
 // FUNCTION DEFINITIONS
@@ -67,16 +72,20 @@ void qcircuit_print(circuit* c)
 	// Our set of qubit strings
 	char** qubits = (char**)malloc(sizeof(char*) * c->n_qubits);
 
+	// Length of circuit
+
+
 	// Initialise our qubits to the null character
 	for (uint32_t i = 0; i < c->n_qubits; i++)
 	{
-		qubits[i] = (char*)calloc(sizeof(char), DEFAULT_STRING_SIZE);
+		qubits[i] = (char*)calloc(sizeof(char), DEFAULT_STRING_SIZE + STRING_SCALE_GATES_SIZE * c->n_gates);
 	}
 
 	// Iterate over the gates in the circuit
 	circuit_element* ce = c->start;
 	while (NULL != ce)
 	{
+		
 		// Break from previous round
 		for (int i = 0; i < c->n_qubits; i++)
 		{
@@ -128,9 +137,10 @@ void qcircuit_print(circuit* c)
 				symbol_table_length++;
 				if (symbol_table_length == symbol_table_max_length)
 				{
-					symbol_table_max_length *= 2;
+					symbol_table_max_length;
 
-					symbol_table = (gate_operation_f*)realloc(symbol_table, symbol_table_max_length);
+					symbol_table = (gate_operation_f*)realloc_reliable(symbol_table, symbol_table_max_length, symbol_table_max_length * 2);
+					symbol_table_max_length *= 2;
 				}
 			}
 			
@@ -207,9 +217,19 @@ void qcircuit_print(circuit* c)
  */
 char* str_increase(char* original, char const* added)
 {
-	original = (char*)realloc(original, strlen(original) + strlen(added) + 2);
+	//original = (char*)realloc_reliable(original, strlen(original), strlen(original) + strlen(added) + 2);
 	strcat(original, added);
 	return original;
+}
+
+void* realloc_reliable(void* original_ptr, const size_t len_orig, const size_t len_new)
+{
+
+	void* tmp = malloc(len_new);
+	printf("%p\n", tmp);
+	memcpy(tmp, original_ptr, len_orig);
+	free(original_ptr); 
+	return tmp;
 }
 
 #endif

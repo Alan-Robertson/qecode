@@ -84,16 +84,16 @@ void error_add(const char pauli, const unsigned qubit, sym* error)
 		break;
 
 		case 'X':
-			sym_set(error, 0, qubit, 1);
+			sym_set_Z(error, 0, qubit, 1);
 		break;
 
 		case 'Z':
-			sym_set(error, 0, qubit + (error->length / 2), 1);
+			sym_set_X(error, 0, qubit, 1);
 		break;
 
 		case 'Y':
-			sym_set(error, 0, qubit, 1);
-			sym_set(error, 0, qubit + (error->length / 2), 1);
+			sym_set_X(error, 0, qubit, 1);
+			sym_set_Z(error, 0, qubit, 1);
 		break;
 
 		default:

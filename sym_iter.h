@@ -152,6 +152,10 @@ void sym_iter_free(sym_iter* siter);
 */
 sym_iter* sym_iter_create(const uint32_t length)
 {
+    // Because we iterate from 0 to the range specified
+    // And because this consistently gets referenced by length = sym->length
+    // And then decremented in the create range function
+    // I really should have designed this a bit better in hindsight
     sym_iter* siter = sym_iter_create_range(length, 0, length + 1);
     return siter;
 }

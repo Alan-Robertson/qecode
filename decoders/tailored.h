@@ -150,14 +150,12 @@ sym** tailor_recovery_operators(const sym* code,
 
 	// Some quality of life variables
 	long long n_syndromes = (1ull << (code->height));
-	printf("N_SYNDROMES: %lld\n", n_syndromes);
 	long long n_logical_operations = (1ull << (logicals->length));
 
 	// Build the decoder table, there should be a single decoding operation for each syndrome
 	sym** tailored_decoder = (sym**)malloc(sizeof(sym*) * n_syndromes);
 
 	// Initialise the recovery operators to prevent fragmentation
-	printf("LEN: %u\n", code->height);
 	sym_iter* syndromes = sym_iter_create(code->height);
 	while (sym_iter_next(syndromes))
 	{

@@ -78,6 +78,10 @@ double* error_probabilities_step_down(double* error_probs, const uint32_t n_qubi
  */
 void error_probabilities_free(double* error_probs);
 
+
+uint64_t error_probabilities_bytes_in_table(const uint32_t n_qubits);
+uint64_t error_probabilities_entries_in_table(const uint32_t n_qubits);
+
 // ----------------------------------------------------------------------------------------
 // FUNCTION DEFINITIONS
 // ----------------------------------------------------------------------------------------
@@ -97,7 +101,7 @@ double* error_probabilities_m(const size_t n_elements)
 
 uint64_t error_probabilities_bytes_in_table(const uint32_t n_qubits)
 {
-	return (1ull << (2 * n_qubits)) * sizeof(double);
+	return error_probabilities_entries_in_table(n_qubits) * sizeof(double);
 }
 
 uint64_t error_probabilities_entries_in_table(const uint32_t n_qubits)
@@ -140,7 +144,9 @@ double* error_probabilities_identity(const size_t n_qubits)
 double* error_probabilities_copy(const size_t n_qubits, double* error_probs)
 {
 	double* error_probs_cpy = error_probabilities_zeros(n_qubits);
+
 	memcpy(error_probs_cpy, error_probs, error_probabilities_bytes_in_table(n_qubits));
+
 	return error_probs_cpy;
 }
 

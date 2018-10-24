@@ -45,5 +45,4 @@ void target_qubits_free(uint32_t* target_qubits)
 	return;
 }
 
-
 #endif

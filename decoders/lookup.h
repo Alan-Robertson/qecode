@@ -86,12 +86,16 @@ decoder* decoder_create_lookup(const uint32_t n_bits)
 	Determines the correction procedure given a syndrome and a lookup decoder
 	:: void* v_params:: The pointer to the params object 
 	:: const sym* syndrome :: The  syndrome passed to the decoder
-	Returns the correction suggested by the decoder
+	Returns the correction suggested by the decoder, if nothing is there, returns NULL
 */
 sym* decoder_call_lookup(void* v_params, const sym* syndrome)
 {
 	decoder_params_tailored_t* params = (decoder_params_tailored_t*)v_params;
-	sym* recovery_operator = sym_copy(params->recovery_operators[sym_to_ll(syndrome)]);
+	sym* recovery_operator = NULL;
+	if (params->recovery_operators[sym_to_ll(syndrome)] != NULL)
+	{
+		recovery_operator = sym_copy(params->recovery_operators[sym_to_ll(syndrome)]);
+	}
 	return recovery_operator;
 }
 
@@ -133,7 +137,7 @@ void decoder_lookup_insert(decoder* d, const sym* syndrome, const sym* value)
 	// If we already have a recovery operation stored at that index, remove it
 	if (NULL != params->recovery_operators[target_index])
 	{
-		sym_free(target);
+		sym_free(params->recovery_operators[target_index]);
 	}
 
 	// Copy the new value in
