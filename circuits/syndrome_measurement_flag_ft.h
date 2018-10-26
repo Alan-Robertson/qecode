@@ -72,6 +72,14 @@ double* circuit_syndrome_measurement_flag_ft_run(
     double* initial_error_rates, 
     gate* noise);
 
+/*
+ * syndrome_measurement_flag_ft_circuit_free
+ * Destructor for the circuit parameters
+ * :: circuit* c :: The circuit to free
+ * Returns nothing
+ */
+void syndrome_measurement_flag_ft_circuit_param_free(void* c);
+
 // ----------------------------------------------------------------------------------------
 // FUNCTION DEFINITIONS
 // ----------------------------------------------------------------------------------------
@@ -123,6 +131,7 @@ circuit* syndrome_measurement_flag_ft_circuit_create(
 
     // Override the operation that runs the circuit
     syndrome_measurement->circuit_operation = circuit_syndrome_measurement_flag_ft_run;
+    syndrome_measurement->circuit_param_free = syndrome_measurement_flag_ft_circuit_param_free;
 
     // One measurement circuit for each qubit, and one for cleanup
     circuit_data->sub_circuits = (circuit**)malloc(sizeof(circuit*) * (circuit_data->n_ancilla_qubits + 1));
@@ -446,9 +455,9 @@ double* circuit_syndrome_measurement_flag_ft_run(
         {
             // Gate operation
             double* tmp_error_rate = gate_apply(
-                c->n_qubits, 
-                expanded_error_probs, 
-                ce->gate_operation, 
+                c->n_qubits,
+                expanded_error_probs,
+                ce->gate_operation,
                 ce->target_qubits);
 
             error_probabilities_free(expanded_error_probs);
@@ -492,8 +501,8 @@ double* circuit_syndrome_measurement_flag_ft_run(
                         expanded_error_probs = tmp_error_rate;
                     }           
                 }
-
             }
+
             // Next circuit element
             ce = ce->next;
         }
@@ -501,7 +510,8 @@ double* circuit_syndrome_measurement_flag_ft_run(
         // Apply FT correction circuit
         if (i != smd->n_ancilla_qubits) // We don't do any flag FT correction on the cleanup sub-circuit
         {
-            syndrome_error_probs = circuit_run(smd->flag_recovery_circuits[i], expanded_error_probs, noise); 
+            syndrome_error_probs = circuit_run(smd->flag_recovery_circuits[i], expanded_error_probs, noise);
+            free(expanded_error_probs); 
         }
     }
 
@@ -513,6 +523,31 @@ double* circuit_syndrome_measurement_flag_ft_run(
     // Cleanup anything that needs to be de-allocated
    
     return syndrome_error_probs;
+}
+
+void syndrome_measurement_flag_ft_circuit_param_free(void* params_v)
+{
+    // Unpack the syndrome measurement data
+    circuit_syndrome_measurement_flag_ft_data_t* smd = (circuit_syndrome_measurement_flag_ft_data_t*)params_v;
+
+    // Cleanup all the sub-circuits
+    for (int i = 0; i <= smd->n_ancilla_qubits; i++)
+    {
+        circuit_free(smd->sub_circuits[i]);
+    }
+
+    // Cleanup all the recovery circuits
+    for (int i = 0; i < smd->n_ancilla_qubits; i++)
+    {
+        // Free the decoders
+        decoder_free(((circuit_recovery_data_t*)(smd->flag_recovery_circuits[i]->circuit_data))->decoder_operation);
+        circuit_free(smd->flag_recovery_circuits[i]);
+    }
+    free(smd->sub_circuits);
+    free(smd->flag_recovery_circuits);
+    free(params_v);
+
+    return;
 }
 
 

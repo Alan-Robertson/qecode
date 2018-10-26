@@ -27,18 +27,6 @@
  */
 void qcircuit_print(circuit* c);
 
-/*
- * str_increase
- * Concatenates a string to a malloc'ed string
- * :: char* original :: The malloced string to be concatenated to
- * :: char const* added :: The const string that will be added
- * Reallocs the malloced string and returns the pointer to the new memory
- */
-char* str_increase(char* original, char const* added);
-
-
-// Because realloc was throwing errors in munmap
-void* realloc_reliable(void* original_ptr, const size_t len_orig, const size_t len_new);
 
 // ----------------------------------------------------------------------------------------
 // FUNCTION DEFINITIONS
@@ -72,12 +60,10 @@ void qcircuit_print(circuit* c)
 	// Our set of qubit strings
 	char** qubits = (char**)malloc(sizeof(char*) * c->n_qubits);
 
-	// Length of circuit
-
-
 	// Initialise our qubits to the null character
 	for (uint32_t i = 0; i < c->n_qubits; i++)
 	{
+		// Allocate enough space for each string in the worst case
 		qubits[i] = (char*)calloc(sizeof(char), DEFAULT_STRING_SIZE + STRING_SCALE_GATES_SIZE * c->n_gates);
 	}
 
@@ -89,7 +75,7 @@ void qcircuit_print(circuit* c)
 		// Break from previous round
 		for (int i = 0; i < c->n_qubits; i++)
 		{
-			qubits[i] = str_increase(qubits[i], space);
+			strcat(qubits[i], space);
 		}
 
 		// Check the gate being applied
@@ -97,22 +83,22 @@ void qcircuit_print(circuit* c)
 		{ // Cnot gate found
 			char cnot_target_diff[MAX_CHARS_NUM];
 			sprintf(cnot_target_diff, "%d", ce->target_qubits[CNOT_TARGET_VALUE] - ce->target_qubits[CNOT_CONTROL_VALUE]);
-			qubits[ce->target_qubits[CNOT_CONTROL_VALUE]] = str_increase(qubits[ce->target_qubits[CNOT_CONTROL_VALUE]], cnot_ctrl);
-			qubits[ce->target_qubits[CNOT_CONTROL_VALUE]] = str_increase(qubits[ce->target_qubits[CNOT_CONTROL_VALUE]], cnot_target_diff);
-			qubits[ce->target_qubits[CNOT_CONTROL_VALUE]] = str_increase(qubits[ce->target_qubits[CNOT_CONTROL_VALUE]], tail);
-			qubits[ce->target_qubits[CNOT_TARGET_VALUE]] = str_increase(qubits[ce->target_qubits[CNOT_TARGET_VALUE]], cnot_targ);
+			strcat(qubits[ce->target_qubits[CNOT_CONTROL_VALUE]], cnot_ctrl);
+			strcat(qubits[ce->target_qubits[CNOT_CONTROL_VALUE]], cnot_target_diff);
+			strcat(qubits[ce->target_qubits[CNOT_CONTROL_VALUE]], tail);
+			strcat(qubits[ce->target_qubits[CNOT_TARGET_VALUE]], cnot_targ);
 		} 
 		else if (ce->gate_operation->operation == gate_hadamard)
 		{ // Hadamard gate found
-			qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]] = str_increase(qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]], gate);
-			qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]] = str_increase(qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]], "H");
-			qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]] = str_increase(qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]], tail);
+			strcat(qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]], gate);
+			strcat(qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]], "H");
+			strcat(qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]], tail);
 		}
 		else if (ce->gate_operation->operation == gate_phase)
 		{ // Phase gate found
-			qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]] = str_increase(qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]], gate);
-			qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]] = str_increase(qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]], "P");
-			qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]] = str_increase(qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]], tail);
+			strcat(qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]], gate);
+			strcat(qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]], "P");
+			strcat(qubits[ce->target_qubits[CLIFFORD_DEFAULT_VALUE]], tail);
 		}
 		else
 		{ // Not a clifford gate; we need to consult our symbol table
@@ -137,9 +123,11 @@ void qcircuit_print(circuit* c)
 				symbol_table_length++;
 				if (symbol_table_length == symbol_table_max_length)
 				{
-					symbol_table_max_length;
-
-					symbol_table = (gate_operation_f*)realloc_reliable(symbol_table, symbol_table_max_length, symbol_table_max_length * 2);
+					// Increase the size of the symbol table
+					gate_operation_f* tmp = (gate_operation_f*)malloc(sizeof(gate_operation_f) * symbol_table_max_length * 2);
+					memcpy(tmp, symbol_table, symbol_table_length * sizeof(gate_operation_f));
+					free(symbol_table);
+					symbol_table = tmp; 
 					symbol_table_max_length *= 2;
 				}
 			}
@@ -149,11 +137,11 @@ void qcircuit_print(circuit* c)
 			{ // Add a 'unitary' with the associated symbol.
 				char symbol_number[MAX_CHARS_NUM];
 				sprintf(symbol_number, "%d",  symbol_index + 1); // So that we can count the gates from 1 rather than 0
-				qubits[ce->target_qubits[i]] = str_increase(qubits[ce->target_qubits[i]], gate);
-				qubits[ce->target_qubits[i]] = str_increase(qubits[ce->target_qubits[i]], unspecified_unitary);
-				qubits[ce->target_qubits[i]] = str_increase(qubits[ce->target_qubits[i]], symbol_number);
-				qubits[ce->target_qubits[i]] = str_increase(qubits[ce->target_qubits[i]], tail);
-				qubits[ce->target_qubits[i]] = str_increase(qubits[ce->target_qubits[i]], tail);
+				strcat(qubits[ce->target_qubits[i]], gate);
+				strcat(qubits[ce->target_qubits[i]], unspecified_unitary);
+				strcat(qubits[ce->target_qubits[i]], symbol_number);
+				strcat(qubits[ce->target_qubits[i]], tail);
+				strcat(qubits[ce->target_qubits[i]], tail);
 			}
 		}
 
@@ -173,7 +161,7 @@ void qcircuit_print(circuit* c)
 			// If no operation, add the quantum wire symbol
 			if (no_operation)
 			{
-				qubits[i] = str_increase(qubits[i], wire);
+				strcat(qubits[i], wire);
 			}
 		}
 
@@ -186,10 +174,10 @@ void qcircuit_print(circuit* c)
 	{
 		if (i != c->n_qubits - 1)
 		{
-			qubits[i] = str_increase(qubits[i], end_wire);
+			strcat(qubits[i], end_wire);
 		}
 		// And a newline after each for readability
-		qubits[i] = str_increase(qubits[i], newline);
+		strcat(qubits[i], newline);
 	}
 
 	// Print the wires and free them
@@ -206,30 +194,6 @@ void qcircuit_print(circuit* c)
 	free(qubits);
 	free(symbol_table);
 	return;
-}
-
-/*
- * str_increase
- * Concatenates a string to a malloc'ed string
- * :: char* original :: The malloced string to be concatenated to
- * :: char const* added :: The const string that will be added
- * Reallocs the malloced string and returns the pointer to the new memory
- */
-char* str_increase(char* original, char const* added)
-{
-	//original = (char*)realloc_reliable(original, strlen(original), strlen(original) + strlen(added) + 2);
-	strcat(original, added);
-	return original;
-}
-
-void* realloc_reliable(void* original_ptr, const size_t len_orig, const size_t len_new)
-{
-
-	void* tmp = malloc(len_new);
-	printf("%p\n", tmp);
-	memcpy(tmp, original_ptr, len_orig);
-	free(original_ptr); 
-	return tmp;
 }
 
 #endif

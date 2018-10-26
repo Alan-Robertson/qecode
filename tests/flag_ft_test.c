@@ -26,7 +26,6 @@
 
 int main()
 {	
-
 	//--------------------------------
 	// Setup the code and the space of qubits
 	//--------------------------------
@@ -37,7 +36,7 @@ int main()
 	unsigned n_ancilla_qubits = code->height;
 	unsigned n_flag_qubits = 2;
 
-	double p_gate_error = 0.0001;
+	double p_gate_error = 0;
 
 	error_model* em_cnot = error_model_create_iid(2, p_gate_error);
 
@@ -117,10 +116,10 @@ int main()
     measure_flags, 
     measure_ancillas);
 
-	for (int i = 0; i < code->height + 1; i++)
+	/*for (int i = 0; i < code->height + 1; i++)
 	{
 		qcircuit_print(((circuit_syndrome_measurement_flag_ft_data_t*)flag_ft_measurement->circuit_data)->sub_circuits[i]);
-	}
+	}*/
 
 	printf("Measuring the state\n");
 	double* measured_state = circuit_run(flag_ft_measurement, initial_error_probs, NULL);	
@@ -133,13 +132,28 @@ int main()
 	printf("Recovered: %e\n", characterise_test(recovered_state, n_qubits));
 
 	printf("Tailored Results\n");
-	double* logical_rates = characterise_code_corrected(code, logicals, recovered_state);
+	/*double* logical_rates = characterise_code_corrected(code, logicals, recovered_state);
 	sym_iter* siter = sym_iter_create_n_qubits(logicals->n_qubits);
 	while(sym_iter_next(siter))
 	{
 		printf("%e \t", logical_rates[sym_iter_ll_from_state(siter)]);
 		sym_print(siter->state);
-	}
+	}*/
 
+	// Cleanup
+	sym_multi_free(2, code, logicals);	
+	gate_multi_free(9, pauli_X, pauli_Z, prepare_X, prepare_Z, measure_flags, measure_ancillas, cnot, hadamard, phase);
+
+	error_model_free(em);
+	error_model_free(em_cnot);
+
+	decoder_free(tailored);
+
+	free(initial_error_probs);
+	circuit_free(flag_ft_measurement);
+	circuit_free(recovery);
+
+	free(measured_state);
+	free(recovered_state);
 	return 0;
 }

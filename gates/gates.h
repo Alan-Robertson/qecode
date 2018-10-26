@@ -675,6 +675,28 @@ double* gate_operator(const unsigned n_qubits,
 }
 
 /* 
+    gate_multi_free:
+	Frees a vargs collection of gate objects
+	:: const size_t n_gates :: The gate to be freed
+	:: VARGS :: The pointers to the gate objects to be freed
+	Does not return anything
+*/
+void gate_multi_free(const size_t n_gates, ...)
+{
+
+	va_list args;
+    va_start(args, n_gates);
+
+    for (size_t i = 0; i < n_gates; i++)
+    {
+    	gate_free(va_arg(args, gate*));
+    }
+    va_end(args);
+
+    return;
+}
+
+/* 
     gate_free:
 	Frees a gate object
 	:: gate* g :: The gate to be freed
@@ -682,6 +704,14 @@ double* gate_operator(const unsigned n_qubits,
 */
 void gate_free(gate* g)
 {
+	if (g->operation_data != NULL)
+	{
+		free(g->operation_data);
+	}
+	if (g->error_model_data != NULL)
+	{
+		free(g->error_model_data);
+	}
 	free(g);
 }
 

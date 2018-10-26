@@ -215,6 +215,7 @@ void circuit_add_gate(circuit* c, gate* g, ...)
     {
         target_qubits[i] = va_arg(args, unsigned);
     }
+    va_end(args);
     
     // Add the new gate using the regular function
     circuit_add_non_varg(c, g, target_qubits);

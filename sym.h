@@ -1395,6 +1395,28 @@ void sym_clear(sym* s)
 }
 
 
+/* 
+    sym_multi_free:
+    Frees a vargs collection of sym objects
+    :: const size_t n_gates :: The number of sym objects to be freed
+    :: VARGS :: The pointers to the sym objects to be freed
+    Does not return anything
+*/
+void sym_multi_free(const size_t n_sym_objects, ...)
+{
+
+    va_list args;
+    va_start(args, n_sym_objects);
+
+    for (size_t i = 0; i < n_sym_objects; i++)
+    {
+        sym_free(va_arg(args, sym*));
+    }
+    va_end(args);
+
+    return;
+}
+
 /*
     sym_free:
     Frees a symplectic matrix object
