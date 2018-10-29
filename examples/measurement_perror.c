@@ -1,5 +1,5 @@
-#define GATE_MULTITHREADING
-#define N_THREADS 4
+//#define GATE_MULTITHREADING
+//#define N_THREADS 4
 
 #include "../sym.h"
 #include <float.h>
@@ -38,8 +38,8 @@ int main()
 		preparation_targets[j] = j;
 	}
 
-	sym* code = code_five_qubit();
-	sym* logicals = code_five_qubit_logicals();
+	sym* code = code_steane();
+	sym* logicals = code_steane_logicals();
 
 	double error_rate = init_p_error;
 	double gate_error = init_p_error;	
@@ -65,15 +65,15 @@ int main()
 		// Construct the gates, including the error gate
 		gate* iid_error_gate = gate_create_iid_noise(wire_noise);
 		gate* cnot = gate_create(2, gate_cnot, cnot_noise, NULL);
-		gate* hadamard = gate_create(1, gate_hadamard, gate_noise, NULL);
-		gate* phase = gate_create(1, gate_phase, gate_noise, NULL);
+		gate* hadamard = gate_create(1, gate_hadamard, NULL, NULL);
+		gate* phase = gate_create(1, gate_phase, NULL, NULL);
 
 		// Our syndrome measurement circuit
 		circuit* measure = syndrome_measurement_circuit_create(code, cnot, hadamard, phase);
 
 		double* initial_error_probs = error_probabilities_identity(n_qubits);
-		double* prepared_error_probs = gate_apply(n_qubits, initial_error_probs, preparation, preparation_targets);
-		double* measured_error_probs = circuit_run(measure, initial_error_probs, iid_error_gate);
+		//double* prepared_error_probs = gate_apply(n_qubits, initial_error_probs, preparation, preparation_targets);
+		double* measured_error_probs = circuit_run(measure, initial_error_probs, NULL);
 
 		// The error model to feed to our decoder		
 		error_model* measured_error = error_model_create_lookup(n_qubits, measured_error_probs);
@@ -88,7 +88,7 @@ int main()
 
 		// Free allocated objects
 		error_probabilities_free(initial_error_probs);
-		error_probabilities_free(prepared_error_probs);
+		//error_probabilities_free(prepared_error_probs);
 		error_probabilities_free(measured_error_probs);
 		error_probabilities_free(probabilities);
 

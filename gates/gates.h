@@ -280,7 +280,6 @@ double* gate_noise(const unsigned n_qubits,
 	double* p_state_probabilities = error_probabilities_zeros(n_qubits);
 	
 	// Identity gate, no operation_output
-	
 	if (NULL == applied_gate->gate_error_model)
 	{
 		memcpy(p_state_probabilities, initial_probabilities, error_probabilities_bytes_in_table(n_qubits));

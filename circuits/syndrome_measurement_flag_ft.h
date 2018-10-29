@@ -1,6 +1,10 @@
 #ifndef CIRCUIT_SYNDROME_MEASUREMENT_FLAG_FT
 #define CIRCUIT_SYNDROME_MEASUREMENT_FLAG_FT
 
+
+//#define CIRCUIT_SYNDROME_MEASUREMENT_FLAG_FT_CIRCUIT_PRINT_PROGRESS
+// Puts a progress bar over the circuit progress
+
 // ----------------------------------------------------------------------------------------
 // DIRECTIVES
 // ----------------------------------------------------------------------------------------
@@ -13,6 +17,9 @@
 
 #include "../characterise.h"
 
+#ifdef CIRCUIT_SYNDROME_MEASUREMENT_FLAG_FT_CIRCUIT_PRINT_PROGRESS
+    #include "../misc/progress_bar.h"
+#endif
 // ----------------------------------------------------------------------------------------
 // STRUCTS
 // ----------------------------------------------------------------------------------------
@@ -424,7 +431,6 @@ double* circuit_syndrome_measurement_flag_ft_run(
     double* initial_error_rates, 
     gate* noise)
 {
-
     // Unpack the syndrome measurement data
     circuit_syndrome_measurement_flag_ft_data_t* smd = (circuit_syndrome_measurement_flag_ft_data_t*)syndrome_measurement->circuit_data;
 
@@ -449,6 +455,13 @@ double* circuit_syndrome_measurement_flag_ft_run(
             smd->n_code_qubits + smd->n_ancilla_qubits, 
             smd->n_code_qubits + smd->n_ancilla_qubits + smd->n_flag_qubits);
         free(syndrome_error_probs);
+
+        // Create our progress bar if applicable
+        #ifdef CIRCUIT_SYNDROME_MEASUREMENT_FLAG_FT_CIRCUIT_PRINT_PROGRESS 
+            char progress_bar_name[32]; // Holding our string
+            sprintf( progress_bar_name, "Sub-Circuit %d", i);
+            progress_bar* ce_progress_bar = progress_bar_create(c->n_gates, progress_bar_name);
+        #endif
 
         // Apply the operations on the measurement sub circuit
         while (NULL != ce)
@@ -505,7 +518,14 @@ double* circuit_syndrome_measurement_flag_ft_run(
 
             // Next circuit element
             ce = ce->next;
+            #ifdef CIRCUIT_SYNDROME_MEASUREMENT_FLAG_FT_CIRCUIT_PRINT_PROGRESS
+                progress_bar_update(ce_progress_bar);
+            #endif
         }
+
+        #ifdef CIRCUIT_SYNDROME_MEASUREMENT_FLAG_FT_CIRCUIT_PRINT_PROGRESS
+            progress_bar_free(ce_progress_bar);
+        #endif
 
         // Apply FT correction circuit
         if (i != smd->n_ancilla_qubits) // We don't do any flag FT correction on the cleanup sub-circuit
