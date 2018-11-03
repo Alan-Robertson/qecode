@@ -27,7 +27,7 @@ int main()
 {	
 	double init_p_error = 0.02;
 	double delta = 0.5;
-
+ 
 	double logical_rate[N_INCREMENTS];
 
 	unsigned n_qubits = 5, n_logicals = 1, distance = 3;
