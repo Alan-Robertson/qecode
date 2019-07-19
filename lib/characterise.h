@@ -1,13 +1,20 @@
 #ifndef CHARACTERISATION
 #define CHARACTERISATION
 
+
+#include <math.h>
+
 #include "sym.h"
 #include "sym_iter.h"
 #include "error_models/error_models.h"
 #include "decoders/decoders.h"
 #include "circuits/error_probabilities.h"
 #include "errors.h"
-#include <math.h>
+
+extern struct sym;
+extern struct sym_iter;
+extern struct error_model;
+extern struct decoder;
 
 /* 
 	characterise_code:

@@ -6,6 +6,9 @@
 
 #include "destabilisers.h"
 
+extern struct sym;
+extern struct sym_iter;
+
 /*
  * tableau_create
  * Creates a tableau representation of the stabilisers and destabilisers as per 10.1103/PhysRevA.70.052328
@@ -37,11 +40,13 @@ bool tableau_backtrack_destabiliser(
 	const sym* logicals, 
 	const unsigned stabiliser);
 
+
 bool tableau_is_stabiliser(
 	const sym* stabiliser_candidate,
 	const sym* tableau,
 	const sym* logicals,
 	const unsigned n_stabiliser);
+
 bool tableau_is_destabiliser(
 	const sym* destabiliser_candidate,
 	const sym* tableau,

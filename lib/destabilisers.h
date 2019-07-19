@@ -4,10 +4,14 @@
 // LIBRARIES ----------------------------------------------------------------------------------------
 
 #include <stdbool.h>
+
 #include "sym.h"
 #include "errors.h"
 #include "logical.h"
 #include "sym_iter.h"
+
+extern struct sym;
+extern struct sym_iter;
 
 // FUNCTION DECLARATIONS ----------------------------------------------------------------------------------------
 
