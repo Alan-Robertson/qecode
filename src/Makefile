@@ -1,13 +1,14 @@
 LIBDIR=../lib
 SRCDIR=./src
 OBJDIR=../build
+EIGDIR=./Eigen/src
 
 LIBS=-lm
 
 TARGETS=$(*.c)
 
 CC = gcc
-CFLAGS = -I$(LIBDIR) -O3
+CFLAGS = -I$(LIBDIR) -I$(EIGDIR) -O3
 all: sym.o
 .PHONY: all
 

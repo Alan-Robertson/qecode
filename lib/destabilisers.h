@@ -10,9 +10,6 @@
 #include "logical.h"
 #include "sym_iter.h"
 
-extern struct sym;
-extern struct sym_iter;
-
 // FUNCTION DECLARATIONS ----------------------------------------------------------------------------------------
 
 /* 

@@ -10,14 +10,14 @@
 int main()
 {	
 	unsigned n_increments = 24;
-	double physical_error_rate = 0.0001;
+	double physical_error_rate = 0.001;
 
 	double logical_rate[24];
 
 	unsigned n_qubits = 7, n_logicals = 1, distance = 3;
 
-	sym* code = code_random_candidate_seven();
-	sym* logicals = code_random_candidate_seven_logicals();
+	sym* code = code_steane();
+	sym* logicals = code_steane_logicals();
 
 	double bias = 0.5;
 	progress_bar* p = progress_bar_create(n_increments, "Decoder Bias Test");

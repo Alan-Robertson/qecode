@@ -4,10 +4,10 @@
 // This is a "hidden" column containing the phase information
 #define TABLEAU_PHASE_COL (tableau->length)
 
+#include "sym.h"
+#include "sym_iter.h"
 #include "destabilisers.h"
 
-extern struct sym;
-extern struct sym_iter;
 
 /*
  * tableau_create

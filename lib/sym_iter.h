@@ -11,8 +11,6 @@
 // STRUCT OBJECTS
 // ----------------------------------------------------------------------------------------
 
-extern struct sym;
-
 /*
     sym_iter:
     The symplectic matrix iterator

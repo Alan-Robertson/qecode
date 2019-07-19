@@ -11,10 +11,6 @@
 #include "circuits/error_probabilities.h"
 #include "errors.h"
 
-extern struct sym;
-extern struct sym_iter;
-extern struct error_model;
-extern struct decoder;
 
 /* 
 	characterise_code:
