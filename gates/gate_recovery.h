@@ -50,7 +50,7 @@ gate_result* gate_recovery(const sym* initial_state, const void* gate_data, cons
 			if (sym_get_X(dr->recovery_operation, 0, i))
 			{
 				// Apply a Z gate to target qubit i
-				gate_result* gr = dr->pauli_Z->operation(recovered_state, dr->pauli_Z, target_qubits + i);
+				gate_result* gr = dr->pauli_X->operation(recovered_state, dr->pauli_Z, target_qubits + i);
 				sym_free(recovered_state);
 				recovered_state = sym_copy(gr->state_results[0]);
 				gate_result_free(gr);
@@ -59,7 +59,7 @@ gate_result* gate_recovery(const sym* initial_state, const void* gate_data, cons
 			// Check for an anti-commutation relation in the Z block
 			if (sym_get_Z(dr->recovery_operation, 0, i))
 			{
-				gate_result* gr = dr->pauli_X->operation(recovered_state, dr->pauli_X, target_qubits + i);
+				gate_result* gr = dr->pauli_Z->operation(recovered_state, dr->pauli_X, target_qubits + i);
 				sym_free(recovered_state);
 				recovered_state = sym_copy(gr->state_results[0]);
 				gate_result_free(gr);

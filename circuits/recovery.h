@@ -165,6 +165,8 @@ double* circuit_recovery_run(
 			// Decode to determine the recovery operation required
 			sym* recovery_operator = decoder_call(rd->decoder_operation, syndrome_trans);
 
+
+
 			if (NULL == recovery_operator) // Decoder table has no entry for this syndrome
 			{ // Give a blank recovery operation
 				recovery_operator = sym_create(1, rd->n_code_qubits * 2);
@@ -176,23 +178,27 @@ double* circuit_recovery_run(
 			sym* recovered_state = sym_copy(siter->state);
 			for (uint32_t i = 0; i < recovery_operator->n_qubits; i++)
 			{
-				// Apply Z operations where required
+				// Apply X operations where required
 				if (sym_get_X(recovery_operator, 0, i))
-				{
-					gate_result* applied_result = gate_operation(rd->pauli_Z, recovered_state, &i);
-					sym_free(recovered_state);
-					recovered_state = sym_copy(applied_result->state_results[0]);
-					gate_result_free(applied_result);
-				}
-				// And apply X operations where required
-				if (sym_get_Z(recovery_operator, 0, i))
 				{
 					gate_result* applied_result = gate_operation(rd->pauli_X, recovered_state, &i);
 					sym_free(recovered_state);
 					recovered_state = sym_copy(applied_result->state_results[0]);
 					gate_result_free(applied_result);
 				}
+
+				// And apply Z operations where required
+				if (sym_get_Z(recovery_operator, 0, i))
+				{
+					gate_result* applied_result = gate_operation(rd->pauli_Z, recovered_state, &i);
+					sym_free(recovered_state);
+					recovered_state = sym_copy(applied_result->state_results[0]);
+					gate_result_free(applied_result);
+				}
 			}
+
+
+
 			sym_free(recovery_operator);
 
 
@@ -212,6 +218,7 @@ double* circuit_recovery_run(
 	}
 	sym_iter_free(siter);
 	sym_iter_free(target_buffer);
+
 	return recovered_error_rates;
 }
 

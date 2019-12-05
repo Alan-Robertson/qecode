@@ -32,8 +32,8 @@ int main()
 
 	unsigned n_qubits = 7, n_logicals = 1, distance = 3;
 
-	sym* code = code_cyclic_seven();
-	sym* logicals = code_cyclic_seven_logicals();
+	sym* code = code_steane();
+	sym* logicals = code_steane_logicals();
 
 	double error_rate = init_p_error;
 	double gate_error = init_p_error;	
@@ -48,7 +48,7 @@ int main()
 		error_model* cnot_noise = error_model_create_iid(2, gate_error);
 		
 		// Setup the error model
-		error_model* local_noise_model = error_model_create_iid(1, error_rate);
+		error_model* local_noise_model = NULL;//error_model_create_iid(1, error_rate);
 		
 		// Construct the gates, including the error gate
 		gate* iid_error_gate = gate_create_iid_noise(local_noise_model);
@@ -77,7 +77,7 @@ int main()
 		error_probabilities_free(encoded_error_probs);
 		error_probabilities_free(probabilities);
 
-		error_model_free(local_noise_model);
+		//error_model_free(local_noise_model);
 		error_model_free(gate_noise);
 		error_model_free(cnot_noise);
 		error_model_free(encoding_error);

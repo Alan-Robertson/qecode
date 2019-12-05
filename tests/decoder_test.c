@@ -1,14 +1,14 @@
 
-#include "sym.h"
-#include "codes/codes.h"
-#include "decoders/tailored.h"
-#include "error_models/iid.h"
-#include "characterise.h"
+#include "../sym.h"
+#include "../codes/codes.h"
+#include "../decoders/tailored.h"
+#include "../error_models/iid.h"
+#include "../characterise.h"
 
 int main()
 {	
-	double rate_min = 0.00000000001, rate_delta = 2;
-	unsigned n_increments = 35;
+	double rate_min = 0.00000001, rate_delta = 2;
+	unsigned n_increments = 27;
 
 	double logical_rate[35];
 
@@ -29,6 +29,7 @@ int main()
 		// Tailor the Decoder
 		decoder* tailored_decoder = decoder_create_tailored(code, logicals, noise_model);
 		
+		
 		double* probabilities = characterise_code(code, logicals, noise_model, tailored_decoder);
 		logical_rate[i] = probabilities[0];
 
@@ -40,7 +41,7 @@ int main()
 	printf("Physical Rate \t Logical Rate\n");
 	for (unsigned i = 0; i < n_increments; i++)
 	{
-		printf("%e \t %e ", rate_min * pow(rate_delta, i), logical_rate[i]);
+		printf("%e \t %e ", rate_min * pow(rate_delta, i), 1 - logical_rate[i]);
 		printf("\n");
 	}
 

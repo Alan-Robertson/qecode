@@ -1,19 +1,18 @@
-#include "codes/codes.h"
-#include "gates/clifford_generators.h"
-#include "gates/pauli_generators.h"
-#include "gates/gate_measurement.h"
-#include "error_models/iid.h"
+#include "../codes/codes.h"
+#include "../gates/clifford_generators.h"
+#include "../gates/pauli_generators.h"
+#include "../error_models/iid.h"
 
-#include "circuits/encoding.h"
-#include "circuits/decoding.h"
-#include "circuits/syndrome_measurement.h"
-#include "circuits/recovery.h"
+#include "../circuits/encoding.h"
+#include "../circuits/decoding.h"
+#include "../circuits/syndrome_measurement.h"
+#include "../circuits/recovery.h"
 
-#include "characterise.h"
-#include "misc/qcircuit.h"
+#include "../characterise.h"
+#include "../misc/qcircuit.h"
 
-#include "decoders/tailored.h"
-#include "decoders/destabiliser.h"
+#include "../decoders/tailored.h"
+#include "../decoders/destabiliser.h"
 
 /*
  *	Check that some trivial error is recovered
@@ -33,45 +32,42 @@ int main()
 
 
 	// Build our decoder (with an incomplete error model):
-	//error_model* decoder_error_model = error_model_create_iid(n_qubits, p_estimated_error);
-	decoder* destab_decoder = decoder_create_destabiliser(code, logicals);
+	error_model* decoder_error_model = error_model_create_iid(n_qubits, p_estimated_error);
+	//decoder* destab_decoder = decoder_create_destabiliser(code, logicals);
 	// Let's just use the destabiliser decoder for now
 
-	//decoder* tailored_decoder = decoder_create_tailored(code, logicals, decoder_error_model);
+	decoder* iid_decoder = decoder_create_tailored(code, logicals, decoder_error_model);
 
-	// Build our circuit with noise included:
-	error_model* em_cnot = error_model_create_iid(2, p_gate_error);
-	error_model* em_gate = error_model_create_iid(1, p_gate_error);
+	 // Setup error models
+    error_model* em_cnot = error_model_create_iid(2, p_gate_error);
+    error_model* em_hadamard = error_model_create_iid(1, p_gate_error);
+    error_model* em_phase = error_model_create_iid(1, p_gate_error);
+    error_model* em_wire = error_model_create_iid(1, p_wire_error);
 
-	gate* cnot = gate_create(2,  
-		gate_cnot,
-		em_cnot,
-		NULL);
+    //--------------------------------
+    // Setup our gates
+    //--------------------------------
+    // Paulis
+    gate* pauli_X = gate_create(1, gate_pauli_X, NULL, NULL);
+    gate* pauli_Z = gate_create(1, gate_pauli_Z, NULL, NULL);
 
-	gate* hadamard = gate_create(1,  
-		gate_hadamard,
-		em_gate,
-		NULL);
+    // State preparation
+    gate* prepare_X = gate_create_prepare_X(1, 0, NULL);
+    gate* prepare_Z = gate_create_prepare_Z(1, 0, NULL);
 
-	gate* phase = gate_create(1,  
-		gate_phase,
-		em_gate,
-		NULL);
+    // Measurement
+    gate* measure_flags = gate_create(n_flag_qubits, gate_measure_X, NULL, NULL);
+    gate* measure_ancillas = gate_create(n_ancilla_qubits, gate_measure_Z, NULL, NULL);
 
-	gate* pauli_X = gate_create(1,  
-		gate_pauli_X,
-		em_gate,
-		NULL);
+    // Cliffords 
+    gate* cnot = gate_create(2, gate_cnot, em_cnot, NULL);
+    gate* hadamard = gate_create(1, gate_hadamard, em_hadamard, NULL);
+    gate* phase = gate_create(1, gate_phase, em_phase, NULL);
 
-	gate* pauli_Z = gate_create(1,  
-		gate_pauli_Z,
-		em_gate,
-		NULL);
+    // Wire Noise
+    gate* wire_noise = gate_create(1, NULL, em_wire, NULL);
 
-	gate* measure_syndromes = gate_create(n_ancilla_qubits,  
-		gate_measure_Z,
-		em_gate,
-		NULL);
+
 
 	// Create our iid noise
 	error_model* em_noise = error_model_create_iid(1, p_error);

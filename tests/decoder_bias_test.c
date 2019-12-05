@@ -1,11 +1,12 @@
 
-#include "sym.h"
-#include "codes/codes.h"
-#include "decoders/tailored.h"
-#include "error_models/iid.h"
-#include "error_models/iid_biased.h"
-#include "characterise.h"
-#include "misc/progress_bar.h"
+#include "../sym.h"
+#include "../codes/codes.h"
+#include "../decoders/tailored.h"
+#include "../error_models/iid.h"
+#include "../error_models/iid_biased.h"
+#include "../error_models/weight_one.h"
+#include "../characterise.h"
+#include "../misc/progress_bar.h"
 
 int main()
 {	
@@ -14,10 +15,10 @@ int main()
 
 	double logical_rate[24];
 
-	unsigned n_qubits = 7, n_logicals = 1, distance = 3;
+	sym* code = code_steane();
+	sym* logicals = code_steane_logicals();
 
-	sym* code = code_random_candidate_seven();
-	sym* logicals = code_random_candidate_seven_logicals();
+    unsigned n_qubits = code->n_qubits, n_logicals = logicals->length / 2, distance = 3;
 
 	double bias = 0.5;
 	progress_bar* p = progress_bar_create(n_increments, "Decoder Bias Test");
@@ -27,7 +28,8 @@ int main()
 		bias *= 2; 
 		
 		// Setup the error model
-		error_model* noise_model = error_model_create_iid_biased_X(n_qubits, physical_error_rate, bias);
+		//error_model* noise_model = error_model_create_iid_biased_X(n_qubits, physical_error_rate, bias);
+        error_model* noise_model = error_model_create_weight_one(n_qubits, physical_error_rate);
 
 		// Tailor the Decoder
 		decoder* tailored_decoder = decoder_create_tailored(code, logicals, noise_model);

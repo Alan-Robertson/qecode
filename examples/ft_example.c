@@ -28,14 +28,14 @@
 int main()
 {
 
-	double p_gate_error = 0.0001;
-	double p_wire_error = 0.0001;
+	double p_gate_error = 0.00001;
+	double p_wire_error = 0.0;
 
 	unsigned n_qubits = 7;
 	unsigned n_ancilla_qubits = 6;
 
-	sym* code = code_candidate_seven_a();
-	sym* logicals = code_candidate_seven_a_logicals();
+	sym* code = code_steane;
+	sym* logicals = code_steane_logicals();
 	
 	// Build our circuit with noise included:
 	error_model* em_cnot = error_model_create_iid(2, p_gate_error);

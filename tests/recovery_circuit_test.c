@@ -130,23 +130,17 @@ int main()
 	double* recovered_state_destab = circuit_run(recovery_destab, syndrome_error_probs, NULL);	
 	double* recovered_state_tailored = circuit_run(recovery_tailored, syndrome_error_probs, NULL);
 
+	sym_iter_print_pauli(9, recovered_state_destab);
+	
 	printf("Destabiliser Results\n");
 	double* logical_rates = characterise_code_corrected(code, logicals, recovered_state_destab);
-	siter = sym_iter_create_n_qubits(logicals->n_qubits);
-	while(sym_iter_next(siter))
-	{
-		printf("%e \t", logical_rates[sym_iter_ll_from_state(siter)]);
-		sym_print(siter->state);
-	}
+
+	sym_iter_print_pauli(1, logical_rates);
+	free(logical_rates);
 	
 	printf("Tailored Results\n");
 	logical_rates = characterise_code_corrected(code, logicals, recovered_state_tailored);
-	siter = sym_iter_create_n_qubits(logicals->n_qubits);
-	while(sym_iter_next(siter))
-	{
-		printf("%e \t", logical_rates[sym_iter_ll_from_state(siter)]);
-		sym_print(siter->state);
-	}
+	sym_iter_print_pauli(1, logical_rates);
 
 	return 0;
 }

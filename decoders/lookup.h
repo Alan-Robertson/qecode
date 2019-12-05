@@ -44,6 +44,15 @@ void decoder_free_params_lookup(void* v_params);
 */
 void decoder_lookup_insert(decoder* d, const sym* syndrome, const sym* value);
 
+/*
+	decoder_lookup_print
+	Prints the contents of the lookup decoder
+	:: decoder* d :: The decoder
+	Returns nothing, prints to stdout
+*/
+void decoder_lookup_print(decoder* d);
+
+
 //----------------------------------------------------------------------------------------
 // The Lookup Decoder `Class'
 //----------------------------------------------------------------------------------------
@@ -144,5 +153,28 @@ void decoder_lookup_insert(decoder* d, const sym* syndrome, const sym* value)
 	params->recovery_operators[target_index] = sym_copy(value);
 	return;
 }
+
+
+/*
+	decoder_lookup_print
+	Prints the contents of the lookup decoder
+	:: decoder* d :: The decoder
+	Returns nothing, prints to stdout
+*/
+void decoder_lookup_print(decoder* d)
+{
+	sym_iter* siter = sym_iter_create(((decoder_params_tailored_t*)(d->params))->n_syndrome_bits);
+	while (sym_iter_next(siter))
+	{
+		sym* recovery_operator = decoder_call_lookup(d->params, siter->state);
+
+		sym_print(siter->state);
+		sym_print_pauli(recovery_operator);
+
+		sym_free(recovery_operator);
+	}
+	sym_iter_free(siter);
+}
+
 
 #endif

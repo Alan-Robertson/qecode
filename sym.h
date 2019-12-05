@@ -442,6 +442,15 @@ sym* ll_to_sym_t(unsigned long long ll, const unsigned height, const unsigned le
 */
 void sym_print(const sym* s);
 
+
+/*
+    sym_print_pauli:
+    Prints a symplectic matrix object as a series of Paulis
+    :: sym* s :: The object whose matrix is to be printed
+    No return, prints to stdout
+*/
+void sym_print_pauli(const sym* s);
+
 /*
     sym_clear:
     Clears the matrix of a symplectic matrix object
@@ -559,6 +568,23 @@ void sym_set(sym* s, const unsigned height, const unsigned length, const BYTE va
     ELEMENT_SET(s, height, length, value);
     return;
 }
+
+/* 
+    sym_set_I:
+    Saves the specified value to that position in the matrix
+    :: sym* s :: Pointer to the matrix in question
+    :: const unsigned height :: Height of the element in question
+    :: const unsigned length :: Length of the element in question
+    :: const BYTE value :: The value to be stored
+    No return type
+*/
+void sym_set_I(sym* s, const unsigned height, const unsigned qubit_index)
+{
+    ELEMENT_SET(s, height, qubit_index, 0);
+    ELEMENT_SET(s, height, qubit_index + s->n_qubits, 0);
+    return;
+}
+
 
 /* 
     sym_set_X:
@@ -846,7 +872,7 @@ unsigned sym_row_commutes(
 
     for (size_t i = 0; i < a->length; i++)
     {
-        commutes += sym_get(a, row_a, i) * sym_get(b, row_b, (i + a->n_qubits) % a->length);
+        commutes += sym_get(a, row_a, i) & sym_get(b, row_b, (i + a->n_qubits) % a->length);
     }
     return commutes % 2;
 }
@@ -885,7 +911,7 @@ unsigned sym_row_column_commutes(
 
     for (size_t i = 0; i < a->length; i++)
     {
-        commutes += sym_get(a, row_a, i) * sym_get(b, (i + a->n_qubits) % a->length, column_b);
+        commutes += sym_get(a, row_a, i) & sym_get(b, (i + a->n_qubits) % a->length, column_b);
     }
     return commutes % 2;
 }
@@ -1270,7 +1296,7 @@ void sym_sym_to_sym(sym* target, sym const* control, ...)
 sym* sym_resize(sym const* s, uint32_t n_qubits)
 {
     sym* resized = sym_create(s->height, n_qubits * 2);
-    uint32_t n_to_copy = s->length < n_qubits? s->length : n_qubits;
+    uint32_t n_to_copy = s->length < n_qubits ? s->length : n_qubits;
 
     for (int i = 0; i < n_to_copy; i++)
     {
@@ -1453,6 +1479,46 @@ void sym_print(const sym* s)
                 {
                     printf(" ");
                 }
+            }
+        }
+        printf("]\n");
+    }
+    return;
+}
+
+
+/*
+    sym_print_pauli:
+    Prints a symplectic matrix object
+    :: sym* s :: The object whose matrix is to be printed
+    No return, prints to stdout
+*/
+void sym_print_pauli(const sym* s)
+{
+    for (size_t i = 0; i < s->height; i++) 
+    {
+        printf("[");
+        for (size_t j = 0; j < s->length / 2; j++)
+        {
+            switch(
+                ((int)sym_get(s, i, j) << 1)
+                + (int)sym_get(s, i, j + s->n_qubits)) 
+            {
+                case 0:
+                    printf("I");
+                    break;
+
+                case 1:
+                    printf("Z");
+                    break;
+
+                case 2:
+                    printf("X");
+                    break;
+
+                case 3:
+                    printf("Y");
+                    break;
             }
         }
         printf("]\n");

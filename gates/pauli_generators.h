@@ -63,7 +63,7 @@ gate_result* gate_pauli_X(const sym* initial_state, const void* gate_data, const
     sym* final_state = sym_copy(initial_state);
     uint32_t target = target_qubit[0];
     
-    sym_set_Z(final_state, 0, target, sym_get_Z(initial_state, 0, target) ^ 1);
+    sym_set_X(final_state, 0, target, sym_get_X(initial_state, 0, target) ^ 1);
 
     return gate_result_create_single(1, final_state);
 }
@@ -81,7 +81,7 @@ gate_result* gate_pauli_Z(const sym* initial_state, const void* gate_data, const
     sym* final_state = sym_copy(initial_state);
     uint32_t target = target_qubit[0];
     
-    sym_set_X(final_state, 0, target, sym_get_X(initial_state, 0, target) ^ 1);
+    sym_set_Z(final_state, 0, target, sym_get_Z(initial_state, 0, target) ^ 1);
 
     return gate_result_create_single(1, final_state);
 }

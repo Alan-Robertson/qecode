@@ -41,8 +41,8 @@ int main()
 	unsigned n_ancilla_qubits = code->height;
 	unsigned n_flag_qubits = 2;
 
-	double p_gate_error = 0.001;
-	double p_wire_error = p_gate_error / 100;
+	double p_gate_error = 0.00001;
+	double p_wire_error = 0.0; //p_gate_error / 100;
 
 	error_model* em_cnot = error_model_create_iid(2, p_gate_error);
 	error_model* em_gate = error_model_create_iid(1, p_gate_error);

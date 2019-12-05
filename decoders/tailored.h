@@ -213,6 +213,7 @@ sym** tailor_recovery_operators(const sym* code,
 		// Determine the overall logical state
 		sym* logical_state = logical_error(logicals, corrected);
 
+
 		// Calculate the probability of this particular error occurring and store it
 		p_options[sym_to_ll(syndrome)][sym_to_ll(logical_state)] += error_model_call(noise, physical_error->state);
 
@@ -281,6 +282,7 @@ sym** tailor_recovery_operators(const sym* code,
 
 	return tailored_decoder;
 }
+
 
 
 #endif

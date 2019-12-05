@@ -1,5 +1,5 @@
-#define GATE_MULTITHREADING
-#define N_THREADS 20
+//#define GATE_MULTITHREADING
+//#define N_THREADS 20
 
 #include "../sym.h"
 #include <float.h>
@@ -26,8 +26,8 @@
 int main()
 {
 
-	double p_gate_error = 0.0001;
-	double p_wire_error = 0.0001;
+	double p_gate_error = 0.00001;
+	double p_wire_error = 0.00001;
 
 	unsigned n_qubits = 7;
 	unsigned n_ancilla_qubits = 6;
@@ -58,14 +58,14 @@ int main()
 
 	// Run the circuit
 	double* initial_error_probs = error_probabilities_identity(n_qubits);
-	double* encoded_error_probs = circuit_run(encode, initial_error_probs, iid_error_gate);
-	double* measured_error_probs = circuit_run(syndromes, encoded_error_probs, iid_error_gate);
+	//double* encoded_error_probs = circuit_run(encode, initial_error_probs, iid_error_gate);
+	double* measured_error_probs = circuit_run(syndromes, initial_error_probs, iid_error_gate);
 
 	// The error model to feed to our decoder		
-	error_model* encoding_error = error_model_create_lookup(n_qubits, encoded_error_probs);
+	error_model* measured_error = error_model_create_lookup(n_qubits, measured_error_probs);
 
 	// Tailor the Decoder
-	decoder* tailored_decoder = decoder_create_tailored(code, logicals, encoding_error);
+	decoder* tailored_decoder = decoder_create_tailored(code, logicals, measured_error);
 	
 	// Create the recovery circuit
 	circuit* recovery = circuit_recovery_create(n_qubits, n_ancilla_qubits,	tailored_decoder, pauli_X, pauli_Z, measure_syndromes);
@@ -78,12 +78,12 @@ int main()
 
 	// Free allocated objects
 	error_model_free(local_noise_model);
-	error_model_free(encoding_error);
+	//error_model_free(encoding_error);
 
 	gate_free(iid_error_gate);
 	
 	error_probabilities_free(initial_error_probs);
-	error_probabilities_free(encoded_error_probs);
+	//error_probabilities_free(encoded_error_probs);
 	error_probabilities_free(measured_error_probs);
 	error_probabilities_free(recovered_error_probs);
 	error_probabilities_free(probabilities);

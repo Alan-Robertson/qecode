@@ -35,16 +35,16 @@ int main()
 	//--------------------------------
 	// Setup the code and the space of qubits
 	//--------------------------------
-	sym* code = code_five_qubit();
-	sym* logicals = code_five_qubit_logicals();
+	sym* code = code_candidate_seven_a();
+	sym* logicals = code_candidate_seven_a_logicals();
 
 	unsigned n_qubits = code->n_qubits;
 	unsigned n_ancilla_qubits = code->height;
 	unsigned n_flag_qubits = 2;
 
-	double p_gate_error = 0.001;
+	double p_gate_error = 0.0000001;
 	double p_wire_error = 0;
-	double bias = 1;
+	double bias = 10;
 
 	error_model* em_cnot = error_model_create_iid_biased_Z(2, p_gate_error, bias);
 	error_model* em_gate = error_model_create_iid(1, p_gate_error);

@@ -11,12 +11,12 @@
 
 int main()
 {	
-	unsigned n_qubits = 5;
-
 	double p_error = 0;
 
 	sym* code = code_five_qubit();
 	sym* logicals = code_five_qubit_logicals();
+
+	unsigned n_qubits = code->n_qubits;
 
 	// Build our decoder (with an incomplete error model):
 	decoder* destab_decoder = decoder_create_destabiliser(code, logicals);
@@ -63,16 +63,18 @@ int main()
 			gate_result* recovered_state = gate_recovery(error_state, recovery, target_qubits);
 			printf("Error Rate %e\n", initial_error_probs[sym_iter_ll_from_state(siter)]);
 			printf("Initial Error: \t\t");
-			sym_print(error_state);
+			sym_print_pauli(error_state);
 
 			printf("Recovery Operation: \t");
-			sym_print(recovery_operation);
+			sym_print_pauli(recovery_operation);
 
 			printf("Recovered State: \t");
-			sym_print(recovered_state->state_results[0]);
+			sym_print_pauli(recovered_state->state_results[0]);
 
 			// Setup the recovered state
 			final_error_probs[sym_to_ll(recovered_state->state_results[0])] += initial_error_probs[sym_iter_ll_from_state(siter)];
+
+			code_commutation_print(recovered_state->state_results[0], code);
 
 			sym_free(syndrome);
 			sym_free(recovery_operation);
@@ -81,6 +83,7 @@ int main()
 		}
 	}
 	sym_iter_free(siter);
+
 	double* logical_rates = characterise_code_corrected(code, logicals, final_error_probs);
 	siter = sym_iter_create_n_qubits(logicals->n_qubits);
 	

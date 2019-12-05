@@ -405,4 +405,21 @@ bool code_stabiliser_commutes(sym* a){
 	return true;
 }
 
+
+void code_commutation_print(sym* pauli_string, sym* code)
+{
+	for (uint32_t i = 0; i < code->height; i++)
+	{
+			sym* tmp = sym_create(1, code->length);
+			
+			sym_row_copy(tmp, code, 0, i);
+			
+			printf("%u\t", sym_row_commutes(pauli_string, code, 0, i));
+			sym_print_pauli(tmp);
+
+			sym_free(tmp);
+	}
+	return;
+}
+
 #endif

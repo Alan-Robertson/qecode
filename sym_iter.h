@@ -114,6 +114,9 @@ void sym_iter_state_from_ll(sym_iter* siter, long long val);
 long long sym_iter_max_ll_counter(uint32_t length, uint32_t current_weight);
 
 
+
+void sym_iter_print_pauli(uint32_t n_qubits, double* distribution);
+
 /*
     sym_iter_free:
     Frees a symplectic iterator object
@@ -407,6 +410,26 @@ unsigned long long sym_iter_binom(unsigned length, unsigned weight)
      }
     return result;
 }
+
+
+
+
+
+
+void sym_iter_print_pauli(uint32_t n_qubits, double* distribution)
+{
+    sym_iter* siter = sym_iter_create(n_qubits * 2);
+    while (sym_iter_next(siter))
+    {
+        if (distribution[sym_iter_ll_from_state(siter)] > 0.0)
+        {
+            printf("%e:\t", distribution[sym_iter_ll_from_state(siter)]); 
+            sym_print_pauli(siter->state);
+        }
+    }
+    sym_iter_free(siter);
+}
+
 
 /*
     sym_iter_left_shift:

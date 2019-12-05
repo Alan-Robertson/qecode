@@ -31,8 +31,39 @@ int main()
 {	
 	double logical_rate[N_INCREMENTS];
 
-	sym* code = code_candidate_seven_c();
-	sym* logicals = code_candidate_seven_c_logicals();
+	//sym* code = code_candidate_seven_a();
+	//sym* logicals = code_candidate_seven_a_logicals();
+	
+	
+	unsigned tmp_code[] = {
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+	0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+	};
+
+	sym* code = sym_create_valued(6, 14, tmp_code); 
+
+	unsigned tmp_logicals[] = {
+	0, 0,
+	0, 0,
+	0, 0,
+	1, 0,
+	0, 0,
+	1, 0,
+	1, 0,
+	1, 0,
+	0, 0,
+	1, 0,
+	0, 0,
+	0, 0,
+	0, 0,
+	0, 1
+	};
+
+	sym* logicals = sym_create_valued(14, 2, tmp_logicals);
 
 
 	unsigned n_qubits = code->n_qubits;
@@ -48,18 +79,18 @@ int main()
 
 	double error_rate = 0.000001;
 	double gate_error = 0.000001;
-	double bias = 1;	
+	double bias = 1;
 
 
 		// Initial noise
 		error_model* initial_noise = error_model_create_iid_biased_Z(n_qubits, error_rate, bias);
 
 		// Build our circuit with noise included:
-		error_model* gate_noise = error_model_create_iid_biased_X(1, gate_error, bias);
-		error_model* cnot_noise = error_model_create_iid_biased_X(2, gate_error, bias);
+		error_model* gate_noise = error_model_create_iid_biased_Z(1, gate_error, bias);
+		error_model* cnot_noise = error_model_create_iid_biased_Z(2, gate_error, bias);
 		
 		// Setup the error model
-		error_model* wire_noise = error_model_create_iid_biased_X(1, error_rate, bias);
+		error_model* wire_noise = error_model_create_iid_biased_Z(1, error_rate, bias);
 		
 		// The state preparation gate
 		gate* preparation = gate_create(n_qubits, NULL, gate_noise, NULL);

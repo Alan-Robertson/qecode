@@ -1,13 +1,14 @@
-#include "codes/codes.h"
-#include "gates/clifford_generators.h"
-#include "error_models/iid.h"
+#include "../sym_iter.h"
+#include "../codes/codes.h"
+#include "../gates/clifford_generators.h"
+#include "../error_models/iid.h"
 
-#include "circuits/encoding.h"
-#include "circuits/decoding.h"
-#include "circuits/syndrome_measurement.h"
+#include "../circuits/encoding.h"
+#include "../circuits/decoding.h"
+#include "../circuits/syndrome_measurement.h"
 
-#include "characterise.h"
-#include "misc/qcircuit.h"
+#include "../characterise.h"
+#include "../misc/qcircuit.h"
 
 /*
 	Check that when you place an error on the circuit (line 62)
@@ -21,7 +22,7 @@ int main()
 	unsigned n_ancilla_qubits = 4;
 
 	double p_gate_error = 0; // Gates themselves are noiseless
-	double p_error = 0;
+	double p_error = 0.1;
 
 	sym* code = code_five_qubit();
 	sym* logicals = code_five_qubit_logicals();
@@ -47,7 +48,7 @@ int main()
 
 	// Create our iid noise
 	error_model* em_noise = error_model_create_iid(1, p_error);
-	gate* noise = gate_create(1, gate_iid, em_noise, NULL);
+	gate* noise = NULL;//gate_create(1, gate_iid, em_noise, NULL);
 
 	// Create our circuit
 	circuit* syndrome_circuit = syndrome_measurement_circuit_create(code, cnot, hadamard, phase);
@@ -63,6 +64,9 @@ int main()
 	
 	double* syndrome_error_probs = circuit_run(syndrome_circuit, initial_error_probs, noise);
 	
+	sym_iter_print_pauli(n_qubits + n_ancilla_qubits, syndrome_error_probs);
+
+	return 0;
 	printf("\n\n");
 	characterise_print(syndrome_error_probs, n_qubits + n_ancilla_qubits);
 
